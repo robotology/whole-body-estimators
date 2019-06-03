@@ -1,17 +1,11 @@
 /*
-################################################################################
-#                                                                              #
-# Copyright (C) 2019 Fondazione Istituto Italiano di Tecnologia (IIT)          #
-# All Rights Reserved.                                                         #
-#                                                                              #
-################################################################################
-
-# @authors: Prashanth Ramadoss <prashanth.ramadoss@iit.it>
-#           Giulio Romualdi    <giulio.romualdi@iit.it>
-#           Silvio Traversaro  <silvio.traversaro@iit.it>
-#           Daniele Pucci      <daniele.pucci@iit.it>
-*/
-
+ * Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
+ */
+ 
 struct Pose6D
 {
     1: double x; 2: double y; 3: double z;
@@ -38,3 +32,4 @@ service floatingBaseEstimationRPC
     bool setJointVelocityLPFCutoffFrequency(1: double freq);
     bool startFloatingBaseFilter();
 }
+

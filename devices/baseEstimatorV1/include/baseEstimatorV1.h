@@ -1,19 +1,13 @@
 /*
-################################################################################
-#                                                                              #
-# Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)          #
-# All Rights Reserved.                                                         #
-#                                                                              #
-################################################################################
+ * Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
+ */
 
-# @authors: Prashanth Ramadoss <prashanth.ramadoss@iit.it>
-#           Giulio Romualdi    <giulio.romualdi@iit.it>
-#           Silvio Traversaro  <silvio.traversaro@iit.it>
-#           Daniele Pucci      <daniele.pucci@iit.it>
-*/
-
-#ifndef ICUB_FLOATING_BASE_ESTIMATOR_V1_H
-#define ICUB_FLOATING_BASE_ESTIMATOR_V1_H
+#ifndef BASE_ESTIMATOR_V1_H
+#define BASE_ESTIMATOR_V1_H
 
 #include <iDynTree/Estimation/AttitudeMahonyFilter.h>
 #include <iDynTree/Estimation/SimpleLeggedOdometry.h>
@@ -24,7 +18,7 @@
 #include <iDynTree/KinDynComputations.h>
 #include <iDynTree/ModelIO/ModelLoader.h>
 #include <iDynTree/yarp/YARPConversions.h>
-#include <iDynTree/Core//EigenHelpers.h>
+#include <iDynTree/Core/EigenHelpers.h>
 
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/ResourceFinder.h>
@@ -71,15 +65,15 @@ namespace yarp {
     namespace dev {
 
 
-    class icubFloatingBaseEstimatorV1 : public yarp::dev::DeviceDriver,
+    class baseEstimatorV1 : public yarp::dev::DeviceDriver,
                                         public yarp::dev::IMultipleWrapper,
                                         public yarp::os::PeriodicThread,
                                         public floatingBaseEstimationRPC
     {
     public:
-        explicit icubFloatingBaseEstimatorV1(double period, yarp::os::ShouldUseSystemClock useSystemClock = yarp::os::ShouldUseSystemClock::No);
-        icubFloatingBaseEstimatorV1();
-        ~icubFloatingBaseEstimatorV1();
+        explicit baseEstimatorV1(double period, yarp::os::ShouldUseSystemClock useSystemClock = yarp::os::ShouldUseSystemClock::No);
+        baseEstimatorV1();
+        ~baseEstimatorV1();
 
         /**
          * @brief Open the estimator device
@@ -173,7 +167,7 @@ namespace yarp {
          * @param[in] func_t pointer of read<Sensor>Func()
          * @return true/false success/failure
          */
-        bool  sensorReadDryRun(bool verbose, bool (icubFloatingBaseEstimatorV1::*func_t)(bool));
+        bool  sensorReadDryRun(bool verbose, bool (baseEstimatorV1::*func_t)(bool));
 
         /**
          * @brief read IMU sensors

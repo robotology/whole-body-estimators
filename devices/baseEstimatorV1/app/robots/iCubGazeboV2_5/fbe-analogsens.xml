@@ -1,9 +1,16 @@
+<!--
+  Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT)
+  All rights reserved.
+
+  This software may be modified and distributed under the terms of the
+  GNU Lesser General Public License v2.1 or any later version.
+ -->
 <?xml version="1.0" encoding="UTF-8" ?>
-<devices robot="iCubGenova04" build="1">
-    <device name="baseestimator" type="icubFloatingBaseEstimatorV1">
+<devices robot="iCubGazeboV2_5" build="1">
+    <device name="baseestimator" type="baseEstimatorV1">
 
         <param name="model_file">model.urdf</param>
-        <param name="robot">icub</param>
+        <param name="robot">icubSim</param>
         <param name="device_period_in_seconds">0.010</param>
         <param name="joints_list">("neck_pitch", "neck_roll", "neck_yaw", "torso_pitch", "torso_roll", "torso_yaw", "l_shoulder_pitch", "l_shoulder_roll", "l_shoulder_yaw", "l_elbow", "r_shoulder_pitch", "r_shoulder_roll", "r_shoulder_yaw", "r_elbow", "l_hip_pitch", "l_hip_roll", "l_hip_yaw", "l_knee", "l_ankle_pitch", "l_ankle_roll", "r_hip_pitch", "r_hip_roll", "r_hip_yaw", "r_knee", "r_ankle_pitch", "r_ankle_roll", "l_arm_ft_sensor", "r_arm_ft_sensor", "l_leg_ft_sensor", "r_leg_ft_sensor", "l_foot_ft_sensor", "r_foot_ft_sensor")</param>
         <param name="base_link">root_link</param>
@@ -11,11 +18,10 @@
         <param name="right_foot_ft_sensor">r_foot_ft_sensor</param>
 
         <param name="publish_debug_ports">false</param>
-	<param name="dump_data">false</param>
-	<param name="use_low_pass_filters">true</param>
-        <param name="joint_vel_lpf_cutoff_freq">3.0</param>
+        <param name="dump_data">false</param>
+        <param name="use_low_pass_filters">false</param>
+        <param name="joint_vel_lpf_cutoff_freq">10.0</param>
 
-	
         <!-- legged odom parameters -->
         <param name="initial_fixed_frame">l_sole</param>
         <param name="initial_reference_frame_for_world">l_sole</param>
@@ -32,7 +38,8 @@
         <param name="mahony_kp">0.7</param>
         <param name="mahony_ki">0.001</param>
         <param name="mahony_use_magnetometer">false</param>
-        <param name="imu_name">root_link_ems_acc_eb5</param>
+        <!-- <param name="imu_name">root_link_ems_acc_eb5</param> -->
+        <param name="imu_name">head_imu_acc_1x1</param>
         <param name="initial_orientation_in_rpy">(0 0 0)</param>
 
         <!-- attitude qekf parameters -->
@@ -49,8 +56,8 @@
 
         <!-- biped foot contact classifier parameters -->
         <param name="initial_primary_foot">right</param>
-        <param name="schmitt_stable_contact_make_time">0.5</param>
-        <param name="schmitt_stable_contact_break_time">0.5</param>
+        <param name="schmitt_stable_contact_make_time">1.0</param>
+        <param name="schmitt_stable_contact_break_time">1.0</param>
         <param name="left_schmitt_contact_make_force_threshold">130.0</param>
         <param name="left_schmitt_contact_break_force_threshold">25.0</param>
         <param name="right_schmitt_contact_make_force_threshold">150.0</param>
@@ -63,16 +70,16 @@
         <group name="LOGGER">
             <param name="dataLoggerOutputPort_name">/logger/data:o</param>
             <param name="dataLoggerRpcOutputPort_name">/logger/rpc:o</param>
-            <param name="dataLoggerInputPort_name">/logger-est/data:i</param>
-            <param name="dataLoggerRpcInputPort_name">/logger-est/rpc:i</param>
+            <param name="dataLoggerInputPort_name">/logger/data:i</param>
+            <param name="dataLoggerRpcInputPort_name">/logger/rpc:i</param>
         </group>
         <action phase="startup" level="15" type="attach">
             <paramlist name="networks">
             <!-- motorcontrol -->
                 <elem name="all_joints">all_joints_mc</elem>
             <!-- imu -->
-<!--                 <elem name="head_imu_acc_1x1">inertial</elem> -->
-                <elem name="root_link_ems_acc_eb5">inertial</elem>
+                <elem name="head_imu_acc_1x1">inertial</elem>
+<!--                 <elem name="root_link_ems_acc_eb5">inertial</elem> -->
             <!-- f/t sensors -->
                 <elem name="l_arm_ft_sensor">left_upper_arm_strain</elem>
                 <elem name="r_arm_ft_sensor">right_upper_arm_strain</elem>
@@ -87,3 +94,4 @@
 
     </device>
 </devices>
+

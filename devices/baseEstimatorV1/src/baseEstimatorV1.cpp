@@ -1,21 +1,15 @@
 /*
-################################################################################
-#                                                                              #
-# Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)          #
-# All Rights Reserved.                                                         #
-#                                                                              #
-################################################################################
+ * Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
+ */
 
-# @authors: Prashanth Ramadoss <prashanth.ramadoss@iit.it>
-#           Giulio Romualdi    <giulio.romualdi@iit.it>
-#           Silvio Traversaro  <silvio.traversaro@iit.it>
-#           Daniele Pucci      <daniele.pucci@iit.it>
-*/
-
-#include <icubFloatingBaseEstimatorV1.h>
+#include <baseEstimatorV1.h>
 
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::getJointNamesList(const yarp::os::Searchable& config, std::vector< std::__cxx11::string >& joint_list)
+bool yarp::dev::baseEstimatorV1::getJointNamesList(const yarp::os::Searchable& config, std::vector< std::string >& joint_list)
 {
     yarp::os::Property property;
     property.fromString(config.toString().c_str());
@@ -35,7 +29,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::getJointNamesList(const yarp::os::S
     return true;
 }
 
-void yarp::dev::icubFloatingBaseEstimatorV1::resizeBuffers()
+void yarp::dev::baseEstimatorV1::resizeBuffers()
 {
     m_joint_positions.resize(m_model);
     m_joint_velocities.resize(m_joint_positions.size());
@@ -55,16 +49,16 @@ void yarp::dev::icubFloatingBaseEstimatorV1::resizeBuffers()
     // wbd contact wrenches, ft sensors and imu measurement buffers are resized in the respective attach methods.
 }
 
-yarp::dev::icubFloatingBaseEstimatorV1::icubFloatingBaseEstimatorV1(double period, yarp::os::ShouldUseSystemClock useSystemClock): PeriodicThread(period, useSystemClock)
+yarp::dev::baseEstimatorV1::baseEstimatorV1(double period, yarp::os::ShouldUseSystemClock useSystemClock): PeriodicThread(period, useSystemClock)
 {
 }
 
-yarp::dev::icubFloatingBaseEstimatorV1::icubFloatingBaseEstimatorV1(): PeriodicThread(0.01, yarp::os::ShouldUseSystemClock::No)
+yarp::dev::baseEstimatorV1::baseEstimatorV1(): PeriodicThread(0.01, yarp::os::ShouldUseSystemClock::No)
 {
 }
 
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::open(yarp::os::Searchable& config)
+bool yarp::dev::baseEstimatorV1::open(yarp::os::Searchable& config)
 {
     yarp::os::LockGuard guard(m_device_mutex);
     if (!configureWholeBodyDynamics(config))
@@ -99,7 +93,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::open(yarp::os::Searchable& config)
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::loadLeggedOdometry()
+bool yarp::dev::baseEstimatorV1::loadLeggedOdometry()
 {
     if (!m_model.setDefaultBaseLink(m_model.getFrameIndex(m_base_link_name)))
     {
@@ -125,7 +119,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::loadLeggedOdometry()
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::loadBipedFootContactClassifier()
+bool yarp::dev::baseEstimatorV1::loadBipedFootContactClassifier()
 {
     m_biped_foot_contact_classifier = std::make_unique<iDynTree::BipedFootContactClassifier>(m_left_foot_contact_schmitt_params, m_right_foot_contact_schmitt_params);
     m_biped_foot_contact_classifier->setContactSwitchingPattern(iDynTree::ALTERNATE_CONTACT);
@@ -133,7 +127,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::loadBipedFootContactClassifier()
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::loadIMUAttitudeMahonyEstimator()
+bool yarp::dev::baseEstimatorV1::loadIMUAttitudeMahonyEstimator()
 {
     m_imu_attitude_observer = std::make_unique<iDynTree::AttitudeMahonyFilter>();
     m_imu_attitude_observer->setGainkp(m_imu_attitude_observer_params.kp);
@@ -143,7 +137,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::loadIMUAttitudeMahonyEstimator()
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::loadIMUAttitudeQEKF()
+bool yarp::dev::baseEstimatorV1::loadIMUAttitudeQEKF()
 {
     m_imu_attitude_qekf = std::make_unique<iDynTree::AttitudeQuaternionEKF>();
     m_imu_attitude_qekf->setParameters(m_imu_attitude_qekf_params);
@@ -151,7 +145,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::loadIMUAttitudeQEKF()
 }
 
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::initializeLeggedOdometry()
+bool yarp::dev::baseEstimatorV1::initializeLeggedOdometry()
 {
     bool ok = m_legged_odometry->updateKinematics(m_joint_positions);
     ok = ok && m_legged_odometry->init(m_initial_fixed_frame, m_initial_reference_frame_for_world, m_initial_reference_frame_H_world);
@@ -161,7 +155,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::initializeLeggedOdometry()
     return ok;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::initializeBipedFootContactClassifier()
+bool yarp::dev::baseEstimatorV1::initializeBipedFootContactClassifier()
 {
     if (m_initial_primary_foot == "left")
     {
@@ -178,7 +172,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::initializeBipedFootContactClassifie
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::initializeIMUAttitudeEstimator()
+bool yarp::dev::baseEstimatorV1::initializeIMUAttitudeEstimator()
 {
     iDynTree::VectorDynSize state;
     state.resize((int)m_imu_attitude_observer->getInternalStateSize());
@@ -194,7 +188,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::initializeIMUAttitudeEstimator()
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::initializeIMUAttitudeQEKF()
+bool yarp::dev::baseEstimatorV1::initializeIMUAttitudeQEKF()
 {
     if (!m_imu_attitude_qekf->initializeFilter())
     {
@@ -218,7 +212,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::initializeIMUAttitudeQEKF()
 }
 
 
-void yarp::dev::icubFloatingBaseEstimatorV1::getFeetCartesianWrenches()
+void yarp::dev::baseEstimatorV1::getFeetCartesianWrenches()
 {
     // get these wrenches from whole body dynamics to avoid errors due to calibration offsets
     m_left_foot_contact_normal_force = m_left_foot_cartesian_wrench(2);
@@ -226,7 +220,7 @@ void yarp::dev::icubFloatingBaseEstimatorV1::getFeetCartesianWrenches()
 }
 
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::updateLeggedOdometry()
+bool yarp::dev::baseEstimatorV1::updateLeggedOdometry()
 {
     m_no_foot_in_contact = false;
     m_biped_foot_contact_classifier->updateFootContactState(yarp::os::Time::now(), m_left_foot_contact_normal_force, m_right_foot_contact_normal_force);
@@ -285,7 +279,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::updateLeggedOdometry()
     return m_legged_odometry_update_went_well;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::updateIMUAttitudeEstimator()
+bool yarp::dev::baseEstimatorV1::updateIMUAttitudeEstimator()
 {
     for (size_t imu = 0; imu < (size_t)m_whole_body_imu_interface.size(); imu++)
     {
@@ -303,7 +297,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::updateIMUAttitudeEstimator()
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::updateIMUAttitudeQEKF()
+bool yarp::dev::baseEstimatorV1::updateIMUAttitudeQEKF()
 {
     m_imu_attitude_qekf->propagateStates();
     for (size_t imu = 0; imu < (size_t)m_whole_body_imu_interface.size(); imu++)
@@ -319,7 +313,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::updateIMUAttitudeQEKF()
     return true;
 }
 
-iDynTree::Transform yarp::dev::icubFloatingBaseEstimatorV1::getHeadIMU_H_NeckBaseAtZero()
+iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMU_H_NeckBaseAtZero()
 {
     iDynTree::KinDynComputations temp_kin_comp;
     temp_kin_comp.loadRobotModel(m_model);
@@ -335,7 +329,7 @@ iDynTree::Transform yarp::dev::icubFloatingBaseEstimatorV1::getHeadIMU_H_NeckBas
     return temp_kin_comp.getRelativeTransform(m_head_imu_name, "head");
 }
 
-iDynTree::Transform yarp::dev::icubFloatingBaseEstimatorV1::getHeadIMUCorrectionWithNeckKinematics()
+iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMUCorrectionWithNeckKinematics()
 {
     // this funciton returns imu_H_imuAssumingNeckBaseToZero
     if (!m_imu_aligned)
@@ -348,7 +342,7 @@ iDynTree::Transform yarp::dev::icubFloatingBaseEstimatorV1::getHeadIMUCorrection
 }
 
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::alignIMUFrames()
+bool yarp::dev::baseEstimatorV1::alignIMUFrames()
 {
     iDynTree::Rotation b_R_head_imu = m_kin_dyn_comp.getRelativeTransform(m_base_link_name, m_head_imu_name).getRotation();
     iDynTree::Rotation wIMU_R_IMU_0;
@@ -369,7 +363,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::alignIMUFrames()
     return true;
 }
 
-iDynTree::Rotation yarp::dev::icubFloatingBaseEstimatorV1::getBaseOrientationFromIMU()
+iDynTree::Rotation yarp::dev::baseEstimatorV1::getBaseOrientationFromIMU()
 {
     iDynTree::Rotation wIMU_R_IMU;
     if (m_attitude_estimator_type == "mahony")
@@ -391,7 +385,7 @@ iDynTree::Rotation yarp::dev::icubFloatingBaseEstimatorV1::getBaseOrientationFro
     return (m_head_imu_calibration_matrix * wIMU_R_b);
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::updateBasePoseWithIMUEstimates()
+bool yarp::dev::baseEstimatorV1::updateBasePoseWithIMUEstimates()
 {
     double updated_roll;
     double updated_pitch;
@@ -434,7 +428,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::updateBasePoseWithIMUEstimates()
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::updateBaseVelocity()
+bool yarp::dev::baseEstimatorV1::updateBaseVelocity()
 {
     using iDynTree::toiDynTree;
     using iDynTree::toEigen;
@@ -479,7 +473,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::updateBaseVelocity()
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::updateBaseVelocityWithIMU()
+bool yarp::dev::baseEstimatorV1::updateBaseVelocityWithIMU()
 {
     using iDynTree::toEigen;
     iDynTree::Vector3 y_acc;
@@ -530,7 +524,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::updateBaseVelocityWithIMU()
 }
 
 
-void yarp::dev::icubFloatingBaseEstimatorV1::publishFloatingBaseState()
+void yarp::dev::baseEstimatorV1::publishFloatingBaseState()
 {
     yarp::os::Bottle &state_bottle = m_floating_base_state_port.prepare();
     state_bottle.clear();
@@ -547,7 +541,7 @@ void yarp::dev::icubFloatingBaseEstimatorV1::publishFloatingBaseState()
     m_floating_base_state_port.write();
 }
 
-void yarp::dev::icubFloatingBaseEstimatorV1::publishFloatingBasePoseVelocity()
+void yarp::dev::baseEstimatorV1::publishFloatingBasePoseVelocity()
 {
     yarp::os::Bottle &state_bottle = m_floating_base_pose_port.prepare();
     state_bottle.clear();
@@ -564,7 +558,7 @@ void yarp::dev::icubFloatingBaseEstimatorV1::publishFloatingBasePoseVelocity()
     m_floating_base_pose_port.write();
 }
 
-void yarp::dev::icubFloatingBaseEstimatorV1::publishContactState()
+void yarp::dev::baseEstimatorV1::publishContactState()
 {
     yarp::os::Bottle &state_bottle = m_contact_state_port.prepare();
     state_bottle.clear();
@@ -577,7 +571,7 @@ void yarp::dev::icubFloatingBaseEstimatorV1::publishContactState()
 }
 
 
-void yarp::dev::icubFloatingBaseEstimatorV1::publishIMUAttitudeEstimatorStates()
+void yarp::dev::baseEstimatorV1::publishIMUAttitudeEstimatorStates()
 {
     iDynTree::VectorDynSize attitude_observer_state;
     if (m_attitude_estimator_type == "mahony")
@@ -615,7 +609,7 @@ void yarp::dev::icubFloatingBaseEstimatorV1::publishIMUAttitudeEstimatorStates()
     m_imu_attitude_observer_estimated_state_port.write();
 }
 
-void yarp::dev::icubFloatingBaseEstimatorV1::publishIMUAttitudeQEKFEstimates()
+void yarp::dev::baseEstimatorV1::publishIMUAttitudeQEKFEstimates()
 {
     iDynTree::RPY rpy;
     m_imu_attitude_qekf->getOrientationEstimateAsRPY(rpy);
@@ -630,12 +624,12 @@ void yarp::dev::icubFloatingBaseEstimatorV1::publishIMUAttitudeQEKFEstimates()
 }
 
 
-void yarp::dev::icubFloatingBaseEstimatorV1::publishTransform()
+void yarp::dev::baseEstimatorV1::publishTransform()
 {
     m_transform_interface->setTransform(m_base_link_name, "world", m_world_H_base);
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::initializeLogger()
+bool yarp::dev::baseEstimatorV1::initializeLogger()
 {
     m_logger->startRecord({"record","fbe_x", "fbe_y", "fbe_z",
                           "fbe_roll", "fbe_pitch", "fbe_yaw",
@@ -649,7 +643,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::initializeLogger()
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::updateLogger()
+bool yarp::dev::baseEstimatorV1::updateLogger()
 {
     yarp::sig::Vector feet_contact_state;
     yarp::sig::Vector feet_contact_normal_forces;
@@ -666,7 +660,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::updateLogger()
 }
 
 
-void yarp::dev::icubFloatingBaseEstimatorV1::publish()
+void yarp::dev::baseEstimatorV1::publish()
 {
     publishFloatingBasePoseVelocity();
     publishContactState();
@@ -683,7 +677,7 @@ void yarp::dev::icubFloatingBaseEstimatorV1::publish()
     publishTransform();
 }
 
-void yarp::dev::icubFloatingBaseEstimatorV1::run()
+void yarp::dev::baseEstimatorV1::run()
 {
     yarp::os::LockGuard guard(m_device_mutex);
 
@@ -751,7 +745,7 @@ void yarp::dev::icubFloatingBaseEstimatorV1::run()
 
 }
 
-void yarp::dev::icubFloatingBaseEstimatorV1::closeDevice()
+void yarp::dev::baseEstimatorV1::closeDevice()
 {
     if (!m_imu_attitude_observer_estimated_state_port.isClosed())
     {
@@ -821,7 +815,7 @@ void yarp::dev::icubFloatingBaseEstimatorV1::closeDevice()
     }
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::close()
+bool yarp::dev::baseEstimatorV1::close()
 {
     yarp::os::LockGuard guard(m_device_mutex);
     closeDevice();
@@ -829,35 +823,35 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::close()
     return true;
 }
 
-yarp::dev::icubFloatingBaseEstimatorV1::~icubFloatingBaseEstimatorV1()
+yarp::dev::baseEstimatorV1::~baseEstimatorV1()
 {
 
 }
 
 /// RPC methods
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::setMahonyKp(const double kp)
+bool yarp::dev::baseEstimatorV1::setMahonyKp(const double kp)
 {
     yarp::os::LockGuard guard(m_device_mutex);
     m_imu_attitude_observer->setGainkp(kp);
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::setMahonyKi(const double ki)
+bool yarp::dev::baseEstimatorV1::setMahonyKi(const double ki)
 {
     yarp::os::LockGuard guard(m_device_mutex);
     m_imu_attitude_observer->setGainki(ki);
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::setMahonyTimeStep(const double timestep)
+bool yarp::dev::baseEstimatorV1::setMahonyTimeStep(const double timestep)
 {
     yarp::os::LockGuard guard(m_device_mutex);
     m_imu_attitude_observer->setTimeStepInSeconds(timestep);
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::setContactSchmittThreshold(const double l_fz_break, const double l_fz_make,
+bool yarp::dev::baseEstimatorV1::setContactSchmittThreshold(const double l_fz_break, const double l_fz_make,
                                                                         const double r_fz_break, const double r_fz_make)
 {
     yarp::os::LockGuard guard(m_device_mutex);
@@ -872,7 +866,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::setContactSchmittThreshold(const do
 }
 
 
-std::string yarp::dev::icubFloatingBaseEstimatorV1::getEstimationJointsList()
+std::string yarp::dev::baseEstimatorV1::getEstimationJointsList()
 {
     yarp::os::LockGuard guard(m_device_mutex);
     std::stringstream ss;
@@ -892,7 +886,7 @@ std::string yarp::dev::icubFloatingBaseEstimatorV1::getEstimationJointsList()
     return ss.str();
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::setPrimaryFoot(const std::string& primary_foot)
+bool yarp::dev::baseEstimatorV1::setPrimaryFoot(const std::string& primary_foot)
 {
     yarp::os::LockGuard guard(m_device_mutex);
     if (primary_foot == "right")
@@ -919,13 +913,13 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::setPrimaryFoot(const std::string& p
     return true;
 }
 
-std::string yarp::dev::icubFloatingBaseEstimatorV1::getRefFrameForWorld()
+std::string yarp::dev::baseEstimatorV1::getRefFrameForWorld()
 {
     yarp::os::LockGuard guard(m_device_mutex);
     return m_initial_reference_frame_for_world;
 }
 
-Pose6D yarp::dev::icubFloatingBaseEstimatorV1::getRefPose6DForWorld()
+Pose6D yarp::dev::baseEstimatorV1::getRefPose6DForWorld()
 {
     yarp::os::LockGuard guard(m_device_mutex);
     Pose6D ref_pose_world;
@@ -938,7 +932,7 @@ Pose6D yarp::dev::icubFloatingBaseEstimatorV1::getRefPose6DForWorld()
     return ref_pose_world;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::resetLeggedOdometry()
+bool yarp::dev::baseEstimatorV1::resetLeggedOdometry()
 {
     yarp::os::LockGuard guard(m_device_mutex);
     m_legged_odometry->updateKinematics(m_joint_positions);
@@ -946,14 +940,14 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::resetLeggedOdometry()
     return ok;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::startFloatingBaseFilter()
+bool yarp::dev::baseEstimatorV1::startFloatingBaseFilter()
 {
     yarp::os::LockGuard guard(m_device_mutex);
     m_state = FilterFSM::RUNNING;
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::resetLeggedOdometryWithRefFrame(const std::string& ref_frame,
+bool yarp::dev::baseEstimatorV1::resetLeggedOdometryWithRefFrame(const std::string& ref_frame,
                                                                       const double x, const double y, const double z,
                                                                       const double roll, const double pitch, const double yaw)
 {
@@ -982,15 +976,16 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::resetLeggedOdometryWithRefFrame(con
     return ok;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::setJointVelocityLPFCutoffFrequency(const double freq)
+bool yarp::dev::baseEstimatorV1::setJointVelocityLPFCutoffFrequency(const double freq)
 {
     m_joint_vel_filter_cutoff_freq = freq;
     m_joint_velocities_filter->setCutFrequency(freq);
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::useJointVelocityLPF(const bool flag)
+bool yarp::dev::baseEstimatorV1::useJointVelocityLPF(const bool flag)
 {
     m_use_lpf = flag;
     return true;
 }
+

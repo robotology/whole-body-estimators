@@ -1,21 +1,15 @@
 /*
-################################################################################
-#                                                                              #
-# Copyright (C) 2018 Fondazione Istituto Italiano di Tecnologia (IIT)          #
-# All Rights Reserved.                                                         #
-#                                                                              #
-################################################################################
+ * Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
+ */
 
-# @authors: Prashanth Ramadoss <prashanth.ramadoss@iit.it>
-#           Giulio Romualdi    <giulio.romualdi@iit.it>
-#           Silvio Traversaro  <silvio.traversaro@iit.it>
-#           Daniele Pucci      <daniele.pucci@iit.it>
-*/
-
-#include <icubFloatingBaseEstimatorV1.h>
+#include <baseEstimatorV1.h>
 
 
-bool  yarp::dev::icubFloatingBaseEstimatorV1::sensorReadDryRun(bool verbose, bool (yarp::dev::icubFloatingBaseEstimatorV1::*func_t)(bool))
+bool  yarp::dev::baseEstimatorV1::sensorReadDryRun(bool verbose, bool (yarp::dev::baseEstimatorV1::*func_t)(bool))
 {
     double tic{yarp::os::Time::now()};
     double time_elapsed_trying_to_read_sensors{0.0};
@@ -34,12 +28,12 @@ bool  yarp::dev::icubFloatingBaseEstimatorV1::sensorReadDryRun(bool verbose, boo
     return read_success;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::attachAll(const yarp::dev::PolyDriverList& p)
+bool yarp::dev::baseEstimatorV1::attachAll(const yarp::dev::PolyDriverList& p)
 {
     yarp::os::LockGuard guard(m_device_mutex);
     if (!attachAllControlBoards(p))
     {
-        yError() << "icubFloatingBaseEstimatorV1: " <<  "Could not attach the control boards";
+        yError() << "baseEstimatorV1: " <<  "Could not attach the control boards";
         return false;
     }
 
@@ -76,7 +70,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::attachAll(const yarp::dev::PolyDriv
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::attachAllControlBoards(const yarp::dev::PolyDriverList& p)
+bool yarp::dev::baseEstimatorV1::attachAllControlBoards(const yarp::dev::PolyDriverList& p)
 {
     bool ok{false};
     for (size_t dev_idx = 0; dev_idx < (size_t)p.size(); dev_idx++)
@@ -96,7 +90,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::attachAllControlBoards(const yarp::
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::loadEstimator()
+bool yarp::dev::baseEstimatorV1::loadEstimator()
 {
     yarp::os::ResourceFinder &rf = yarp::os::ResourceFinder::getResourceFinderSingleton();
     std::string model_file_path = rf.findFileByName(m_model_file_name);
@@ -145,12 +139,12 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::loadEstimator()
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::attachMultipleAnalogSensors(const yarp::dev::PolyDriverList& p)
+bool yarp::dev::baseEstimatorV1::attachMultipleAnalogSensors(const yarp::dev::PolyDriverList& p)
 {
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::attachAllForceTorqueSensors(const yarp::dev::PolyDriverList& p)
+bool yarp::dev::baseEstimatorV1::attachAllForceTorqueSensors(const yarp::dev::PolyDriverList& p)
 {
     std::vector<yarp::dev::IAnalogSensor* > ft_sensor_list;
     std::vector<std::string> ft_sensor_name;
@@ -201,7 +195,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::attachAllForceTorqueSensors(const y
     // dry run of readFTSensors() to check if all FTs work and to initialize buffers
     m_ft_measurements_from_yarp_server.resize(m_nr_of_channels_in_YARP_FT_sensor);
     bool verbose{false};
-    if (!sensorReadDryRun(verbose, &yarp::dev::icubFloatingBaseEstimatorV1::readFTSensors))
+    if (!sensorReadDryRun(verbose, &yarp::dev::baseEstimatorV1::readFTSensors))
     {
         return false;
     }
@@ -209,7 +203,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::attachAllForceTorqueSensors(const y
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::attachAllInertialMeasurementUnits(const yarp::dev::PolyDriverList& p)
+bool yarp::dev::baseEstimatorV1::attachAllInertialMeasurementUnits(const yarp::dev::PolyDriverList& p)
 {
     std::vector<yarp::dev::IGenericSensor* > imu_sensor_list;
     std::vector<std::string> imu_sensor_name;
@@ -270,14 +264,14 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::attachAllInertialMeasurementUnits(c
         m_imu_meaaurements_from_yarp_server[imu].resize(m_nr_of_channels_in_YARP_IMU_sensor);
     }
     bool verbose{false};
-    if (!sensorReadDryRun(verbose, &yarp::dev::icubFloatingBaseEstimatorV1::readIMUSensors))
+    if (!sensorReadDryRun(verbose, &yarp::dev::baseEstimatorV1::readIMUSensors))
     {
         return false;
     }
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::readIMUSensors(bool verbose)
+bool yarp::dev::baseEstimatorV1::readIMUSensors(bool verbose)
 {
     bool all_IMUs_read_correctly{true};
     for (size_t imu = 0; imu < m_nr_of_IMUs_detected; imu++)
@@ -312,7 +306,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::readIMUSensors(bool verbose)
      return all_IMUs_read_correctly;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::readFTSensors(bool verbose)
+bool yarp::dev::baseEstimatorV1::readFTSensors(bool verbose)
 {
     bool ft_sensors_read_correctly{true};
     for (size_t ft = 0; ft < m_nr_of_forcetorque_sensors_detected; ft++)
@@ -352,7 +346,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::readFTSensors(bool verbose)
     return ft_sensors_read_correctly;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::readEncoders(bool verbose)
+bool yarp::dev::baseEstimatorV1::readEncoders(bool verbose)
 {
     int ax; m_remapped_control_board_interfaces.encs->getAxes(&ax);
     bool encoders_read_correctly = m_remapped_control_board_interfaces.encs->getEncoders(m_joint_positions.data());
@@ -388,7 +382,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::readEncoders(bool verbose)
 }
 
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::configureWholeBodyDynamics(const yarp::os::Searchable& config)
+bool yarp::dev::baseEstimatorV1::configureWholeBodyDynamics(const yarp::os::Searchable& config)
 {
     if (config.check("left_foot_cartesian_wrench_port") && config.find("left_foot_cartesian_wrench_port").isString())
     {
@@ -432,7 +426,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::configureWholeBodyDynamics(const ya
     m_left_foot_cartesian_wrench.resize(6);
 
     bool verbose{false};
-    if (!sensorReadDryRun(verbose, &yarp::dev::icubFloatingBaseEstimatorV1::readWholeBodyDynamicsContactWrenches))
+    if (!sensorReadDryRun(verbose, &yarp::dev::baseEstimatorV1::readWholeBodyDynamicsContactWrenches))
     {
         return false;
     }
@@ -441,7 +435,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::configureWholeBodyDynamics(const ya
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::calibFTSensorsStanding()
+bool yarp::dev::baseEstimatorV1::calibFTSensorsStanding()
 {
     yarp::os::RpcClient wbd_rpc_port;
     wbd_rpc_port.open("/wholeBodyDynamics/local/rpc");
@@ -497,7 +491,7 @@ bool readCartesianWrenchesFromPorts(yarp::os::BufferedPort<yarp::sig::Vector>& p
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::readWholeBodyDynamicsContactWrenches(bool verbose)
+bool yarp::dev::baseEstimatorV1::readWholeBodyDynamicsContactWrenches(bool verbose)
 {
     bool ok = readCartesianWrenchesFromPorts(m_left_foot_cartesian_wrench_wbd_port, m_left_foot_cartesian_wrench, m_verbose);
     ok = readCartesianWrenchesFromPorts(m_right_foot_cartesian_wrench_wbd_port, m_right_foot_cartesian_wrench, m_verbose) && ok;
@@ -505,7 +499,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::readWholeBodyDynamicsContactWrenche
     return ok;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::readSensors(bool verbose)
+bool yarp::dev::baseEstimatorV1::readSensors(bool verbose)
 {
     bool all_sensors_read_correctly{true};
     all_sensors_read_correctly = readEncoders(m_verbose) && all_sensors_read_correctly;
@@ -516,7 +510,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::readSensors(bool verbose)
     return all_sensors_read_correctly;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::loadTransformBroadcaster()
+bool yarp::dev::baseEstimatorV1::loadTransformBroadcaster()
 {
     yarp::os::Property tf_broadcaster_settings;
     tf_broadcaster_settings.put("device", "transformClient");
@@ -547,7 +541,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::loadTransformBroadcaster()
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::detachAll()
+bool yarp::dev::baseEstimatorV1::detachAll()
 {
     yarp::os::LockGuard guard(m_device_mutex);
     m_device_initialized_correctly = false;
@@ -557,3 +551,4 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::detachAll()
     }
     return true;
 }
+

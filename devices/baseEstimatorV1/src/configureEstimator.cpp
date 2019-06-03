@@ -1,20 +1,14 @@
 /*
-################################################################################
-#                                                                              #
-# Copyright (C) 2019 Fondazione Istituto Italiano di Tecnologia (IIT)          #
-# All Rights Reserved.                                                         #
-#                                                                              #
-################################################################################
+ * Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT)
+ * All rights reserved.
+ *
+ * This software may be modified and distributed under the terms of the
+ * GNU Lesser General Public License v2.1 or any later version.
+ */
 
-# @authors: Prashanth Ramadoss <prashanth.ramadoss@iit.it>
-#           Giulio Romualdi    <giulio.romualdi@iit.it>
-#           Silvio Traversaro  <silvio.traversaro@iit.it>
-#           Daniele Pucci      <daniele.pucci@iit.it>
-*/
+#include <baseEstimatorV1.h>
 
-#include <icubFloatingBaseEstimatorV1.h>
-
-bool yarp::dev::icubFloatingBaseEstimatorV1::loadEstimatorParametersFromConfig(const yarp::os::Searchable& config)
+bool yarp::dev::baseEstimatorV1::loadEstimatorParametersFromConfig(const yarp::os::Searchable& config)
 {
     if (config.check("model_file") && config.find("model_file").isString())
     {
@@ -179,7 +173,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::loadEstimatorParametersFromConfig(c
     return ok;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::loadLeggedOdometryParametersFromConfig(const yarp::os::Searchable& config)
+bool yarp::dev::baseEstimatorV1::loadLeggedOdometryParametersFromConfig(const yarp::os::Searchable& config)
 {
     if (config.check("initial_fixed_frame") && config.find("initial_fixed_frame").isString())
     {
@@ -235,7 +229,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::loadLeggedOdometryParametersFromCon
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::loadBipedFootContactClassifierParametersFromConfig(const yarp::os::Searchable& config)
+bool yarp::dev::baseEstimatorV1::loadBipedFootContactClassifierParametersFromConfig(const yarp::os::Searchable& config)
 {
     if (config.check("initial_primary_foot") && config.find("initial_primary_foot").isString())
     {
@@ -318,7 +312,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::loadBipedFootContactClassifierParam
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::loadIMUAttitudeMahonyEstimatorParametersFromConfig(const yarp::os::Searchable& config)
+bool yarp::dev::baseEstimatorV1::loadIMUAttitudeMahonyEstimatorParametersFromConfig(const yarp::os::Searchable& config)
 {
     if (config.check("mahony_kp") && config.find("mahony_kp").isDouble())
     {
@@ -359,7 +353,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::loadIMUAttitudeMahonyEstimatorParam
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::loadIMUAttitudeQEKFParamtersFromConfig(const yarp::os::Searchable& config)
+bool yarp::dev::baseEstimatorV1::loadIMUAttitudeQEKFParamtersFromConfig(const yarp::os::Searchable& config)
 {
     if (config.check("qekf_discretization_time_step_in_seconds") && config.find("qekf_discretization_time_step_in_seconds").isDouble())
     {
@@ -454,7 +448,7 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::loadIMUAttitudeQEKFParamtersFromCon
     return true;
 }
 
-bool yarp::dev::icubFloatingBaseEstimatorV1::openComms()
+bool yarp::dev::baseEstimatorV1::openComms()
 {
     bool ok{false};
     ok = m_imu_attitude_observer_estimated_state_port.open(m_port_prefix + "/mahony_state/state:o");
@@ -502,3 +496,4 @@ bool yarp::dev::icubFloatingBaseEstimatorV1::openComms()
 
     return true;
 }
+
