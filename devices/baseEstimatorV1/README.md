@@ -1,4 +1,6 @@
 # Overview
+This estimator uses the kinematics, IMU mounted on the head and the contact forces information to estimate the floating base of the robot. The pose of floating base with respect to the inertial frame is computed through legged odometry and is fused along with the attitude estimates from the head IMU. The base velocity is obtained from the contact Jacobian computed using the kinematics information by enforcing the unilateral constraint of the foot.
+
 - [:computer: How to run the simulation](#computer-how-to-run-the-simulation)
 - [:running: How to test on iCub](#running-how-to-test-on-icub)
 
@@ -35,14 +37,22 @@
    yarp rpc /base-estimator/rpc
    ```
    the following commands are allowed:
-   * `startFloatingBaseFilter`: fill this;
-   * `setContactSchmittThreshold lbreak lmake rbreak rmake`: fill this;
-   * `setPrimaryFoot foot`: fill this;
-   * `useJointVelocityLPF flag`: fill this;
-   * `setJointVelocityLPFCutoffFrequency freq`: fill this;
-   * `resetLeggedOdometry`: fill this;
-   * `resetLeggedOdometryWithRefFrame frame x y z roll pitch yaw`: fill this;
-   * `getRefFrameForWorld`: fill this;
+   * `startFloatingBaseFilter`: starts the estimator, this needs to be run after the FT sensors are reset;
+
+   other optional commands include,
+   
+   * `setContactSchmittThreshold lbreak lmake rbreak rmake`: used to set contact force thresholds for feet contact detection;
+   * `setPrimaryFoot foot`: set the foot to the one that does not break the contact initially during walking, `foot` can be `left` or `right`;
+   * `useJointVelocityLPF flag`: use a low pass filter on the joint velocities, `flag` can be `true` or `false`;
+   * `setJointVelocityLPFCutoffFrequency freq`: set the cut-off frequency for the low pass filter on the joint velocities;
+   * `resetLeggedOdometry`: reset the floating base pose and reset the legged odometry to the inital state;
+   * `resetLeggedOdometryWithRefFrame frame x y z roll pitch yaw`: reset the legged odometry by mentioning an intial reference to the world frame with respect to the initial fixed frame;
+   * `getRefFrameForWorld`: get the initial fixed frame with respect to which the world frame was set;
+
+## Configuration
+
+The configuration file for the estimator can be found `app/robots/${YARP_ROBOT_NAME}/fbe-analogsens.xml`. 
+The attitude estimation for the head IMU can be chosen to be either a QuaternionEKF or a non-linear complementary filter. The gains should be tuned accordingly.
 
 ## How to dump data
 Before run `yarprobotinterface` check if [`dump_data`](app/robots/iCubGazeboV2_5/fbe-analogsens.xml#L14) is set to `true`
