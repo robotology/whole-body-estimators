@@ -6,7 +6,8 @@
   GNU Lesser General Public License v2.1 or any later version.
  -->
 <?xml version="1.0" encoding="UTF-8" ?>
-<robot name="iCubGazeboV2_5" build="1">
+<!DOCTYPE robot PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
+<robot name="iCubGazeboV2_5" build="1" portprefix="baseestimation">
     <!-- open control boards -->
     <device name="torso_mc" type="remote_controlboard">
         <param name="remote">/icub/torso</param>
