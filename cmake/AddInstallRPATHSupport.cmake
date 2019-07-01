@@ -29,7 +29,7 @@
 # - the variable will be used only by applications spawned by the shell
 #   and not by other processes.
 #
-# RPATH is aimed to solve the issues introduced by the second
+# RPATH aims in solving the issues introduced by the second
 # installation method. Using run-path dependent libraries you can
 # create a directory structure containing executables and dependent
 # libraries that users can relocate without breaking it.
@@ -48,7 +48,9 @@
 #    enabled shared library, i.e. its install name will be resolved
 #    only at run time.
 #  - In all cases (building executables and/or shared libraries)
-#    dependent shared libraries with RPATH support will be properly
+#    dependent shared libraries with RPATH support will have their name
+#    resolved only at run time, by embedding the search path directly
+#    into the built binary.
 #
 # The command has the following parameters:
 #
@@ -95,13 +97,13 @@ function(ADD_INSTALL_RPATH_SUPPORT)
   set(_options USE_LINK_PATH)
   set(_oneValueArgs INSTALL_NAME_DIR)
   set(_multiValueArgs BIN_DIRS
-    LIB_DIRS
-    DEPENDS)
+                      LIB_DIRS
+                      DEPENDS)
 
   cmake_parse_arguments(_ARS "${_options}"
-    "${_oneValueArgs}"
-    "${_multiValueArgs}"
-    "${ARGN}")
+                             "${_oneValueArgs}"
+                             "${_multiValueArgs}"
+                             "${ARGN}")
 
   # if either RPATH or INSTALL_RPATH is disabled
   # and the INSTALL_NAME_DIR variable is set, then hardcode the install name
@@ -134,10 +136,10 @@ function(ADD_INSTALL_RPATH_SUPPORT)
     # Find system implicit lib directories
     set(_system_lib_dirs ${CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES})
     if(EXISTS "/etc/debian_version") # is this a debian system ?
-      if(CMAKE_LIBRARY_ARCHITECTURE)
-        list(APPEND _system_lib_dirs "/lib/${CMAKE_LIBRARY_ARCHITECTURE}"
-          "/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}")
-      endif()
+        if(CMAKE_LIBRARY_ARCHITECTURE)
+            list(APPEND _system_lib_dirs "/lib/${CMAKE_LIBRARY_ARCHITECTURE}"
+                                         "/usr/lib/${CMAKE_LIBRARY_ARCHITECTURE}")
+        endif()
     endif()
     # This is relative RPATH for libraries built in the same project
     foreach(lib_dir ${_ARS_LIB_DIRS})

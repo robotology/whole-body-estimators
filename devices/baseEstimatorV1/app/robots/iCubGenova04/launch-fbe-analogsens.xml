@@ -87,7 +87,6 @@
         <param name="transforms_lifetime">0.2</param>
     </device>
 
-    <!-- <devices file="wholebodydynamics-external.xml" /> -->
     <devices file="fbe-analogsens.xml" />
 </robot>
 

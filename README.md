@@ -39,7 +39,6 @@ make
 Notice: `sudo` is not necessary if you specify the `CMAKE_INSTALL_PREFIX`. In this case it is necessary to add in the `.bashrc` or `.bash_profile` the following lines:
 ``` sh
 export WBDEstimator_INSTALL_DIR=/path/where/you/installed
-export LD_LIBRARY_PATH=${LD_LIBRARY_PATH}:${WBDEstimator_INSTALL_DIR}/lib/yarp
 export YARP_DATA_DIRS=${YARP_DATA_DIRS}:${WBDEstimator_INSTALL_DIR}/share/yarp:${WBDEstimator_INSTALL_DIR}/lib/yarp
 ```
 

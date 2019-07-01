@@ -4,22 +4,7 @@
 
 set(iDynTree_REQUIRED_VERSION 0.11.0)
 
-set(CMAKE_INCLUDE_CURRENT_DIR TRUE)
-
-option(ENABLE_RPATH "Enable RPATH for this library" ON)
-mark_as_advanced(ENABLE_RPATH)
-include(AddInstallRPATHSupport)
-add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}"
-                          LIB_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
-                          INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}"
-                          DEPENDS ENABLE_RPATH
-                          USE_LINK_PATH)
-
-find_package(Eigen3 REQUIRED)
-find_package(iDynTree REQUIRED)
-if(${iDynTree_VERSION} VERSION_LESS ${iDynTree_REQUIRED_VERSION})
-    message(FATAL_ERROR "iDyntree version ${iDynTree_VERSION} not sufficient, at least version ${iDynTree_REQUIRED_VERSION} is required.")
-endif()
+find_package(iDynTree ${iDynTree_VERSION} REQUIRED)
 
 find_package(ICUB REQUIRED)
 
