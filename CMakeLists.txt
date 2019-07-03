@@ -1,0 +1,32 @@
+# Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT). All rights reserved.
+# This software may be modified and distributed under the terms of the
+# GNU Lesser General Public License v2.1 or any later version.
+
+cmake_minimum_required(VERSION 3.5)
+project(whole-body-estimators LANGUAGES CXX
+                              VERSION 0.1)
+                             
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" ON)
+
+list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+
+option(ENABLE_RPATH "Enable RPATH for this library" ON)
+mark_as_advanced(ENABLE_RPATH)
+include(AddInstallRPATHSupport)
+add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BINDIR}"
+                          LIB_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}"
+                          INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}"
+                          DEPENDS ENABLE_RPATH
+                          USE_LINK_PATH)
+
+set(YARP_REQUIRED_VERSION 3.0.1)
+
+find_package(YARP ${YARP_REQUIRED_VERSION} REQUIRED)
+
+add_subdirectory(devices)
+
+include(AddUninstallTarget)
+
