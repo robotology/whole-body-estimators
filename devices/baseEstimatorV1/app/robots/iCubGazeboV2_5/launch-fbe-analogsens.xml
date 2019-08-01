@@ -7,7 +7,8 @@
  -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE robot PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
-<robot name="iCubGazeboV2_5" build="1" portprefix="baseestimation">
+<robot name="iCubGazeboV2_5" portprefix="baseestimation" build="1"  xmlns:xi="http://www.w3.org/2001/XInclude">
+
     <!-- open control boards -->
     <device name="torso_mc" type="remote_controlboard">
         <param name="remote">/icubSim/torso</param>
@@ -87,6 +88,7 @@
         <param name="transforms_lifetime">0.2</param>
     </device>
 
-    <devices file="fbe-analogsens.xml" />
+    <xi:include href="estimators/fbe-analogsens.xml" />
+
 </robot>
 

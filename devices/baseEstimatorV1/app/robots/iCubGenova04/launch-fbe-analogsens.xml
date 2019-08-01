@@ -1,13 +1,13 @@
 <!--
   Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT)
   All rights reserved.
- 
+
   This software may be modified and distributed under the terms of the
   GNU Lesser General Public License v2.1 or any later version.
  -->
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE robot PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
-<robot name="iCubGazeboV2_5" build="1" portprefix="baseestimation">
+<robot name="iCubGenova04" portprefix="baseestimation" build="1"  xmlns:xi="http://www.w3.org/2001/XInclude">
     <!-- open control boards -->
     <device name="torso_mc" type="remote_controlboard">
         <param name="remote">/icub/torso</param>
@@ -34,7 +34,7 @@
         <param name="local">/baseestimation/head</param>
     </device>
 
-    
+
     <!-- open remote control board remapper -->
     <device name="all_joints_mc" type="remotecontrolboardremapper">
         <param name="remoteControlBoards">("/icub/head", "/icub/torso", "/icub/left_arm", "/icub/right_arm", "/icub/left_leg", "/icub/right_leg")</param>
@@ -88,6 +88,5 @@
         <param name="transforms_lifetime">0.2</param>
     </device>
 
-    <devices file="fbe-analogsens.xml" />
+    <xi:include href="estimators/fbe-analogsens.xml" />
 </robot>
-
