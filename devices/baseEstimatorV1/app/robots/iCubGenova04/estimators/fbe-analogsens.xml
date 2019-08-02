@@ -6,8 +6,7 @@
   GNU Lesser General Public License v2.1 or any later version.
  -->
 <?xml version="1.0" encoding="UTF-8" ?>
-<devices robot="iCubGenova04" build="1">
-    <device name="baseestimator" type="baseEstimatorV1">
+<device xmlns:xi="http://www.w3.org/2001/XInclude" name="baseestimator" type="baseEstimatorV1">
 
         <param name="model_file">model.urdf</param>
         <param name="robot">icub</param>
@@ -92,6 +91,5 @@
 
         <action phase="shutdown" level="2" type="detach" />
 
-    </device>
-</devices>
+</device>
 
