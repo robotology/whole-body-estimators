@@ -283,7 +283,7 @@ bool yarp::dev::baseEstimatorV1::updateIMUAttitudeEstimator()
 {
     for (size_t imu = 0; imu < (size_t)m_whole_body_imu_interface.size(); imu++)
     {
-        if (m_raw_IMU_measurements[imu].sensor_name == m_head_imu_name)
+        if (m_raw_IMU_measurements[imu].sensor_name == m_imu_name)
         {
             m_imu_attitude_observer->updateFilterWithMeasurements(m_raw_IMU_measurements[imu].linear_proper_acceleration,
                                                                   m_raw_IMU_measurements[imu].angular_velocity);
@@ -302,7 +302,7 @@ bool yarp::dev::baseEstimatorV1::updateIMUAttitudeQEKF()
     m_imu_attitude_qekf->propagateStates();
     for (size_t imu = 0; imu < (size_t)m_whole_body_imu_interface.size(); imu++)
     {
-        if (m_raw_IMU_measurements[imu].sensor_name == m_head_imu_name)
+        if (m_raw_IMU_measurements[imu].sensor_name == m_imu_name)
         {
             m_imu_attitude_qekf->updateFilterWithMeasurements(m_raw_IMU_measurements[imu].linear_proper_acceleration,
                                                               m_raw_IMU_measurements[imu].angular_velocity);
@@ -326,7 +326,7 @@ iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMU_H_NeckBaseAtZero()
     initial_positions(0) = initial_positions(1) = initial_positions(2) = 0.0;
     temp_kin_comp.setRobotState(initial_positions, initial_velocities, gravity);
 
-    return temp_kin_comp.getRelativeTransform(m_head_imu_name, "head");
+    return temp_kin_comp.getRelativeTransform(m_imu_name, m_head_imu_link);
 }
 
 iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMUCorrectionWithNeckKinematics()
@@ -337,14 +337,14 @@ iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMUCorrectionWithNeckKine
         m_imu_H_neck_base_at_zero = getHeadIMU_H_NeckBaseAtZero();
         m_imu_aligned = true;
     }
-    iDynTree::Transform imu_H_neck_base =  m_kin_dyn_comp.getRelativeTransform(m_head_imu_name, "head");
+    iDynTree::Transform imu_H_neck_base =  m_kin_dyn_comp.getRelativeTransform(m_imu_name, m_head_imu_link);
     return imu_H_neck_base*(m_imu_H_neck_base_at_zero.inverse());
 }
 
 
 bool yarp::dev::baseEstimatorV1::alignIMUFrames()
 {
-    iDynTree::Rotation b_R_head_imu = m_kin_dyn_comp.getRelativeTransform(m_base_link_name, m_head_imu_name).getRotation();
+    iDynTree::Rotation b_R_imu = m_kin_dyn_comp.getRelativeTransform(m_base_link_name, m_imu_name).getRotation();
     iDynTree::Rotation wIMU_R_IMU_0;
     if (m_attitude_estimator_type == "qekf")
     {
@@ -359,7 +359,7 @@ bool yarp::dev::baseEstimatorV1::alignIMUFrames()
         yError() << "floatingBaseEstimatorV1: " << "Not using any attitude estimator, cannot align IMU frames";
     }
     iDynTree::Rotation w_R_b =  iDynTree::Rotation::RPY(m_world_pose_base_in_R6(3), m_world_pose_base_in_R6(4), m_world_pose_base_in_R6(5));
-    m_head_imu_calibration_matrix = w_R_b*b_R_head_imu*wIMU_R_IMU_0.inverse();
+    m_imu_calibration_matrix = w_R_b*b_R_imu*wIMU_R_IMU_0.inverse();
     return true;
 }
 
@@ -375,14 +375,20 @@ iDynTree::Rotation yarp::dev::baseEstimatorV1::getBaseOrientationFromIMU()
         m_imu_attitude_qekf->getOrientationEstimateAsRotationMatrix(wIMU_R_IMU);
     }
 
-//     iDynTree::Rotation wIMU_R_wIMUNeckAtZero
- // = getHeadIMUCorrectionWithNeckKinematics().getRotation();
-    iDynTree::Rotation IMU_R_b = m_kin_dyn_comp.getRelativeTransform(m_head_imu_name, m_base_link_name).getRotation();
+    iDynTree::Rotation IMU_R_b = m_kin_dyn_comp.getRelativeTransform(m_imu_name, m_base_link_name).getRotation();
+    iDynTree::Rotation wIMU_R_b;
+    if (m_is_head_imu)
+    {
+        iDynTree::Rotation wIMU_R_wIMUNeckAtZero = getHeadIMUCorrectionWithNeckKinematics().getRotation();
+        // correct IMU with neck kinematics
+        wIMU_R_b = wIMU_R_wIMUNeckAtZero*wIMU_R_IMU*IMU_R_b;
+    }
+    else
+    {
+        wIMU_R_b = wIMU_R_IMU*IMU_R_b;
+    }
 
-    // correct IMU with neck kinematics
-//     iDynTree::Rotation wIMU_R_b = wIMU_R_wIMUNeckAtZero*wIMU_R_IMU*IMU_R_b;
-    iDynTree::Rotation wIMU_R_b = wIMU_R_IMU*IMU_R_b;
-    return (m_head_imu_calibration_matrix * wIMU_R_b);
+    return (m_imu_calibration_matrix * wIMU_R_b);
 }
 
 bool yarp::dev::baseEstimatorV1::updateBasePoseWithIMUEstimates()
@@ -477,10 +483,10 @@ bool yarp::dev::baseEstimatorV1::updateBaseVelocityWithIMU()
 {
     using iDynTree::toEigen;
     iDynTree::Vector3 y_acc;
-    // works only for waist IMU, waist IMU name is stored in the variable m_head_imu_name
+
     for (size_t imu = 0; imu < (size_t)m_whole_body_imu_interface.size(); imu++)
     {
-        if (m_raw_IMU_measurements[imu].sensor_name == m_head_imu_name) // change my name
+        if (m_raw_IMU_measurements[imu].sensor_name == m_imu_name)
         {
             y_acc = m_raw_IMU_measurements[imu].linear_proper_acceleration;
 
@@ -503,7 +509,7 @@ bool yarp::dev::baseEstimatorV1::updateBaseVelocityWithIMU()
         m_imu_attitude_qekf->getInternalState(state_buffer);
     }
 
-    iDynTree::Rotation w_R_IMU = m_head_imu_calibration_matrix*wIMU_R_IMU;
+    iDynTree::Rotation w_R_IMU = m_imu_calibration_matrix*wIMU_R_IMU;
     iDynTree::Vector3 gravity;
     gravity.zero();
     gravity(2) = -9.8;

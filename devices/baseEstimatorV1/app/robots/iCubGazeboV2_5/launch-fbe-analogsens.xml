@@ -42,11 +42,19 @@
         <param name="localPortPrefix">/baseestimation</param>
     </device>
 
-    <!-- open imu -->
+    <!-- open head imu -->
    <device name="inertial" type="genericSensorClient">
         <param name="remote">/icubSim/inertial</param>
         <param name="local">/baseestimation/head/imu:i</param>
     </device>
+
+    <!-- open root link imu -->
+<!--
+    <device name="xsens_inertial" type="genericSensorClient">
+        <param name="remote">/icubSim/xsens_inertial</param>
+        <param name="local">/baseestimation/waist/imu:i</param>
+    </device>
+    -->
 
     <!-- open FT sens -->
     <device name="left_upper_arm_strain" type="analogsensorclient">

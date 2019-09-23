@@ -518,7 +518,9 @@ namespace yarp {
         std::string m_initial_primary_foot{"left"}; ///< initial primary foot for the contact classifier
         iDynTree::AttitudeMahonyFilterParameters m_imu_attitude_observer_params; ///< parameters for the attitude observer
         iDynTree::AttitudeQuaternionEKFParameters m_imu_attitude_qekf_params;
-        std::string m_head_imu_name{"head_imu_acc_1x1"};
+        std::string m_imu_name{"head_imu_acc_1x1"};
+        bool m_is_head_imu{true};
+        std::string m_head_imu_link{"head"};
 
         // robot model and sensors
         iDynTree::Model m_model; ///< iDynTree object of loaded robot model
@@ -582,7 +584,7 @@ namespace yarp {
 
         iDynTree::RPY m_imu_attitude_estimate_as_rpy;
 
-        iDynTree::Rotation m_head_imu_calibration_matrix;
+        iDynTree::Rotation m_imu_calibration_matrix;
         iDynTree::Transform m_imu_H_neck_base_at_zero;
         bool m_imu_aligned{false};
 

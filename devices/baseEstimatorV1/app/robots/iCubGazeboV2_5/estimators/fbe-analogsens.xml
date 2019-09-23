@@ -16,6 +16,8 @@
         <param name="base_link">root_link</param>
         <param name="left_foot_ft_sensor">l_foot_ft_sensor</param>
         <param name="right_foot_ft_sensor">r_foot_ft_sensor</param>
+        <param name="imu_name">head_imu_acc_1x1</param> <!-- options are: "head_imu_acc_1x1" or "root_link_imu_acc" -->
+        <param name="head_imu_link">head</param>
 
         <param name="publish_debug_ports">false</param>
         <param name="dump_data">false</param>
@@ -38,8 +40,6 @@
         <param name="mahony_kp">0.7</param>
         <param name="mahony_ki">0.001</param>
         <param name="mahony_use_magnetometer">false</param>
-        <!-- <param name="imu_name">root_link_ems_acc_eb5</param> -->
-        <param name="imu_name">head_imu_acc_1x1</param>
         <param name="initial_orientation_in_rpy">(0 0 0)</param>
 
         <!-- attitude qekf parameters -->
@@ -79,7 +79,7 @@
                 <elem name="all_joints">all_joints_mc</elem>
             <!-- imu -->
                 <elem name="head_imu_acc_1x1">inertial</elem>
-<!--                 <elem name="root_link_ems_acc_eb5">inertial</elem> -->
+<!--                 <elem name="root_link_imu_acc">xsens_inertial</elem> -->
             <!-- f/t sensors -->
                 <elem name="l_arm_ft_sensor">left_upper_arm_strain</elem>
                 <elem name="r_arm_ft_sensor">right_upper_arm_strain</elem>
