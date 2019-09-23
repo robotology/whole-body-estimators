@@ -40,7 +40,7 @@ This estimator uses the kinematics, IMU mounted on the head and the contact forc
    * `startFloatingBaseFilter`: starts the estimator, this needs to be run after the FT sensors are reset;
 
    other optional commands include,
-   
+
    * `setContactSchmittThreshold lbreak lmake rbreak rmake`: used to set contact force thresholds for feet contact detection;
    * `setPrimaryFoot foot`: set the foot to the one that does not break the contact initially during walking, `foot` can be `left` or `right`;
    * `useJointVelocityLPF flag`: use a low pass filter on the joint velocities, `flag` can be `true` or `false`;
@@ -51,8 +51,8 @@ This estimator uses the kinematics, IMU mounted on the head and the contact forc
 
 ## Configuration
 
-The configuration file for the estimator can be found `app/robots/${YARP_ROBOT_NAME}/fbe-analogsens.xml`. 
-The attitude estimation for the head IMU can be chosen to be either a QuaternionEKF or a non-linear complementary filter. The gains should be tuned accordingly.
+The configuration file for the estimator can be found `app/robots/${YARP_ROBOT_NAME}/fbe-analogsens.xml`.
+The attitude estimation for the IMU can be chosen to be either a QuaternionEKF or a non-linear complementary filter. The gains should be tuned accordingly. The choice of which IMU to use can also be chosen, however please read the note below.
 
 ## How to dump data
 Before run `yarprobotinterface` check if [`dump_data`](app/robots/iCubGazeboV2_5/fbe-analogsens.xml#L14) is set to `true`
@@ -70,3 +70,19 @@ You can follow the same instructions of the simulation section without using `YA
 Currently the supported robots are only:
 - ``iCubGenova04``
 - ``icubGazeboV2_5``
+
+---
+**Note**
+If you would like to use root link IMU instead of head IMU (default is Head IMU), please uncomment the following lines in `launch-fbe-analogsens.xml`
+``` xml
+<device name="xsens_inertial" type="genericSensorClient">
+        <param name="remote">/icubSim/xsens_inertial</param>
+        <param name="local">/baseestimation/waist/imu:i</param>
+</device>
+```
+
+and the following line in `fbe-analogsens.xml`
+```xml
+<elem name="root_link_imu_acc">xsens_inertial</elem>
+```
+---

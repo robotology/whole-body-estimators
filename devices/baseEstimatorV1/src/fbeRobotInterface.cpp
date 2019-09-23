@@ -108,6 +108,26 @@ bool yarp::dev::baseEstimatorV1::loadEstimator()
     m_sensors_list = model_loader.sensors();
     m_sensor_measurements.resize(m_sensors_list);
 
+    // check imu relevant information
+    auto imu_frame_idx = m_model.getFrameIndex(m_imu_name);
+    if (imu_frame_idx == iDynTree::FRAME_INVALID_INDEX)
+    {
+        yError() << "floatingBaseEstimatorV1: " <<  "Invalid IMU name specified as parameter \"imu_name\". Not available in the given model";
+        return false;
+    }
+
+    auto imu_link{m_model.getFrameLink(imu_frame_idx)};
+    if (imu_link != m_model.getDefaultBaseLink() || imu_link != m_model.getLinkIndex(m_head_imu_link))
+    {
+        yError() << "floatingBaseEstimatorV1: " <<  "IMU is assumed to be rigidly attached to the base link or the mentioned head link (if head IMU is used).";
+        return false;
+    }
+
+    if (imu_link == m_model.getDefaultBaseLink())
+    {
+        m_is_head_imu = false;
+    }
+
     m_kin_dyn_comp.loadRobotModel(m_model);
 
     resizeBuffers();

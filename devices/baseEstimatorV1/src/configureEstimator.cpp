@@ -144,11 +144,20 @@ bool yarp::dev::baseEstimatorV1::loadEstimatorParametersFromConfig(const yarp::o
 
     if (config.check("imu_name") && config.find("imu_name").isString())
     {
-        m_head_imu_name = config.find("imu_name").asString();
+        m_imu_name = config.find("imu_name").asString();
     }
     else
     {
-        yWarning() << "floatingBaseEstimatorV1: " << "Attitude estimator will get IMU measurements from default IMU with name: " << m_head_imu_name ;
+        yWarning() << "floatingBaseEstimatorV1: " << "Attitude estimator will get IMU measurements from default IMU with name: " << m_imu_name ;
+    }
+
+    if (config.check("head_imu_link") && config.find("head_imu_link").isString())
+    {
+        m_head_imu_link = config.find("head_imu_link").asString();
+    }
+    else
+    {
+        yWarning() << "floatingBaseEstimatorV1: " << "Head IMU link is assumed as link with the name: " << m_head_imu_link ;
     }
 
     if (m_attitude_estimator_type == "mahony")
