@@ -160,6 +160,41 @@ bool yarp::dev::baseEstimatorV1::loadEstimatorParametersFromConfig(const yarp::o
         yWarning() << "floatingBaseEstimatorV1: " << "Head IMU link is assumed as link with the name: " << m_head_imu_link ;
     }
 
+    yarp::os::Value* upper_body_joint_names_list;
+    if(!config.check("head_to_base_joints_list", upper_body_joint_names_list))
+    {
+        yError() <<  "floatingBaseEstimatorV1: " <<" Unable to find the head to base joints list";
+        return false;
+    }
+
+    if(!YarpHelper::yarpListToStringVector(upper_body_joint_names_list, m_head_to_base_joints_list))
+    {
+        return false;
+    }
+
+    if (config.check("head_to_base_joints_list_zero_pos") && config.find("head_to_base_joints_list_zero_pos").isList())
+    {
+        yarp::os::Bottle* upper_body_joint_zero_pos;
+        upper_body_joint_zero_pos = config.find("head_to_base_joints_list_zero_pos").asList();
+
+        if (upper_body_joint_zero_pos == nullptr || upper_body_joint_zero_pos->size() != m_head_to_base_joints_list.size())
+        {
+            m_head_to_base_joints_list_zero_pos.resize(m_head_to_base_joints_list.size());
+            m_head_to_base_joints_list_zero_pos.zero();
+        }
+
+        m_head_to_base_joints_list_zero_pos.resize(upper_body_joint_zero_pos->size());
+        for (auto idx = 0; idx < upper_body_joint_zero_pos->size(); idx++)
+        {
+            m_head_to_base_joints_list_zero_pos(idx) = upper_body_joint_zero_pos->get(idx).asDouble();
+        }
+    }
+    else
+    {
+        m_head_to_base_joints_list_zero_pos.resize(m_head_to_base_joints_list.size());
+        m_head_to_base_joints_list_zero_pos.zero();
+    }
+
     if (m_attitude_estimator_type == "mahony")
     {
         ok = loadIMUAttitudeMahonyEstimatorParametersFromConfig(config) && ok;

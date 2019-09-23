@@ -587,6 +587,8 @@ namespace yarp {
         iDynTree::Rotation m_imu_calibration_matrix;
         iDynTree::Transform m_imu_H_neck_base_at_zero;
         bool m_imu_aligned{false};
+        std::vector<std::string> m_head_to_base_joints_list;
+        iDynTree::VectorDynSize m_head_to_base_joints_list_zero_pos;
 
         std::string m_current_fixed_frame; ///< current frame associated to the fixed link in legged odometery
         std::string m_previous_fixed_frame; ///< previous frame associated to the fixed link in legged odometery

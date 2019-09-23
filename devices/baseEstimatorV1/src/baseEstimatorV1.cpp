@@ -322,10 +322,30 @@ iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMU_H_NeckBaseAtZero()
     iDynTree::Vector3 gravity;
     gravity.zero();
     gravity(2) = -9.81;
-    // set neck pitch, roll and yaw to zero
-    initial_positions(0) = initial_positions(1) = initial_positions(2) = 0.0;
-    temp_kin_comp.setRobotState(initial_positions, initial_velocities, gravity);
 
+    bool broke{false};
+    int vecDynIdx{0};
+    for (auto& upper_body_joint : m_head_to_base_joints_list)
+    {
+        std::vector<std::string>::iterator iter = std::find(m_estimation_joint_names.begin(), m_estimation_joint_names.end(), upper_body_joint);
+        if (iter != m_estimation_joint_names.end())
+        {
+            size_t idx = std::distance(m_estimation_joint_names.begin(), iter);
+            initial_positions(idx) = m_head_to_base_joints_list_zero_pos(vecDynIdx++);
+        }
+        else
+        {
+            broke = true;
+            break;
+        }
+    }
+
+    if (broke)
+    {
+        return iDynTree::Transform::Identity();
+    }
+
+    temp_kin_comp.setRobotState(initial_positions, initial_velocities, gravity);
     return temp_kin_comp.getRelativeTransform(m_imu_name, m_head_imu_link);
 }
 
