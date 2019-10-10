@@ -86,3 +86,26 @@ and the following line in `fbe-analogsens.xml`
 <elem name="root_link_imu_acc">xsens_inertial</elem>
 ```
 ---
+# Troubleshooting
+## yarprobotinterface closes with the message, "baseEstimatorV1 device not found"
+In order to check if the `baseEstimatorV1` device has been properly installed and `YARP` is being able to identify the location of the device library, we can run
+```sh
+yarpdev --list
+```
+to check if `baseEstimatorV1` plugin has been listed with the set of YARP devices with the following message
+```sh
+[INFO]Device "baseEstimatorV1", available on request
+```
+
+In case this is not seen, check again properly if the `YARP_DATA_DIRS` has been properly updated.
+
+If the following error message is seen,
+```sh
+[Warning]Device "baseEstimatorV1", Wrong library name
+```
+then, it can be fixed by adding the following line in your `.bashrc` file
+```sh
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:${WBDEstimator_INSTALL_DIR}/lib/yarp
+```
+
+and run `sudo ldconfig` on your terminal.

@@ -327,20 +327,20 @@ namespace yarp {
         iDynTree::Rotation getBaseOrientationFromIMU();
 
         /**
-         * @brief Get the home transform of the neck to IMU to be used for correcting the
-         *        transform due to neck kinematics. this is useful only when using the head IMU
+         * @brief Get the home transform of the base to head IMU to be used for correcting the
+         *        transform due to upper body kinematics. this is useful only when using the head IMU
          * @note this method needs to be used only if using the head IMU, not applicable for the waist IMU
-         * @return iDynTree::Transform return HEADIMU_H_NeckBaseAtHomePosition
+         * @return iDynTree::Transform return HEADIMU_H_BaseAtHomePosition
          */
-        iDynTree::Transform getHeadIMU_H_NeckBaseAtZero();
+        iDynTree::Transform getHeadIMU_H_BaseAtZero();
 
         /**
          * @brief Get the correction transform to be used for correcting the
-         *        transform due to neck kinematics. this is useful only when using the head IMU
+         *        transform due to upper body kinematics. this is useful only when using the head IMU
          * @note this method needs to be used only if using the head IMU, not applicable for the waist IMU
-         * @return iDynTree::Transform return HEADIMU_H_NeckBase
+         * @return iDynTree::Transform return HEADIMU_H_Base
          */
-        iDynTree::Transform getHeadIMUCorrectionWithNeckKinematics();
+        iDynTree::Transform getHeadIMUCorrectionWithUpperBodyKinematics();
 
         /**
          * @brief update the fixed frame and kinematic measurements for legged odometry and
@@ -365,11 +365,11 @@ namespace yarp {
 
         /**
          * @brief correct the orientation estimate of the Head IMU obtained from the
-         *        attitude estimator with the correction transform HEADIMU_H_NeckBase
+         *        attitude estimator with the correction transform HEADIMU_H_Base
          * @note this method needs to be used only if using the head IMU, not applicable for the waist IMU
          * @return true/false success/failure
          */
-        bool correctHeadIMUWithNeckKinematics();
+        bool correctHeadIMUWithUpperBodyKinematics();
 
         /**
          * @brief Fuses the world to base transform
@@ -585,8 +585,10 @@ namespace yarp {
         iDynTree::RPY m_imu_attitude_estimate_as_rpy;
 
         iDynTree::Rotation m_imu_calibration_matrix;
-        iDynTree::Transform m_imu_H_neck_base_at_zero;
+        iDynTree::Transform m_imu_H_base_at_zero;
         bool m_imu_aligned{false};
+        std::vector<std::string> m_head_to_base_joints_list;
+        iDynTree::VectorDynSize m_head_to_base_joints_list_zero_pos;
 
         std::string m_current_fixed_frame; ///< current frame associated to the fixed link in legged odometery
         std::string m_previous_fixed_frame; ///< previous frame associated to the fixed link in legged odometery

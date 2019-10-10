@@ -313,7 +313,7 @@ bool yarp::dev::baseEstimatorV1::updateIMUAttitudeQEKF()
     return true;
 }
 
-iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMU_H_NeckBaseAtZero()
+iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMU_H_BaseAtZero()
 {
     iDynTree::KinDynComputations temp_kin_comp;
     temp_kin_comp.loadRobotModel(m_model);
@@ -322,23 +322,44 @@ iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMU_H_NeckBaseAtZero()
     iDynTree::Vector3 gravity;
     gravity.zero();
     gravity(2) = -9.81;
-    // set neck pitch, roll and yaw to zero
-    initial_positions(0) = initial_positions(1) = initial_positions(2) = 0.0;
-    temp_kin_comp.setRobotState(initial_positions, initial_velocities, gravity);
 
+    bool broke{false};
+    int vecDynIdx{0};
+    for (auto& upper_body_joint : m_head_to_base_joints_list)
+    {
+        std::vector<std::string>::iterator iter = std::find(m_estimation_joint_names.begin(), m_estimation_joint_names.end(), upper_body_joint);
+        if (iter != m_estimation_joint_names.end())
+        {
+            size_t idx = std::distance(m_estimation_joint_names.begin(), iter);
+            initial_positions(idx) = m_head_to_base_joints_list_zero_pos(vecDynIdx++);
+        }
+        else
+        {
+            broke = true;
+            break;
+        }
+    }
+
+    if (broke)
+    {
+        yWarning() << "floatingBaseEstimatorV1: " << "home joint positions not mentioned for upper body kinematic chain. Using headIMU_H_baseAtZero as Identity" ; 
+        return iDynTree::Transform::Identity();
+    }
+
+    temp_kin_comp.setRobotState(initial_positions, initial_velocities, gravity);
     return temp_kin_comp.getRelativeTransform(m_imu_name, m_head_imu_link);
 }
 
-iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMUCorrectionWithNeckKinematics()
+iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMUCorrectionWithUpperBodyKinematics()
 {
-    // this funciton returns imu_H_imuAssumingNeckBaseToZero
+    // this funciton returns imu_H_imuAssumingBaseToZero
     if (!m_imu_aligned)
     {
-        m_imu_H_neck_base_at_zero = getHeadIMU_H_NeckBaseAtZero();
+        m_imu_H_base_at_zero = getHeadIMU_H_BaseAtZero();
         m_imu_aligned = true;
     }
-    iDynTree::Transform imu_H_neck_base =  m_kin_dyn_comp.getRelativeTransform(m_imu_name, m_head_imu_link);
-    return imu_H_neck_base*(m_imu_H_neck_base_at_zero.inverse());
+    iDynTree::Transform imu_H_base =  m_kin_dyn_comp.getRelativeTransform(m_imu_name, m_head_imu_link);
+    return imu_H_base*(m_imu_H_base_at_zero.inverse());
 }
 
 
@@ -379,9 +400,9 @@ iDynTree::Rotation yarp::dev::baseEstimatorV1::getBaseOrientationFromIMU()
     iDynTree::Rotation wIMU_R_b;
     if (m_is_head_imu)
     {
-        iDynTree::Rotation wIMU_R_wIMUNeckAtZero = getHeadIMUCorrectionWithNeckKinematics().getRotation();
-        // correct IMU with neck kinematics
-        wIMU_R_b = wIMU_R_wIMUNeckAtZero*wIMU_R_IMU*IMU_R_b;
+        iDynTree::Rotation wIMU_R_wIMUBaseAtZero = getHeadIMUCorrectionWithUpperBodyKinematics().getRotation();
+        // correct IMU with upperbody kinematics
+        wIMU_R_b = wIMU_R_wIMUBaseAtZero*wIMU_R_IMU*IMU_R_b;
     }
     else
     {
