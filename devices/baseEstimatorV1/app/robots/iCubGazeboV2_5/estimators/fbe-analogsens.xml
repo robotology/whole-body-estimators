@@ -58,11 +58,11 @@
 
         <!-- biped foot contact classifier parameters -->
         <param name="initial_primary_foot">right</param>
-        <param name="schmitt_stable_contact_make_time">1.0</param>
-        <param name="schmitt_stable_contact_break_time">1.0</param>
+        <param name="schmitt_stable_contact_make_time">0.01</param>
+        <param name="schmitt_stable_contact_break_time">0.01</param>
         <param name="left_schmitt_contact_make_force_threshold">130.0</param>
         <param name="left_schmitt_contact_break_force_threshold">25.0</param>
-        <param name="right_schmitt_contact_make_force_threshold">150.0</param>
+        <param name="right_schmitt_contact_make_force_threshold">130.0</param>
         <param name="right_schmitt_contact_break_force_threshold">25.0</param>
 
         <!-- whole body dynamics for getting contact forces -->
