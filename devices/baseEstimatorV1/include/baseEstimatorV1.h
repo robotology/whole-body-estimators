@@ -394,6 +394,8 @@ namespace yarp {
          */
         bool updateBaseVelocityWithIMU();
 
+        bool setRobotStateWithZeroBaseVelocity();
+
         /**
          * @brief parent method for other publish methods
          */
@@ -484,10 +486,15 @@ namespace yarp {
         virtual bool setPrimaryFoot(const std::string& primary_foot);
         virtual std::string getRefFrameForWorld();
         virtual Pose6D getRefPose6DForWorld();
+        virtual bool resetIMU();
         virtual bool resetLeggedOdometry();
         virtual bool resetLeggedOdometryWithRefFrame(const std::string& ref_frame,
                                                     const double x, const double y, const double z,
                                                     const double roll, const double pitch, const double yaw);
+        virtual bool resetEstimator();
+        virtual bool resetEstimatorWithRefFrame(const std::string& ref_frame,
+                                            const double x, const double y, const double z,
+                                            const double roll, const double pitch, const double yaw);
         virtual bool startFloatingBaseFilter();
         virtual bool useJointVelocityLPF(const bool flag);
         virtual bool setJointVelocityLPFCutoffFrequency(const double freq);

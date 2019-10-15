@@ -318,6 +318,7 @@ iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMU_H_BaseAtZero()
     iDynTree::KinDynComputations temp_kin_comp;
     temp_kin_comp.loadRobotModel(m_model);
     iDynTree::JointPosDoubleArray initial_positions{m_joint_positions}, initial_velocities{m_joint_positions};
+    initial_positions.zero();
     initial_velocities.zero();
     iDynTree::Vector3 gravity;
     gravity.zero();
@@ -342,7 +343,7 @@ iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMU_H_BaseAtZero()
 
     if (broke)
     {
-        yWarning() << "floatingBaseEstimatorV1: " << "home joint positions not mentioned for upper body kinematic chain. Using headIMU_H_baseAtZero as Identity" ; 
+        yWarning() << "floatingBaseEstimatorV1: " << "home joint positions not mentioned for upper body kinematic chain. Using headIMU_H_baseAtZero as Identity" ;
         return iDynTree::Transform::Identity();
     }
 
@@ -358,6 +359,7 @@ iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMUCorrectionWithUpperBod
         m_imu_H_base_at_zero = getHeadIMU_H_BaseAtZero();
         m_imu_aligned = true;
     }
+    setRobotStateWithZeroBaseVelocity();
     iDynTree::Transform imu_H_base =  m_kin_dyn_comp.getRelativeTransform(m_imu_name, m_head_imu_link);
     return imu_H_base*(m_imu_H_base_at_zero.inverse());
 }
@@ -365,6 +367,7 @@ iDynTree::Transform yarp::dev::baseEstimatorV1::getHeadIMUCorrectionWithUpperBod
 
 bool yarp::dev::baseEstimatorV1::alignIMUFrames()
 {
+    setRobotStateWithZeroBaseVelocity();
     iDynTree::Rotation b_R_imu = m_kin_dyn_comp.getRelativeTransform(m_base_link_name, m_imu_name).getRotation();
     iDynTree::Rotation wIMU_R_IMU_0;
     if (m_attitude_estimator_type == "qekf")
@@ -416,6 +419,7 @@ bool yarp::dev::baseEstimatorV1::updateBasePoseWithIMUEstimates()
 {
     double updated_roll;
     double updated_pitch;
+
     iDynTree::Rotation w_R_b_imu = getBaseOrientationFromIMU();
     double weight_imu_on_roll{m_imu_confidence_roll}, weight_imu_on_pitch{m_imu_confidence_roll};
     std::string fixed_link;
@@ -446,7 +450,10 @@ bool yarp::dev::baseEstimatorV1::updateBasePoseWithIMUEstimates()
     iDynTree::Position w_p_b = w_p_fl - (w_R_b*b_p_fl);
 
     w_H_b.setRotation(w_R_b);
-    //w_H_b.setPosition(w_p_b);
+    if (m_no_foot_in_contact)
+    {
+        w_H_b.setPosition(w_p_b);
+    }
 
     yarp::eigen::toEigen(m_world_pose_base_in_R6).block<3,1>(0,0) =  iDynTree::toEigen(w_H_b.getPosition());
     yarp::eigen::toEigen(m_world_pose_base_in_R6).block<3,1>(3,0) =  iDynTree::toEigen(w_H_b.getRotation().asRPY());
@@ -461,22 +468,15 @@ bool yarp::dev::baseEstimatorV1::updateBaseVelocity()
     using iDynTree::toEigen;
     using iDynTree::toYarp;
 
-    if (!m_model.getFrameIndex(m_initial_fixed_frame))
+    if (!m_model.getFrameIndex(m_current_fixed_frame))
     {
         return false;
     }
-    iDynTree::Transform w_H_b_estimate;
-    toiDynTree(m_world_H_base, w_H_b_estimate);
 
-    iDynTree::Vector3 gravity;
-    gravity(2) = -9.8;
-
-    // we assume here the base velocity is zero, since the following computation
-    // gives us the floating jacobian which is dependent only on the joint positions
-    // and floating base pose due to mixed velocity representation
-    iDynTree::Twist base_velocity;
-    base_velocity.zero();
-    m_kin_dyn_comp.setRobotState(w_H_b_estimate, m_joint_positions, base_velocity, m_joint_velocities, gravity);
+    if (!setRobotStateWithZeroBaseVelocity())
+    {
+        return false;
+    }
 
     size_t n_joints = m_joint_velocities.size();
     iDynTree::MatrixDynSize contact_jacobian(6, (n_joints + 6));
@@ -497,6 +497,24 @@ bool yarp::dev::baseEstimatorV1::updateBaseVelocity()
     iDynTree::Vector6 floating_base_velocity;
     toEigen(floating_base_velocity) = -contact_jacobian_base_inverse * toEigen(contact_jacobian_shape) * toEigen(m_joint_velocities);
     toYarp(floating_base_velocity, m_world_velocity_base);
+    return true;
+}
+
+bool yarp::dev::baseEstimatorV1::setRobotStateWithZeroBaseVelocity()
+{
+    iDynTree::Transform w_H_b_estimate;
+    toiDynTree(m_world_H_base, w_H_b_estimate);
+
+    iDynTree::Vector3 gravity;
+    gravity(2) = -9.8;
+
+    // we assume here the base velocity is zero, since the following computation
+    // gives us the floating jacobian which is dependent only on the joint positions
+    // and floating base pose due to mixed velocity representation
+    iDynTree::Twist base_velocity;
+    base_velocity.zero();
+    m_kin_dyn_comp.setRobotState(w_H_b_estimate, m_joint_positions, base_velocity, m_joint_velocities, gravity);
+
     return true;
 }
 
@@ -653,7 +671,7 @@ void yarp::dev::baseEstimatorV1::publishIMUAttitudeQEKFEstimates()
 
 void yarp::dev::baseEstimatorV1::publishTransform()
 {
-    m_transform_interface->setTransform(m_base_link_name, "world", m_world_H_base);
+    m_transform_interface->setTransform(m_robot+"/"+m_base_link_name, "world", m_world_H_base);
 }
 
 bool yarp::dev::baseEstimatorV1::initializeLogger()
@@ -754,6 +772,7 @@ void yarp::dev::baseEstimatorV1::run()
             {
                 updateIMUAttitudeQEKF();
             }
+
             updateBasePoseWithIMUEstimates();
             updateBaseVelocity();
             //updateBaseVelocityWithIMU();
@@ -964,6 +983,34 @@ bool yarp::dev::baseEstimatorV1::resetLeggedOdometry()
     yarp::os::LockGuard guard(m_device_mutex);
     m_legged_odometry->updateKinematics(m_joint_positions);
     bool ok = m_legged_odometry->init(m_initial_fixed_frame, m_initial_reference_frame_for_world, m_initial_reference_frame_H_world);
+    updateLeggedOdometry();
+    return ok;
+}
+
+bool yarp::dev::baseEstimatorV1::resetIMU()
+{
+    yarp::os::LockGuard guard(m_device_mutex);
+    bool ok{false};
+    if (m_attitude_estimator_type == "qekf")
+    {
+        ok = initializeIMUAttitudeQEKF();
+    }
+    else if (m_attitude_estimator_type == "mahony")
+    {
+        ok = initializeIMUAttitudeEstimator();
+    }
+
+    ok = alignIMUFrames();
+    updateBasePoseWithIMUEstimates();
+   return ok;
+}
+
+bool yarp::dev::baseEstimatorV1::resetEstimator()
+{
+    bool ok{false};
+    // stick to this order because alignIMUFrames depends on w_R_b estimate from LO
+    ok = resetLeggedOdometry();
+    ok = resetIMU();
     return ok;
 }
 
@@ -999,7 +1046,19 @@ bool yarp::dev::baseEstimatorV1::resetLeggedOdometryWithRefFrame(const std::stri
     }
     m_legged_odometry->changeFixedFrame(ref_frame);
 
+    updateLeggedOdometry();
     m_state = FilterFSM::RUNNING;
+    return ok;
+}
+
+bool yarp::dev::baseEstimatorV1::resetEstimatorWithRefFrame(const std::string& ref_frame,
+                                                    const double x, const double y, const double z,
+                                                    const double roll, const double pitch, const double yaw)
+{
+    bool ok{false};
+    // stick to this order because alignIMUFrames depends on w_R_b estimate from LO
+    ok = resetLeggedOdometryWithRefFrame(ref_frame, x, y, z, roll, pitch, yaw);
+    ok = resetIMU();
     return ok;
 }
 

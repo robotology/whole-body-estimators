@@ -5,7 +5,7 @@
  * This software may be modified and distributed under the terms of the
  * GNU Lesser General Public License v2.1 or any later version.
  */
- 
+
 struct Pose6D
 {
     1: double x; 2: double y; 3: double z;
@@ -23,9 +23,14 @@ service floatingBaseEstimationRPC
 
     bool setPrimaryFoot(1: string primary_foot);
 
+    bool resetIMU();
     bool resetLeggedOdometry();
     bool resetLeggedOdometryWithRefFrame(1: string ref_frame, 2: double x, 3: double y, 4: double z,
                                        5: double roll, 6: double pitch, 7: double yaw);
+    bool resetEstimator();
+    bool resetEstimatorWithRefFrame(1: string ref_frame, 2: double x, 3: double y, 4: double z,
+                                 5: double roll, 6: double pitch, 7: double yaw);
+
     string getRefFrameForWorld();
     Pose6D getRefPose6DForWorld();
     bool useJointVelocityLPF(1: bool flag);
