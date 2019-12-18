@@ -60,7 +60,7 @@ yarp::dev::baseEstimatorV1::baseEstimatorV1(): PeriodicThread(0.01, yarp::os::Sh
 
 bool yarp::dev::baseEstimatorV1::open(yarp::os::Searchable& config)
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     if (!configureWholeBodyDynamics(config))
     {
         yError() << "floatingBaseEstimatorV1: " <<  "Could not connect to wholebodydynamics";
@@ -764,7 +764,7 @@ void yarp::dev::baseEstimatorV1::publish()
 
 void yarp::dev::baseEstimatorV1::run()
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
 
     if(m_state != FilterFSM::RUNNING)
         return;
@@ -904,7 +904,7 @@ void yarp::dev::baseEstimatorV1::closeDevice()
 
 bool yarp::dev::baseEstimatorV1::close()
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     closeDevice();
 
     return true;
@@ -919,21 +919,21 @@ yarp::dev::baseEstimatorV1::~baseEstimatorV1()
 
 bool yarp::dev::baseEstimatorV1::setMahonyKp(const double kp)
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     m_imu_attitude_observer->setGainkp(kp);
     return true;
 }
 
 bool yarp::dev::baseEstimatorV1::setMahonyKi(const double ki)
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     m_imu_attitude_observer->setGainki(ki);
     return true;
 }
 
 bool yarp::dev::baseEstimatorV1::setMahonyTimeStep(const double timestep)
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     m_imu_attitude_observer->setTimeStepInSeconds(timestep);
     return true;
 }
@@ -941,7 +941,7 @@ bool yarp::dev::baseEstimatorV1::setMahonyTimeStep(const double timestep)
 bool yarp::dev::baseEstimatorV1::setContactSchmittThreshold(const double l_fz_break, const double l_fz_make,
                                                                         const double r_fz_break, const double r_fz_make)
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     m_biped_foot_contact_classifier->m_leftFootContactClassifier->m_contactSchmitt->setLowValueThreshold(l_fz_break);
     m_biped_foot_contact_classifier->m_leftFootContactClassifier->m_contactSchmitt->setHighValueThreshold(l_fz_make);
     m_biped_foot_contact_classifier->m_rightFootContactClassifier->m_contactSchmitt->setLowValueThreshold(r_fz_break);
@@ -955,7 +955,7 @@ bool yarp::dev::baseEstimatorV1::setContactSchmittThreshold(const double l_fz_br
 
 std::string yarp::dev::baseEstimatorV1::getEstimationJointsList()
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     std::stringstream ss;
     for (int i = 0; i < m_estimation_joint_names.size(); i++)
     {
@@ -975,7 +975,7 @@ std::string yarp::dev::baseEstimatorV1::getEstimationJointsList()
 
 bool yarp::dev::baseEstimatorV1::setPrimaryFoot(const std::string& primary_foot)
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     if (primary_foot == "right")
     {
         m_current_fixed_frame = "r_foot";
@@ -1002,13 +1002,13 @@ bool yarp::dev::baseEstimatorV1::setPrimaryFoot(const std::string& primary_foot)
 
 std::string yarp::dev::baseEstimatorV1::getRefFrameForWorld()
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     return m_initial_reference_frame_for_world;
 }
 
 Pose6D yarp::dev::baseEstimatorV1::getRefPose6DForWorld()
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     Pose6D ref_pose_world;
     ref_pose_world.x = m_initial_reference_frame_H_world.getPosition()(0);
     ref_pose_world.y = m_initial_reference_frame_H_world.getPosition()(1);
@@ -1021,7 +1021,7 @@ Pose6D yarp::dev::baseEstimatorV1::getRefPose6DForWorld()
 
 bool yarp::dev::baseEstimatorV1::resetLeggedOdometry()
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     m_legged_odometry->updateKinematics(m_joint_positions);
     bool ok = m_legged_odometry->init(m_initial_fixed_frame, m_initial_reference_frame_for_world, m_initial_reference_frame_H_world);
     updateLeggedOdometry();
@@ -1030,7 +1030,7 @@ bool yarp::dev::baseEstimatorV1::resetLeggedOdometry()
 
 bool yarp::dev::baseEstimatorV1::resetIMU()
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     bool ok{false};
     if (m_attitude_estimator_type == "qekf")
     {
@@ -1057,7 +1057,7 @@ bool yarp::dev::baseEstimatorV1::resetEstimator()
 
 bool yarp::dev::baseEstimatorV1::startFloatingBaseFilter()
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     m_state = FilterFSM::RUNNING;
     return true;
 }
@@ -1066,7 +1066,7 @@ bool yarp::dev::baseEstimatorV1::resetLeggedOdometryWithRefFrame(const std::stri
                                                                       const double x, const double y, const double z,
                                                                       const double roll, const double pitch, const double yaw)
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     m_initial_reference_frame_for_world = ref_frame;
     iDynTree::Position w_p_b(x, y ,z);
     iDynTree::Rotation w_R_b{iDynTree::Rotation::RPY(roll, pitch, yaw)};

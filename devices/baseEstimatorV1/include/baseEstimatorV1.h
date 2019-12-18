@@ -38,7 +38,7 @@
 #include <string>
 #include <WalkingLogger.hpp>
 #include <thrifts/floatingBaseEstimationRPC.h>
-
+#include <mutex>
 #include <iCub/ctrl/filters.h>
 
 inline double deg2rad(const double angleInDeg)
@@ -521,7 +521,7 @@ namespace yarp {
         bool m_verbose{true}; ///< verbose outputs
         std::string m_port_prefix{"/base-estimator"};
 
-        yarp::os::Mutex m_device_mutex; ///< mutex to avoid resource clash
+        std::mutex m_device_mutex; ///< mutex to avoid resource clash
 
         // status flags
         bool m_device_initialized_correctly{false};
