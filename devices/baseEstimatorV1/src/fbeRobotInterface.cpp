@@ -30,7 +30,7 @@ bool  yarp::dev::baseEstimatorV1::sensorReadDryRun(bool verbose, bool (yarp::dev
 
 bool yarp::dev::baseEstimatorV1::attachAll(const yarp::dev::PolyDriverList& p)
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     if (!attachAllControlBoards(p))
     {
         yError() << "baseEstimatorV1: " <<  "Could not attach the control boards";
@@ -566,7 +566,7 @@ bool yarp::dev::baseEstimatorV1::loadTransformBroadcaster()
 
 bool yarp::dev::baseEstimatorV1::detachAll()
 {
-    yarp::os::LockGuard guard(m_device_mutex);
+    std::lock_guard<std::mutex> guard(m_device_mutex);
     m_device_initialized_correctly = false;
     if (isRunning())
     {
