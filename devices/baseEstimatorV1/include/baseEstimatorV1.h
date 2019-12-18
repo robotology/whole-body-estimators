@@ -394,7 +394,19 @@ namespace yarp {
          */
         bool updateBaseVelocityWithIMU();
 
+        /**
+         * @brief sets robot state for kindyncomputations object using estimated base pose,
+         *  kinematic measurements and zero base velocity
+         * @return true/false success/failure
+         */
         bool setRobotStateWithZeroBaseVelocity();
+
+        /**
+         * @brief get robot's center of mass position using estimated base pose and
+         *  kinematic measurements
+         * @return true/false success/failure
+         */
+        bool getCOMPositionAndVelocity(iDynTree::Position& com_position, iDynTree::Vector3& com_vel);
 
         /**
          * @brief parent method for other publish methods
@@ -425,6 +437,12 @@ namespace yarp {
          *        x y z roll pitch yaw vx vy vz omegax omegay omegaz
          */
         void publishFloatingBasePoseVelocity();
+
+        /**
+         * @brief publish center of mass position and velocity through YARP port
+         *       x y z vz vy vz
+         */
+        void publishCOMEstimate();
 
         /**
          * @brief publish feet contact state through YARP port
@@ -588,6 +606,7 @@ namespace yarp {
         yarp::os::BufferedPort<yarp::os::Bottle> m_imu_attitude_observer_estimated_state_port; ///< port to publish rotation as RPY and IMU gyro bias
         yarp::os::BufferedPort<yarp::os::Bottle> m_imu_attitude_qekf_estimated_state_port; ///< port to publish rotation as RPY and IMU gyro bias
         yarp::os::Port m_estimator_rpc_port; ///< RPC port for service calls
+        yarp::os::BufferedPort<yarp::os::Bottle> m_com_port; ///< port to publish estimated com position and velocity as x y z vx vy vz
 
         iDynTree::RPY m_imu_attitude_estimate_as_rpy;
 
@@ -614,6 +633,8 @@ namespace yarp {
         std::string m_left_sole{"l_sole"};
         iDynTree::Rotation m_l_sole_R_l_ft_sensor, m_r_sole_R_r_ft_sensor;
         iDynTree::KinDynComputations m_kin_dyn_comp;
+        iDynTree::Position m_com_position;
+        iDynTree::Vector3 m_com_velocity;
 
         std::string m_left_foot_cartesian_wrench_port_name, m_right_foot_cartesian_wrench_port_name;
         yarp::os::BufferedPort<yarp::sig::Vector> m_left_foot_cartesian_wrench_wbd_port, m_right_foot_cartesian_wrench_wbd_port;

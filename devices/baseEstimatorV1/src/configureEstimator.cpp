@@ -538,6 +538,13 @@ bool yarp::dev::baseEstimatorV1::openComms()
         return false;
     }
 
+    ok = m_com_port.open(m_port_prefix + "/center_of_mass/state:o");
+    if (!ok)
+    {
+        yError() << "floatingBaseEstimatorV1: " << "could not open port " << m_port_prefix + "/center_of_mass/state:o";
+        return false;
+    }
+
     return true;
 }
 

@@ -518,6 +518,28 @@ bool yarp::dev::baseEstimatorV1::setRobotStateWithZeroBaseVelocity()
     return true;
 }
 
+bool yarp::dev::baseEstimatorV1::getCOMPositionAndVelocity(iDynTree::Position& com_position, iDynTree::Vector3& com_vel)
+{
+    iDynTree::Transform w_H_b_estimate;
+    toiDynTree(m_world_H_base, w_H_b_estimate);
+
+    iDynTree::Vector3 gravity;
+    gravity(2) = -9.8;
+
+    iDynTree::Twist base_velocity(iDynTree::LinVelocity(m_world_velocity_base(0),
+                                                m_world_velocity_base(1),
+                                                m_world_velocity_base(2)),
+                             iDynTree::AngVelocity(m_world_velocity_base(3),
+                                                m_world_velocity_base(4),
+                                                m_world_velocity_base(5)));
+
+    m_kin_dyn_comp.setRobotState(w_H_b_estimate, m_joint_positions, base_velocity, m_joint_velocities, gravity);
+    com_position = m_kin_dyn_comp.getCenterOfMassPosition();
+    com_vel = m_kin_dyn_comp.getCenterOfMassVelocity();
+
+    return true;
+}
+
 bool yarp::dev::baseEstimatorV1::updateBaseVelocityWithIMU()
 {
     using iDynTree::toEigen;
@@ -601,6 +623,23 @@ void yarp::dev::baseEstimatorV1::publishFloatingBasePoseVelocity()
     }
 
     m_floating_base_pose_port.write();
+}
+
+void yarp::dev::baseEstimatorV1::publishCOMEstimate()
+{
+    yarp::os::Bottle &com_bottle = m_com_port.prepare();
+    com_bottle.clear();
+    for (unsigned int i = 0; i < m_com_position.size(); i++)
+    {
+        com_bottle.addDouble(m_com_position(i));
+    }
+
+    for (unsigned int i = 0; i < m_com_velocity.size(); i++)
+    {
+        com_bottle.addDouble(m_com_velocity(i));
+    }
+
+    m_com_port.write();
 }
 
 void yarp::dev::baseEstimatorV1::publishContactState()
@@ -708,6 +747,7 @@ bool yarp::dev::baseEstimatorV1::updateLogger()
 void yarp::dev::baseEstimatorV1::publish()
 {
     publishFloatingBasePoseVelocity();
+    publishCOMEstimate();
     publishContactState();
 
     if (m_use_debug_ports)
@@ -776,6 +816,7 @@ void yarp::dev::baseEstimatorV1::run()
             updateBasePoseWithIMUEstimates();
             updateBaseVelocity();
             //updateBaseVelocityWithIMU();
+            getCOMPositionAndVelocity(m_com_position, m_com_velocity);
             publish();
             if (m_dump_data)
             {
