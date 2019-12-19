@@ -793,7 +793,6 @@ void yarp::dev::baseEstimatorV1::run()
                 ok = initializeIMUAttitudeQEKF();
             }
             ok = alignIMUFrames();
-            publish();
             if (m_dump_data)
             {
                 initializeLogger();
