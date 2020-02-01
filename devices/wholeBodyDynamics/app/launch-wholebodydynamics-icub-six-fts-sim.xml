@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE devices PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
+
+<robot name="@WBD_YARP_ROBOT_NAME">
+    <!-- controlboards -->
+    <device name="torso_mc" type="remote_controlboard">
+        <param name="remote"> /icubSim/torso </param>
+        <param name="local"> /wholeBodyDynamics/torso </param>
+    </device>
+
+    <device name="left_arm_mc" type="remote_controlboard">
+        <param name="remote"> /icubSim/left_arm </param>
+        <param name="local"> /wholeBodyDynamics/left_arm </param>
+    </device>
+
+    <device name="right_arm_mc" type="remote_controlboard">
+        <param name="remote"> /icubSim/right_arm </param>
+        <param name="local"> /wholeBodyDynamics/right_arm </param>
+    </device>
+
+    <device name="left_leg_mc" type="remote_controlboard">
+        <param name="remote"> /icubSim/left_leg </param>
+        <param name="local"> /wholeBodyDynamics/left_leg </param>
+    </device>
+
+    <device name="right_leg_mc" type="remote_controlboard">
+        <param name="remote"> /icubSim/right_leg </param>
+        <param name="local"> /wholeBodyDynamics/right_leg </param>
+    </device>
+
+    <device name="head_mc" type="remote_controlboard">
+        <param name="remote"> /icubSim/head </param>
+        <param name="local"> /wholeBodyDynamics/head </param>
+    </device>
+
+    <!-- the head and wrist virtual analog sensor are not used in practice, so they are commented out
+    <device name="head_virtual_strain" type="virtualAnalogClient">
+        <param name="remote"> /icubSim/joint_vsens/head:i </param>
+        <param name="local"> /wholeBodyDynamics/head/Torques:o </param>
+        <param name="AxisName"> (neck_pitch,neck_roll,neck_yaw) </param>
+        <param name="virtualAnalogSensorInteger"> 0 </param>
+    </device>
+
+    <device name="left_wrist_virtual_strain" type="virtualAnalogClient">
+        <param name="remote"> /icubSim/joint_vsens/left_wrist:i </param>
+        <param name="local"> /wholeBodyDynamics/left_wrist/Torques:o </param>
+        <param name="AxisName"> (l_wrist_pitch,l_wrist_yaw) </param>
+        <param name="virtualAnalogSensorInteger"> 3 </param>
+    </device>
+
+    <device name="right_wrist_virtual_strain" type="virtualAnalogClient">
+        <param name="remote"> /icubSim/joint_vsens/right_wrist:i </param>
+        <param name="local"> /wholeBodyDynamics/right_wrist/Torques:o </param>
+        <param name="AxisName"> (l_wrist_pitch,l_wrist_yaw) </param>
+        <param name="virtualAnalogSensorInteger"> 3 </param>
+    </device>
+    -->
+
+    <!-- imu -->
+    <device name="inertial" type="genericSensorClient">
+        <param name="remote"> /icubSim/inertial </param>
+        <param name="local"> /wholeBodyDynamics/imu </param>
+    </device>
+
+    <!-- six axis force torque sensors -->
+    <device name="left_upper_arm_strain" type="analogsensorclient">
+        <param name="remote"> /icubSim/left_arm/analog:o </param>
+        <param name="local"> /wholeBodyDynamics/l_arm_ft_sensor </param>
+    </device>
+
+    <device name="right_upper_arm_strain" type="analogsensorclient">
+        <param name="remote"> /icubSim/right_arm/analog:o </param>
+        <param name="local"> /wholeBodyDynamics/r_arm_ft_sensor </param>
+    </device>
+
+    <device name="left_upper_leg_strain" type="analogsensorclient">
+        <param name="remote"> /icubSim/left_leg/analog:o </param>
+        <param name="local"> /wholeBodyDynamics/l_leg_ft_sensor </param>
+    </device>
+
+    <device name="right_upper_leg_strain" type="analogsensorclient">
+        <param name="remote"> /icubSim/right_leg/analog:o </param>
+        <param name="local"> /wholeBodyDynamics/r_leg_ft_sensor </param>
+    </device>
+
+    <device name="left_lower_leg_strain" type="analogsensorclient">
+        <param name="remote"> /icubSim/left_foot/analog:o </param>
+        <param name="local"> /wholeBodyDynamics/l_foot_ft_sensor </param>
+    </device>
+
+    <device name="right_lower_leg_strain" type="analogsensorclient">
+        <param name="remote"> /icubSim/right_foot/analog:o </param>
+        <param name="local"> /wholeBodyDynamics/r_foot_ft_sensor </param>
+    </device>
+
+    <!-- estimators -->
+    <devices file="estimators/wholebodydynamics-external.xml" />
+</robot>
