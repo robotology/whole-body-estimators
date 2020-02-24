@@ -1,0 +1,98 @@
+<!--
+  Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT)
+  All rights reserved.
+
+  This software may be modified and distributed under the terms of the
+  GNU Lesser General Public License v2.1 or any later version.
+ -->
+<?xml version="1.0" encoding="UTF-8" ?>
+<device xmlns:xi="http://www.w3.org/2001/XInclude" name="baseestimator" type="baseEstimatorV1">
+
+        <param name="model_file">model.urdf</param>
+        <param name="robot">icub</param>
+        <param name="device_period_in_seconds">0.010</param>
+        <param name="joints_list">("neck_pitch", "neck_roll", "neck_yaw", "torso_pitch", "torso_roll", "torso_yaw", "l_shoulder_pitch", "l_shoulder_roll", "l_shoulder_yaw", "l_elbow", "r_shoulder_pitch", "r_shoulder_roll", "r_shoulder_yaw", "r_elbow", "l_hip_pitch", "l_hip_roll", "l_hip_yaw", "l_knee", "l_ankle_pitch", "l_ankle_roll", "r_hip_pitch", "r_hip_roll", "r_hip_yaw", "r_knee", "r_ankle_pitch", "r_ankle_roll", "l_arm_ft_sensor", "r_arm_ft_sensor", "l_leg_ft_sensor", "r_leg_ft_sensor", "l_foot_ft_sensor", "r_foot_ft_sensor")</param>
+        <param name="base_link">root_link</param>
+        <param name="left_foot_ft_sensor">l_foot_ft_sensor</param>
+        <param name="right_foot_ft_sensor">r_foot_ft_sensor</param>
+        <param name="imu_name">head_imu_acc_1x1</param> <!-- options are: "head_imu_acc_1x1" or "root_link_imu_acc" -->
+        <param name="head_imu_link">head</param>
+        <param name="head_to_base_joints_list">("neck_pitch", "neck_roll", "neck_yaw", "torso_pitch", "torso_roll", "torso_yaw")</param>
+        <param name="head_to_base_joints_list_zero_pos">(0.0, 0.0, 0.0, 0.0, 0.0, 0.0)</param>
+
+        <param name="publish_debug_ports">false</param>
+        <param name="dump_data">false</param>
+        <param name="use_low_pass_filters">true</param>
+        <param name="joint_vel_lpf_cutoff_freq">3.0</param>
+
+
+        <!-- legged odom parameters -->
+        <param name="initial_fixed_frame">l_sole</param>
+        <param name="initial_reference_frame_for_world">l_sole</param>
+        <param name="initial_reference_frame_xyzrpy_pose_world">(0 0 0 0 0 0)</param>
+
+        <!-- attitude estimator general -->
+        <param name="attitude_filter_type">qekf</param>  <!-- "qekf" or "mahony" -->
+        <param name="initial_attitude_estimate_as_quaternion">(1.0 0.0 0.0 0.0)</param>
+        <param name="imu_confidence_roll">0.0</param>
+        <param name="imu_confidence_pitch">0.0</param>
+
+        <!-- attitude mahony filter parameters -->
+        <param name="mahony_discretization_time_step_in_seconds">0.010</param>
+        <param name="mahony_kp">0.7</param>
+        <param name="mahony_ki">0.001</param>
+        <param name="mahony_use_magnetometer">false</param>
+        <param name="initial_orientation_in_rpy">(0 0 0)</param>
+
+        <!-- attitude qekf parameters -->
+        <param name="qekf_discretization_time_step_in_seconds">0.010</param>
+        <param name="qekf_accelerometer_noise_variance">0.03</param>
+        <param name="qekf_magnetometer_noise_variance">0.0</param>
+        <param name="qekf_gyroscope_noise_variance">0.5</param>
+        <param name="qekf_gyro_bias_noise_variance">10e-11</param>
+        <param name="qekf_initial_orientation_error_variance">10e-6</param>
+        <param name="qekf_initial_ang_vel_error_variance">10e-1</param>
+        <param name="qekf_initial_gyro_bias_error_variance">10e-11</param>
+        <param name="qekf_bias_correlation_time_factor">10e-3</param>
+        <param name="qekf_use_magnetometer_measurements">false</param>
+
+        <!-- biped foot contact classifier parameters -->
+        <param name="initial_primary_foot">right</param>
+        <param name="schmitt_stable_contact_make_time">0.5</param>
+        <param name="schmitt_stable_contact_break_time">0.5</param>
+        <param name="left_schmitt_contact_make_force_threshold">130.0</param>
+        <param name="left_schmitt_contact_break_force_threshold">25.0</param>
+        <param name="right_schmitt_contact_make_force_threshold">150.0</param>
+        <param name="right_schmitt_contact_break_force_threshold">25.0</param>
+
+        <!-- whole body dynamics for getting contact forces -->
+        <param name="left_foot_cartesian_wrench_port">/wholeBodyDynamics/left_foot/cartesianEndEffectorWrench:o</param>
+        <param name="right_foot_cartesian_wrench_port">/wholeBodyDynamics/right_foot/cartesianEndEffectorWrench:o</param>
+
+        <group name="LOGGER">
+            <param name="dataLoggerOutputPort_name">/logger/data:o</param>
+            <param name="dataLoggerRpcOutputPort_name">/logger/rpc:o</param>
+            <param name="dataLoggerInputPort_name">/logger-est/data:i</param>
+            <param name="dataLoggerRpcInputPort_name">/logger-est/rpc:i</param>
+        </group>
+        <action phase="startup" level="15" type="attach">
+            <paramlist name="networks">
+            <!-- motorcontrol -->
+                <elem name="all_joints">all_joints_mc</elem>
+            <!-- imu -->
+                <elem name="head_imu_acc_1x1">inertial</elem>
+<!--                 <elem name="root_link_imu_acc">xsens_inertial</elem> -->
+            <!-- f/t sensors -->
+                <elem name="l_arm_ft_sensor">left_upper_arm_strain</elem>
+                <elem name="r_arm_ft_sensor">right_upper_arm_strain</elem>
+                <elem name="l_leg_ft_sensor">left_upper_leg_strain</elem>
+                <elem name="r_leg_ft_sensor">right_upper_leg_strain</elem>
+                <elem name="l_foot_ft_sensor">left_lower_leg_strain</elem>
+                <elem name="r_foot_ft_sensor">right_lower_leg_strain</elem>
+            </paramlist>
+        </action>
+
+        <action phase="shutdown" level="2" type="detach" />
+
+</device>
+
