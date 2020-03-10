@@ -26,7 +26,12 @@ set(YARP_REQUIRED_VERSION 3.0.1)
 
 find_package(YARP ${YARP_REQUIRED_VERSION} REQUIRED)
 
+yarp_configure_plugins_installation(${PROJECT_NAME})
+
+add_subdirectory(libraries)
+add_subdirectory(idl)
 add_subdirectory(devices)
+add_subdirectory(scripts)
 
 include(AddUninstallTarget)
 
