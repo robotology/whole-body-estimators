@@ -12,6 +12,7 @@
 #include <yarp/os/RpcServer.h>
 #include <yarp/dev/IVirtualAnalogSensor.h>
 #include <yarp/dev/IAnalogSensor.h>
+#include <yarp/dev/MultipleAnalogSensorsInterfaces.h>
 #include <yarp/dev/GenericSensorInterfaces.h>
 
 // iCub includes
@@ -194,6 +195,50 @@ class wholeBodyDynamicsDeviceFilters
  *      </group>
  * \endcode
  *
+ * * \subsection TemperatureCoefficients
+ * This device support to specify a set of temperature coefficients matrix to apply on the top of the (already calibrated) measure coming from the F/T sensors.
+ * This feature is meant to be experimental, and will be removed at any time.
+ *
+ * The group of options that regolated this group is the following:
+ * | Parameter name | SubParameter   | Type              | Units | Default Value | Required |   Description                                                     | Notes |
+ * |:--------------:|:--------------:|:-----------------:|:-----:|:-------------:|:--------:|:-----------------------------------------------------------------:|:-----:|
+ * | FT_TEMPERATURE_COEFFICIENTS |  -       | group         | -     | -             | No       |  Group for providing secondary calibration matrix for FT sensors. |   |
+ * |                             | ftSensorName_1 | vector of 7 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x7 temperature coefficients matrix, specified in row-major order. | The temperature message coming from the sensor will be *multiplied* by the specified matrix to get the actual measurement used.  |
+ * |                             | ...            | vector of 7 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x7 temperature coefficients matrix, specified in row-major order. | The temperature message coming from the sensor will be *multiplied* by the specified matrix to get the actual measurement used.  |
+ * |                             | ftSensorName_n | vector of 7 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x7 temperature coefficients matrix, specified in row-major order. | The temperature message coming from the sensor will be *multiplied* by the specified matrix to get the actual measurement used.  |
+ *
+ * All sensors not specified will use a 1x7 zero vector as a temperature coefficients matrix, where the first 6 are temperature correction for each axis and the 7th value is the temperature offset.
+ *
+ * Example of part of a configuration file using .xml yarprobotinterface format (remember to put the fractional dot!).
+ * \code{.xml}
+ *      <group name="FT_TEMPERATURE_COEFFICIENTS">
+ *             <param name="l_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0,0.0)</param>
+ *             <param name="r_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0,0.0)</param>
+ *      </group>
+ * \endcode
+ *
+ * * * \subsection Force torque pre-estimated offset
+ * This device support to specify a set an constant offset vector to apply on the top of the (already calibrated) measure coming from the F/T sensors.
+ * This feature is meant to be experimental, and will be removed at any time.
+ *
+ * The group of options that regolated this group is the following:
+ * | Parameter name | SubParameter   | Type              | Units | Default Value | Required |   Description                                                     | Notes |
+ * |:--------------:|:--------------:|:-----------------:|:-----:|:-------------:|:--------:|:-----------------------------------------------------------------:|:-----:|
+ * | FT_OFFSET |  -       | group         | -     | -             | No       |  Group for providing secondary calibration matrix for FT sensors. |   |
+ * |           | ftSensorName_1 | vector of 6 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x6 temperature coefficients matrix, specified in row-major order. | The constant offset estimated offline will be substracted to the sensor measurements to get the actual measurement used.  |
+ * |           | ...            | vector of 6 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x6 temperature coefficients matrix, specified in row-major order. | The constant offset estimated offline will be substracted to the sensor measurements to get the actual measurement used.  |
+ * |           | ftSensorName_n | vector of 6 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x6 temperature coefficients matrix, specified in row-major order. | The constant offset estimated offline will be substracted to the sensor measurements to get the actual measurement used.  |
+ *
+ * All sensors not specified will use a 1x6 zero vector as a constant offset, where the 6 are offset for each axis.
+ *
+ * Example of part of a configuration file using .xml yarprobotinterface format (remember to put the fractional dot!).
+ * \code{.xml}
+ *      <group name="FT_OFFSET">
+ *             <param name="l_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0)</param>
+ *             <param name="r_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0)</param>
+ *      </group>
+ * \endcode
+ *
  * \subsection Filters
  * All the filters used for the input measurements are using the iCub::ctrl::realTime::FirstOrderLowPassFilter class.
  *
@@ -271,7 +316,7 @@ class wholeBodyDynamicsDeviceFilters
  *
  *     </device>
  * </devices>
- * \endcode 
+ * \endcode
  *
  */
 class WholeBodyDynamicsDevice :  public yarp::dev::DeviceDriver,
@@ -354,6 +399,17 @@ private:
     /** F/T sensors interfaces */
     std::vector<yarp::dev::IAnalogSensor * > ftSensors;
 
+    /** Remapped multiple analog sensors containing the sensors that implement multiple analgo sensor interfaces*/
+    yarp::dev::PolyDriver multipleAnalogRemappedDevice;
+    struct
+    {
+        yarp::dev::ITemperatureSensors * temperatureSensors;
+        yarp::dev::ISixAxisForceTorqueSensors * ftMultiSensors;
+        yarp::dev::IMultipleWrapper * multwrap;
+    } remappedMASInterfaces;
+    std::vector<int> ftTempMapping;
+    double prevFTTempTimeStamp;
+
     /** IMU interface */
     yarp::dev::IGenericSensor * imuInterface;
 
@@ -389,7 +445,8 @@ private:
     bool openEstimator(os::Searchable& config);
     bool openContactFrames(os::Searchable& config);
     bool openSkinContactListPorts(os::Searchable& config);
-    bool openExternalWrenchesPorts(os::Searchable& config);    
+    bool openExternalWrenchesPorts(os::Searchable& config);
+    bool openMultipleAnalogSensorRemapper(os::Searchable& config);
     bool openFilteredFTPorts(os::Searchable& config);
 
     /**
@@ -425,8 +482,9 @@ private:
     /**
      * Attach all Six Axis Force/Torque devices.
      * A device is identified as a Six Axis F/T if it
-     * implements the IAnalogSensor interface.
-     *
+     * implements the IAnalogSensor interface. It also ataches MAS Six Axis F/T sensors.
+     * A device is identified as a MAS Six Axis F/T if it
+     * implements the Multiple Analog Sensor interfaces.
      */
     bool attachAllFTs(const PolyDriverList& p);
 
@@ -479,7 +537,9 @@ private:
      */
     bool loadSettingsFromConfig(yarp::os::Searchable& config);
     bool loadSecondaryCalibrationSettingsFromConfig(yarp::os::Searchable& config);
-    bool loadGravityCompensationSettingsFromConfig(yarp::os::Searchable & config);
+    bool loadGravityCompensationSettingsFromConfig(yarp::os::Searchable & config);    
+    bool loadTemperatureCoefficientsSettingsFromConfig(yarp::os::Searchable& config);
+    bool loadFTSensorOffsetFromConfig(yarp::os::Searchable& config);
     bool applyLPFSettingsFromConfig(const yarp::os::Property& config, const std::string& setting_name);
 
     /**
@@ -507,6 +567,7 @@ private:
     yarp::sig::Vector              ftMeasurement;
     yarp::sig::Vector              imuMeasurement;
     yarp::sig::Vector              estimatedJointTorquesYARP;
+    yarp::sig::VectorOf<double>              tempMeasurements;
 
     /***
      * Buffer for raw sensors measurements.
@@ -602,6 +663,12 @@ private:
       * @return true/false on success/failure
       */
      virtual bool resetOffset(const std::string& calib_code);
+
+    /**
+     * Use the sensor offset estimated offline.
+     * @return true/false on success/failure
+     */
+    virtual bool usePreEstimatedOffset();
 
      /**
       * Quit the module.
@@ -826,4 +893,3 @@ public:
 }
 
 #endif /* CODYCO_WHOLE_BODY_DYNAMICS_DEVICE_H */
-

@@ -28,7 +28,10 @@ class SixAxisForceTorqueMeasureProcessor
 {
 private:
     iDynTree::Matrix6x6 m_secondaryCalibrationMatrix;
-    iDynTree::Wrench m_offset;
+    iDynTree::Wrench m_offset;    
+    iDynTree::Wrench m_estimated_offset;
+    iDynTree::Vector6 m_temperatureCoefficients;
+    double m_tempOffset;
 
 public:
     /**
@@ -48,6 +51,16 @@ public:
     const iDynTree::Wrench & offset() const;
 
     /**
+     * Accessor to the offline estimated offset.
+     */
+    iDynTree::Wrench & estimatedOffset();
+
+    /**
+     * Const accessor to the offline estimated offset.
+     */
+    const iDynTree::Wrench & estimatedOffset() const;
+
+    /**
      * Accessor to the secondary calibration matrix.
      */
     iDynTree::Matrix6x6 & secondaryCalibrationMatrix();
@@ -58,6 +71,26 @@ public:
     const iDynTree::Matrix6x6 & secondaryCalibrationMatrix() const;
 
     /**
+    * Accessor to the temperature offset.
+    */
+   double & tempOffset();
+
+   /**
+    * Const accessor to the temperature offset.
+    */
+   const double & tempOffset() const;
+
+   /**
+    * Accessor to the temperature Coefficients.
+    */
+   iDynTree::Vector6 & temperatureCoefficients();
+
+   /**
+    * Const accessor to the temperature Coefficients.
+    */
+   const iDynTree::Vector6 & temperatureCoefficients() const;
+
+    /**
      * Process the input F/T.
      *
      * Returns secondaryCalibrationMatrix*input + offset .
@@ -65,9 +98,24 @@ public:
     iDynTree::Wrench filt(const iDynTree::Wrench & input) const;
 
     /**
+     * Process the input F/T.
+     *
+     * Returns secondaryCalibrationMatrix*input + offset + temperatureCoefficients*(temperature-temperatureOffset).
+     */
+    iDynTree::Wrench filt(const iDynTree::Wrench & input, const double & temperature) const;
+
+    /**
      * Process the input F/T by only applyng the calibration matrix.
      */
     iDynTree::Wrench applySecondaryCalibrationMatrix(const iDynTree::Wrench & input) const;
+
+    /**
+     * Process the input F/T by only applyng the calibration matrix and temperature coefficients.
+     */
+    iDynTree::Wrench applySecondaryCalibrationMatrix(const iDynTree::Wrench & input, const double & temperature) const;
+
+
+
 };
 
 }
