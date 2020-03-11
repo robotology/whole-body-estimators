@@ -3,4 +3,7 @@
 # GNU Lesser General Public License v2.1 or any later version.
 
 add_subdirectory(baseEstimatorV1)
-
+add_subdirectory(wholeBodyDynamics)
+add_subdirectory(virtualAnalogClient)
+add_subdirectory(virtualAnalogRemapper)
+add_subdirectory(genericSensorClient)

@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE devices PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
+
+<devices robot="@WBD_YARP_ROBOT_NAME@" build="1">
+    <device name="wholebodydynamics" type="wholebodydynamics">
+        <param name="axesNames">(torso_pitch,torso_roll,torso_yaw,neck_pitch, neck_roll,neck_yaw,l_shoulder_pitch,l_shoulder_roll,l_shoulder_yaw,l_elbow,r_shoulder_pitch,r_shoulder_roll,r_shoulder_yaw,r_elbow,l_hip_pitch,l_hip_roll,l_hip_yaw,l_knee,l_ankle_pitch,l_ankle_roll,r_hip_pitch,r_hip_roll,r_hip_yaw,r_knee,r_ankle_pitch,r_ankle_roll)</param>
+        <param name="modelFile">model.urdf</param>
+        <param name="fixedFrameGravity">(0,0,-9.81)</param>
+        <param name="defaultContactFrames">(l_hand,r_hand,root_link,l_sole,r_sole,l_lower_leg,r_lower_leg,l_elbow_1,r_elbow_1)</param>
+        <param name="imuFrameName">imu_frame</param>
+        <param name="useJointVelocity">true</param>
+        <param name="useJointAcceleration">true</param>
+
+        <!-- map between iDynTree links (identified by a name)
+             and skinDynLib links (identified by their frame name, a BodyPart enum
+             and a local (to the body part) index -->
+        <group name="IDYNTREE_SKINDYNLIB_LINKS">
+            <param name="root_link">(root_link,1,0)</param>
+            <param name="chest"> (chest,1,2)</param>
+            <param name="l_upper_arm">(l_upper_arm,3,2)</param>
+            <param name="l_elbow_1">(l_elbow_1, 3, 4)</param>
+            <param name="r_upper_arm">(r_upper_arm,4,2)</param>
+            <param name="r_elbow_1">(r_elbow_1, 4, 4)</param>
+            <param name="l_lower_leg">(l_lower_leg,5,3)</param>
+            <param name="l_ankle_1">(l_ankle_1,5,4)</param>
+            <param name="l_foot">(l_foot_dh_frame,5,5)</param>
+            <param name="r_lower_leg">(r_lower_leg,6,3)</param>
+            <param name="r_ankle_1">(r_ankle_1,6,4)</param>
+            <param name="r_foot">(r_foot_dh_frame,6,5)</param>
+        </group>
+
+        <group name="GRAVITY_COMPENSATION">
+            <param name="enableGravityCompensation">true</param>
+            <param name="gravityCompensationBaseLink">root_link</param>
+            <param name="gravityCompensationAxesNames">(torso_pitch,torso_roll,torso_yaw,neck_pitch,neck_roll,neck_yaw,l_shoulder_pitch,l_shoulder_roll,l_shoulder_yaw,l_elbow,r_shoulder_pitch,r_shoulder_roll,r_shoulder_yaw,r_elbow)</param>
+        </group>
+
+        <group name="WBD_OUTPUT_EXTERNAL_WRENCH_PORTS">
+            <param name="/wholeBodyDynamics/left_leg/cartesianEndEffectorWrench:o">(l_foot,l_sole,root_link)</param>
+            <param name="/wholeBodyDynamics/right_leg/cartesianEndEffectorWrench:o">(r_foot,r_sole,root_link)</param>
+        </group>
+
+        <action phase="startup" level="15" type="attach">
+            <paramlist name="networks">
+                <!-- motorcontrol -->
+                <elem name="left_leg">left_leg_mc</elem>
+                <elem name="right_leg">right_leg_mc</elem>
+                <elem name="torso">torso_mc</elem>
+                <elem name="right_arm">right_arm_mc</elem>
+                <elem name="left_arm">left_arm_mc</elem>
+                <elem name="head">head_mc</elem>
+                <!-- virtual torque sensors -->
+                <elem name="left_leg_vsens">left_leg_virtual_strain</elem>
+                <elem name="right_leg_vsens">right_leg_virtual_strain</elem>
+                <elem name="torso_vsens">torso_virtual_strain</elem>
+                <elem name="right_arm_vsens">right_arm_virtual_strain</elem>
+                <elem name="left_arm_vsens">left_arm_virtual_strain</elem>
+                <!-- imu -->
+                <elem name="imu">inertial</elem>
+                <!-- ft -->
+                <elem name="l_arm_ft_sensor">left_upper_arm_strain</elem>
+                <elem name="r_arm_ft_sensor">right_upper_arm_strain</elem>
+                <elem name="l_leg_ft_sensor">left_upper_leg_strain</elem>
+                <elem name="r_leg_ft_sensor">right_upper_leg_strain</elem>
+                <elem name="l_foot_ft_sensor">left_lower_leg_strain</elem>
+                <elem name="r_foot_ft_sensor">right_lower_leg_strain</elem>
+            </paramlist>
+        </action>
+
+        <action phase="shutdown" level="2" type="detach" />
+
+    </device>
+</devices>
