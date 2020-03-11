@@ -68,15 +68,12 @@ const double& SixAxisForceTorqueMeasureProcessor::tempOffset() const
 
 iDynTree::Wrench SixAxisForceTorqueMeasureProcessor::filt(const iDynTree::Wrench& input) const
 {
-    Eigen::Matrix<double,6,1> retEig = toEigen(m_secondaryCalibrationMatrix)*toEigen(input)-toEigen(m_offset);
-    iDynTree::Wrench ret;
-    fromEigen(ret,retEig);
-    return ret;
+    return filt(input, 0.0);
 }
 
 iDynTree::Wrench SixAxisForceTorqueMeasureProcessor::filt(const iDynTree::Wrench & input, const double & temperature) const
 {
-    Eigen::Matrix<double,6,1> retEig = toEigen(m_secondaryCalibrationMatrix)*toEigen(input)-toEigen(m_offset)+toEigen(m_temperatureCoefficients)*(temperature-m_tempOffset);    
+    Eigen::Matrix<double,6,1> retEig = toEigen(m_secondaryCalibrationMatrix)*toEigen(input)-toEigen(m_offset)+toEigen(m_temperatureCoefficients)*(temperature-m_tempOffset);
     iDynTree::Wrench ret;
     fromEigen(ret,retEig);
 
@@ -86,12 +83,7 @@ iDynTree::Wrench SixAxisForceTorqueMeasureProcessor::filt(const iDynTree::Wrench
 
 iDynTree::Wrench SixAxisForceTorqueMeasureProcessor::applySecondaryCalibrationMatrix(const iDynTree::Wrench& input) const
 {
-    Eigen::Matrix<double,6,1> retEig = toEigen(m_secondaryCalibrationMatrix)*toEigen(input);
-
-    iDynTree::Wrench ret;
-    fromEigen(ret,retEig);
-
-    return ret;
+    return applySecondaryCalibrationMatrix( input, 0.0);
 }
 
 iDynTree::Wrench SixAxisForceTorqueMeasureProcessor::applySecondaryCalibrationMatrix(const iDynTree::Wrench& input, const double & temperature) const
@@ -105,5 +97,3 @@ iDynTree::Wrench SixAxisForceTorqueMeasureProcessor::applySecondaryCalibrationMa
 }
 
 }
-
-
