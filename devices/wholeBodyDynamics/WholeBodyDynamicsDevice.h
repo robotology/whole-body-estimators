@@ -30,8 +30,10 @@
 #include <wholeBodyDynamics_IDLServer.h>
 #include "SixAxisForceTorqueMeasureHelpers.h"
 #include "GravityCompensationHelpers.h"
+#include "KnownExternalWrench.h"
 
 #include <vector>
+#include <array>
 
 
 namespace yarp {
@@ -381,7 +383,7 @@ private:
     bool openRemapperControlBoard(os::Searchable& config);
     bool openRemapperVirtualSensors(os::Searchable& config);
     bool openEstimator(os::Searchable& config);
-    bool openDefaultContactFrames(os::Searchable& config);
+    bool openContactFrames(os::Searchable& config);
     bool openSkinContactListPorts(os::Searchable& config);
     bool openExternalWrenchesPorts(os::Searchable& config);    
     bool openFilteredFTPorts(os::Searchable& config);
@@ -707,8 +709,16 @@ private:
       * specified, and a full wrench on the first suitable frame (i.e. frame belonging to the submodel)
       *  is added.
       */
+     //std::string selectedContactFrames{"default"};
      std::vector<std::string> defaultContactFrames;
+     std::vector<std::string> overrideContactFrames;
+     std::vector<std::string> contactWrenchType;
+     std::vector<std::vector<double>> contactWrenchDirection;
+     std::vector<std::vector<double>> contactWrenchPosition;
      std::vector<iDynTree::FrameIndex> subModelIndex2DefaultContact;
+     std::vector<std::vector<iDynTree::FrameIndex>> subModelIndex2OverrideContact;
+     bool overrideContactFramesSelected{false};
+     std::vector<int> subModelVarSize;
 
      /**
       * Port used to read the location of external contacts
