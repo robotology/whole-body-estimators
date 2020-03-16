@@ -14,9 +14,10 @@ The current implementations available in the `devices` folder include,
 
 
 # :page_facing_up: Dependencies
+* [YCM](https://github.com/robotology/ycm) extra CMake Modules for YARP and friends.
 * [YARP](http://www.yarp.it/): to handle the comunication with the robot;
-* [iDynTree](https://github.com/robotology/idyntree/tree/devel): to setup the floating base estimation algorithm;
 * [ICUB](https://github.com/robotology/icub-main): to use the utilities like low pass filters from the `ctrLib` library
+* [iDynTree](https://github.com/robotology/idyntree/tree/devel): to setup the floating base estimation algorithm. Please compile iDynTree with CMake option IDYNTREE_USES_ICUB_MAIN ON (depends on ICUB).
 * [Gazebo](http://gazebosim.org/): for the simulation (tested Gazebo 8 and 9).
 
   ## Optional Dependencies
@@ -47,6 +48,8 @@ export YARP_DATA_DIRS=${YARP_DATA_DIRS}:${WBDEstimator_INSTALL_DIR}/share/yarp:$
 
 # Authors
 ```
+Hosameldin Awadalla Omer Mohamed <hosameldin.mohamed@iit.it>
+Francisco Javier Andrade Chavez <FranciscoJavier.AndradeChavez@iit.it>
 Prashanth Ramadoss <prashanth.ramadoss@iit.it>
 Giulio Romualdi    <giulio.romualdi@iit.it>
 Silvio Traversaro  <silvio.traversaro@iit.it>
