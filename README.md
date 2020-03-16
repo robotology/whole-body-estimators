@@ -1,4 +1,4 @@
-# whole-body-estimators
+# whole-body-estimators ![C++ CI Workflow](https://github.com/robotology/whole-body-estimators/workflows/C++%20CI%20Workflow/badge.svg)
 YARP-based estimators for humanoid robots.
 
 # Overview
@@ -24,7 +24,6 @@ The current implementations available in the `devices` folder include,
   * [walking-controllers](https://github.com/robotology/walking-controllers): to test the floating base estimation along side walking controllers
 
 It must be noted that all of these dependencies can be directly installed together in one place using the [robotology-superbuild](https://github.com/robotology/robotology-superbuild).
-
 
 # :hammer: Build the suite
 ## Linux
