@@ -9,6 +9,12 @@ project(whole-body-estimators LANGUAGES CXX
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+## avoid having M_PI error by importing math symbols from standard cmath
+add_definitions(-D_USE_MATH_DEFINES)
+# and export all symbols in Windows
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
+
 option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" ON)
 
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
