@@ -440,16 +440,11 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
                     contactWrenchPosition[ax][ay] = propContactWrenchPosition->get(index).asDouble();
                 }
             }
-            std::cout << "HERE??" << std::endl;
 
-            std::cout << "overrideContactFrames size= " << overrideContactFrames.size() << std::endl;
-            std::cout << "contactWrenchType size= " << contactWrenchType.size() << std::endl;
-            std::cout << "contactWrenchDirection size= " << contactWrenchDirection.size() << std::endl;
-            std::cout << "contactWrenchPosition size= " << contactWrenchPosition.size() << std::endl;
             //check full size of the lists `contactWrenchType`, `contactWrenchDirection` and `contactWrenchPosition` to verify it's consistent with  number of frames in `overrideContactFrames`
             if(contactWrenchType.size() == overrideContactFrames.size() && contactWrenchDirection.size() == overrideContactFrames.size() && contactWrenchPosition.size() == overrideContactFrames.size())
             {
-                std::cout << "HERE inside??" << std::endl;
+                yInfo() << "wholeBodyDynamics: parsing the values from the parameters 'overrideContactFrames', 'contactWrenchType', 'contactWrenchDirection' and 'contactWrenchPosition'.";
             }
             else
             {
@@ -458,15 +453,12 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
             }
         }
 
-        std::cout << "we reached hereHAHAHHAAHA " << std::endl;
         //create classes "KnownExternalWrench"
         wholeBodyDynamics::KnownExternalWrench wrench[propOverrideContactFrames->size()];
 
         for(int ax=0; ax < propOverrideContactFrames->size(); ax++)
         {            
             wrench[ax] = wholeBodyDynamics::KnownExternalWrench(overrideContactFrames[ax], contactWrenchType[ax], contactWrenchDirection[ax], contactWrenchPosition[ax]);
-            
-            wrench[ax].display();
         }
 
         // We build the overrideContactFramesIdx vector
@@ -504,7 +496,6 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
         {
             // We indicate with FRAME_INVALID_INDEX the fact that we still don't have a override contact for the given submodel
             subModelIndex2OverrideContact[i].resize(nrOfSubModels,iDynTree::FRAME_INVALID_INDEX);
-            std::cout << "Resize done? " << std::endl;
 
             size_t subModelIdx = estimator.submodels().getSubModelOfFrame(estimator.model(),overrideContactFramesIdx[i]);
 
@@ -525,8 +516,6 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
             // We indicate with FRAME_INVALID_INDEX the fact that we still don't have a override contact for the given submodel
             //subModelIndex2OverrideContact[i].resize(nrOfSubModels,iDynTree::FRAME_INVALID_INDEX);
         }
-        
-        std::cout << "[HOSAM] The frames for each submodel " << subModelIndex2OverrideContact << std::endl;
 
         // Let's check that every submodel has an override contact position
         for(size_t subModelIdx = 0; subModelIdx < nrOfSubModels; subModelIdx++)
@@ -540,7 +529,6 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
                     iDynTree::LinkIndex linkIdx = subModelTraversal.getLink(i)->getIndex();
                     yError() << "wholeBodyDynamics : openOverrideContactFrames :" << estimator.model().getLinkName(linkIdx);
                 }
-
                 return false;
             }
         }
@@ -2030,6 +2018,9 @@ void WholeBodyDynamicsDevice::publishExternalWrenches()
 
         // Compute net wrenches for each link
         estimateExternalContactWrenches.computeNetWrenches(netExternalWrenchesExertedByTheEnviroment);
+
+        // Print "estimateExternalContactWrenches" data
+        yDebug() << "After publishExternalWrenches(), estimatedExternalWrenches=\n" << estimateExternalContactWrenches.toString(estimator.model()) << "\n";
     }
 
 

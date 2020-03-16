@@ -47,7 +47,7 @@ public:
      *  Copy constructor
      * TODO
      */
-    KnownExternalWrench(std::string parsedframeName, std::string parsedType, std::vector<double> parsedPosition, std::vector<double> parsedDirection);
+    KnownExternalWrench(std::string parsedframeName, std::string parsedType, std::vector<double> parsedDirection, std::vector<double> parsedPosition);
 
     /**
      * Process the input F/T by only applyng the calibration matrix.
