@@ -14,6 +14,7 @@ The current implementations available in the `devices` folder include,
 
 
 # :page_facing_up: Dependencies
+* [YCM](https://github.com/robotology/ycm) extra CMake Modules for YARP and friends.
 * [YARP](http://www.yarp.it/): to handle the comunication with the robot;
 * [ICUB](https://github.com/robotology/icub-main): to use the utilities like low pass filters from the `ctrLib` library
 * [iDynTree](https://github.com/robotology/idyntree/tree/devel): to setup the floating base estimation algorithm. Please compile iDynTree with CMake option IDYNTREE_USES_ICUB_MAIN ON (depends on ICUB).
