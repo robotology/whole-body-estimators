@@ -30,7 +30,7 @@
 #include <wholeBodyDynamics_IDLServer.h>
 #include "SixAxisForceTorqueMeasureHelpers.h"
 #include "GravityCompensationHelpers.h"
-#include "KnownExternalWrench.h"
+#include "UnknownWrenchContact.h"
 
 #include <vector>
 #include <array>
@@ -131,6 +131,10 @@ class wholeBodyDynamicsDeviceFilters
  * | defaultContactFrames      | -   | vector of strings (name of frames ) |-| - |  Yes     | Vector of default contact frames. If no external force read from the skin is found on a given submodel, the defaultContactFrames list is scanned and the first frame found on the submodel is the one at which origin the unknown contact force is assumed to be. | - |
  * | alwaysUpdateAllVirtualTorqueSensors | -     |  bool |  -    |      -        |  Yes     | Enforce that a virtual sensor for each estimated axes is available. | Tipically this is set to false when the device is running in the robot, while to true if it is running outside the robot. |
  * | defaultContactFrames |      -   | vector of strings |  -    |    -          | Yes      | If not data is read from the skin, specify the location of the default contacts | For each submodel induced by the FT sensor, the first not used frame that belongs to that submodel is selected from the list. An error is raised if not suitable frame is found for a submodel. |
+ * | overrideContactFrames |      -   | vector of strings |  -    |    -          | No      | If not data is read from the skin, and this parameter exists, it will override 'defaultContactFrames'  | For each submodel induced by the FT sensor, the frames that belong to that submodel are selected from the list with constraint that the number of variables does not exceed 6. An error is raised if not suitable frame is found for a submodel. |
+ * | contactWrenchType |      -   | vector of strings |  -    |    -          | Yes if 'overrideContactFrames' exists      | It should contain one field for each override frame. The values can be either 'full', 'pure' or 'pureKnown'  | 'full' means the external wrench is full-wrench (6 unknown variables), 'pure' means pure force (3 unknown variables), and 'pureKnown' means pure force with known direction (1 unknown variable). |
+ * | contactWrenchDirection |      -   | vector of doubles |  -    |    -          | Yes if 'overrideContactFrames' exists      | It should contain 3 fields for each override frame.  |     |
+ * | contactWrenchPosition |      -   | vector of doubles |  -    |    -          | Yes if 'overrideContactFrames' exists      | It should contain 3 fields for each override frame.  |     |
  * | useJointVelocity     |        - | bool              |  -    |      true     |  No      | Select if the measured joint velocities (read from the getEncoderSpeeds method) are used for estimation, or if they should be forced to 0.0 . | The default value of true is deprecated, and in the future the parameter will be required. |
  * | useJointAcceleration |        - | bool              |  -    |      true     |  No      | Select if the measured joint accelerations (read from the getEncoderAccelerations method) are used for estimation, or if they should be forced to 0.0 . | The default value of true is deprecated, and in the future the parameter will be required. |
  * | streamFilteredFT     |        - | bool              |  -    |      false    |  No      | Select if the filtered and offset removed forces will be streamed or not. The name of the ports have the following syntax:  portname=(portPrefix+"/filteredFT/"+sensorName). Example: "myPrefix/filteredFT/l_leg_ft_sensor" | The value streamed by this ports is affected by the secondary calibration matrix, the estimated offset and temperature coefficients ( if any ). |
