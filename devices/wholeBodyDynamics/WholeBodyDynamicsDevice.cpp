@@ -32,6 +32,7 @@ WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): RateThread(10),
                                                     estimationWentWell(false),
                                                     validOffsetAvailable(false),
                                                     lastReadingSkinContactListStamp(0.0),
+                                                    checkTemperatureEvery_seconds(0.55),
                                                     settingsEditor(settings)
 {
     // Calibration quantities
@@ -1000,6 +1001,14 @@ bool WholeBodyDynamicsDevice::applyLPFSettingsFromConfig(const yarp::os::Propert
         return false;
     }
 
+    // Set time to check for a new temperature measurement. The default value is 0.55;
+    // is set in the device constructor
+    if( prop.check("checkTemperatureEvery_seconds") &&
+        prop.find("checkTemperatureEvery_seconds").isDouble())
+    {
+        checkTemperatureEvery_seconds = prop.find("checkTemperatureEvery_seconds").asDouble();
+    }
+
     return true;
 }
 
@@ -1504,12 +1513,10 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         return false;
     }
 
-    // Temporary code to check name of sensors, assuming the temperature sensor name will be the same as the ft sensor
     int checkCounter=0;
     std::string ftName;
     std::string tempName;
     int ftMap=-1;
-    //for (auto & sensorName : tempDeviceNames){
     for (int tSensor=0;tSensor<tempSensors;tSensor++){
         remappedMASInterfaces.temperatureSensors->getTemperatureSensorName(tSensor,tempName);
         int individualCheck=0;
@@ -1695,8 +1702,7 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
     {
         iDynTree::Wrench bufWrench;
         int ftRetVal = ftSensors[ft]->read(ftMeasurement);
-//TODO: change 0.55 for a variable. 0.55 was related to the fact that temperature sensors are updated once every second
-        if (timeFTStamp-prevFTTempTimeStamp>0.55){
+        if (timeFTStamp-prevFTTempTimeStamp>checkTemperatureEvery_seconds){
             if (ftTempMapping[ft]!=-1){
                 sensorStatus=remappedMASInterfaces.temperatureSensors->getTemperatureSensorStatus(ftTempMapping[ft]);
                 std::string nameOfSensor;

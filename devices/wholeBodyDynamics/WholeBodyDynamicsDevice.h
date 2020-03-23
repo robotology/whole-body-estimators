@@ -138,6 +138,7 @@ class wholeBodyDynamicsDeviceFilters
  * | useJointVelocity     |        - | bool              |  -    |      true     |  No      | Select if the measured joint velocities (read from the getEncoderSpeeds method) are used for estimation, or if they should be forced to 0.0 . | The default value of true is deprecated, and in the future the parameter will be required. |
  * | useJointAcceleration |        - | bool              |  -    |      true     |  No      | Select if the measured joint accelerations (read from the getEncoderAccelerations method) are used for estimation, or if they should be forced to 0.0 . | The default value of true is deprecated, and in the future the parameter will be required. |
  * | streamFilteredFT     |        - | bool              |  -    |      false    |  No      | Select if the filtered and offset removed forces will be streamed or not. The name of the ports have the following syntax:  portname=(portPrefix+"/filteredFT/"+sensorName). Example: "myPrefix/filteredFT/l_leg_ft_sensor" | The value streamed by this ports is affected by the secondary calibration matrix, the estimated offset and temperature coefficients ( if any ). |
+ * | checkTemperatureEvery_seconds     |        - | double              |  -    |      0.55    |  No      | Set the time in seconds in which to check a new temperature measurement. Typically temperature measurments are slow so no need checking at the same frequency as other measurements. Only useful if temperature coefficients are available. |
  * | IDYNTREE_SKINDYNLIB_LINKS |  -  | group             | -     | -             | Yes      |  Group describing the mapping between link names and skinDynLib identifiers. | |
  * |                |   linkName_1   | string (name of a link in the model) | - | - | Yes   | Bottle of three elements describing how the link with linkName is described in skinDynLib: the first element is the name of the frame in which the contact info is expressed in skinDynLib (tipically DH frames), the second a integer describing the skinDynLib BodyPart , and the third a integer describing the skinDynLib LinkIndex  | |
  * |                |   ...   | string (name of a link in the model) | - | -     | Yes      | Bottle of three elements describing how the link with linkName is described in skinDynLib: the first element is the name of the frame in which the contact info is expressed in skinDynLib (tipically DH frames), the second a integer describing the skinDynLib BodyPart , and the third a integer describing the skinDynLib LinkIndex  | |
@@ -197,7 +198,7 @@ class wholeBodyDynamicsDeviceFilters
  *
  * * \subsection TemperatureCoefficients
  * This device support to specify a set of temperature coefficients matrix to apply on the top of the (already calibrated) measure coming from the F/T sensors.
- * This feature is meant to be experimental, and will be removed at any time.
+ * \warning  This feature is meant to be experimental, and will be removed at any time.
  *
  * The group of options that regolated this group is the following:
  * | Parameter name | SubParameter   | Type              | Units | Default Value | Required |   Description                                                     | Notes |
@@ -219,7 +220,7 @@ class wholeBodyDynamicsDeviceFilters
  *
  * * * \subsection Force torque pre-estimated offset
  * This device support to specify a set an constant offset vector to apply on the top of the (already calibrated) measure coming from the F/T sensors.
- * This feature is meant to be experimental, and will be removed at any time.
+ * \warning  This feature is meant to be experimental, and will be removed at any time.
  *
  * The group of options that regolated this group is the following:
  * | Parameter name | SubParameter   | Type              | Units | Default Value | Required |   Description                                                     | Notes |
@@ -373,6 +374,13 @@ private:
     bool streamFilteredFT;
 
     /**
+      * Double to set how much time in seconds to wait before checking a new temperature value.
+      * Default value is 0.55 because current temperature streaming frequency is set to 1 second.
+      * In this way, we are sure we do not miss any change in the measurements.
+      */
+    double checkTemperatureEvery_seconds;
+
+    /**
      * Names of the axis (joint with at least a degree of freedom) used in estimation.
      */
     std::vector<std::string> estimationJointNames;
@@ -399,7 +407,7 @@ private:
     /** F/T sensors interfaces */
     std::vector<yarp::dev::IAnalogSensor * > ftSensors;
 
-    /** Remapped multiple analog sensors containing the sensors that implement multiple analgo sensor interfaces*/
+    /** Remapped multiple analog sensors containing the sensors that implement multiple analog sensor interfaces*/
     yarp::dev::PolyDriver multipleAnalogRemappedDevice;
     struct
     {
@@ -667,6 +675,7 @@ private:
     /**
      * Use the sensor offset estimated offline.
      * @return true/false on success/failure
+     * For now it checks if the norm of the offline offset is 0.0, which is the case for the default values when no offline offset was inserted in the configuration file.
      */
     virtual bool usePreEstimatedOffset();
 
