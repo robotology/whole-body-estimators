@@ -12,6 +12,13 @@ on:
     # Execute a "nightly" build at 2 AM UTC
     - cron: '0 2 * * *'
     
+env:
+    vcpkg_robotology_TAG: v0.0.3
+    YCM_TAG: v0.11.0
+    YARP_TAG: v3.3.2
+    ICUB_TAG: v1.15.0
+    iDynTree_TAG: v1.0.2   
+    
 jobs:
     build:
         name: '[${{matrix.os}}@${{matrix.build_type}}]'
@@ -45,8 +52,18 @@ jobs:
         - name: Dependencies [Windows]
           if: matrix.os == 'windows-latest'
           run: |
-            git clone https://github.com/robotology-dependencies/robotology-vcpkg-binary-ports C:/robotology-vcpkg-binary-ports      
-            vcpkg.exe --overlay-ports=C:/robotology-vcpkg-binary-ports install --triplet x64-windows ace assimp libxml2 eigen3 ipopt-binary
+            # To avoid spending a huge time compiling vcpkg dependencies, we download a root that comes precompiled with all the ports that we need
+            choco install -y wget unzip
+            
+            # To avoid problems with non-relocatable packages, we unzip the archive exactly in the same C:/robotology/vcpkg 
+            # that has been used to create the pre-compiled archive
+            cd C:/
+            md C:/robotology
+            md C:/robotology/vcpkg
+            wget https://github.com/robotology/robotology-superbuild-dependencies-vcpkg/releases/download/${env:vcpkg_robotology_TAG}/vcpkg-robotology.zip
+            unzip vcpkg-robotology.zip -d C:/robotology/vcpkg
+            # Overwrite the VCPKG_INSTALLATION_ROOT env variable defined by Github Actions to point to our vcpkg
+            echo "::set-env name=VCPKG_INSTALLATION_ROOT::C:/robotology/vcpkg"
                
         - name: Dependencies [macOS]
           if: matrix.os == 'macOS-latest'
@@ -60,14 +77,14 @@ jobs:
             sudo apt install git build-essential cmake libace-dev coinor-libipopt-dev  libboost-system-dev libboost-filesystem-dev \
                              libboost-thread-dev liborocos-kdl-dev libeigen3-dev swig qtbase5-dev qtdeclarative5-dev qtmultimedia5-dev libqt5charts5-dev \
                              libxml2-dev liburdfdom-dev libtinyxml-dev liburdfdom-dev liboctave-dev python-dev valgrind libassimp-dev
-                             
+                                                        
         - name: Source-based Dependencies [Windows]
           if: matrix.os == 'windows-latest'
           shell: bash
           run: |
             # YCM
             cd ${GITHUB_WORKSPACE}
-            git clone https://github.com/robotology/ycm
+            git clone -b ${YCM_TAG} https://github.com/robotology/ycm
             cd ycm
             mkdir -p build
             cd build
@@ -79,6 +96,7 @@ jobs:
             cd ${GITHUB_WORKSPACE}
             git clone https://github.com/robotology/yarp
             cd yarp
+            git checkout ${YARP_TAG}
             mkdir -p build
             cd build
             cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
@@ -92,6 +110,7 @@ jobs:
             cd ${GITHUB_WORKSPACE}
             git clone https://github.com/robotology/icub-main
             cd icub-main
+            git checkout ${ICUB_TAG}
             mkdir -p build
             cd build
             cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
@@ -104,7 +123,7 @@ jobs:
             cd ${GITHUB_WORKSPACE}
             git clone https://github.com/robotology/iDynTree
             cd iDynTree
-            git checkout devel
+            git checkout ${iDynTree_TAG}
             mkdir -p build
             cd build
             cmake -A x64 -DCMAKE_TOOLCHAIN_FILE=${VCPKG_INSTALLATION_ROOT}/scripts/buildsystems/vcpkg.cmake \
@@ -121,7 +140,7 @@ jobs:
           run: |
             # YCM
             cd ${GITHUB_WORKSPACE}
-            git clone https://github.com/robotology/ycm
+            git clone -b ${YCM_TAG} https://github.com/robotology/ycm
             cd ycm
             mkdir -p build
             cd build
@@ -132,6 +151,7 @@ jobs:
             cd ${GITHUB_WORKSPACE}
             git clone https://github.com/robotology/yarp
             cd yarp
+            git checkout ${YARP_TAG}
             mkdir -p build
             cd build
             cmake -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
@@ -142,6 +162,7 @@ jobs:
             cd ${GITHUB_WORKSPACE}
             git clone https://github.com/robotology/icub-main
             cd icub-main
+            git checkout ${ICUB_TAG}
             mkdir -p build
             cd build
             cmake -DCMAKE_PREFIX_PATH=${GITHUB_WORKSPACE}/install \
@@ -152,6 +173,7 @@ jobs:
             cd ${GITHUB_WORKSPACE}
             git clone https://github.com/robotology/iDynTree
             cd iDynTree
+            git checkout ${iDynTree_TAG}
             git checkout devel
             mkdir -p build
             cd build
