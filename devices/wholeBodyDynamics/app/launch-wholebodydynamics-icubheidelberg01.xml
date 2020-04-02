@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE devices PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
 
-<robot name="iCubHeidelberg01">
+<robot name="iCubHeidelberg01" build="1" xmlns:xi="http://www.w3.org/2001/XInclude">
     <!-- controlboards -->
     <device name="torso_mc" type="remote_controlboard">
         <param name="remote"> /icub/torso </param>
@@ -68,5 +68,5 @@
     </device>
 
     <!-- estimators -->
-    <devices file="estimators/wholebodydynamics-external.xml" />
+    <xi:include href="estimators/wholebodydynamics-external.xml" />
 </robot>
