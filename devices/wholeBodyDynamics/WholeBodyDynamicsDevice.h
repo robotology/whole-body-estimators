@@ -10,7 +10,6 @@
 #include <yarp/dev/Wrapper.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/RpcServer.h>
-//#include <yarp/os/Semaphore.h>
 #include <yarp/dev/IVirtualAnalogSensor.h>
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/GenericSensorInterfaces.h>
