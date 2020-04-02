@@ -20,7 +20,7 @@
 
 // iDynTree includes
 #include <iDynTree/Estimation/ExtWrenchesAndJointTorquesEstimator.h>
-#include <iDynTree/iCub/skinDynLibConversions.h>
+#include <iDynTree/skinDynLibConversions.h>
 #include <iDynTree/KinDynComputations.h>
 
 // Filters
