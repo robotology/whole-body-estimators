@@ -10,8 +10,6 @@
 #include <yarp/os/PortReaderBuffer.h>
 #include <yarp/os/Log.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/LockGuard.h>
-
 
 const int GS_ANALOG_TIMEOUT=100; //ms
 
@@ -19,7 +17,7 @@ using namespace yarp::os;
 
 inline void GSInputPortProcessor::resetStat()
 {
-    yarp::os::LockGuard guard(mutex);
+    std::lock_guard<std::mutex> guard(mutex);
 
     dataAvailable = false;
     count=0;
@@ -39,7 +37,7 @@ void GSInputPortProcessor::onRead(yarp::sig::Vector &v)
 {
     now=Time::now();
 
-    yarp::os::LockGuard guard(mutex);
+    std::lock_guard<std::mutex> guard(mutex);
 
     if (count>0)
     {
@@ -83,7 +81,7 @@ void GSInputPortProcessor::onRead(yarp::sig::Vector &v)
 
 inline bool GSInputPortProcessor::getLast(yarp::sig::Vector &data, Stamp &stmp)
 {
-    yarp::os::LockGuard guard(mutex);
+    std::lock_guard<std::mutex> guard(mutex);
 
     if (dataAvailable)
     {
@@ -96,7 +94,7 @@ inline bool GSInputPortProcessor::getLast(yarp::sig::Vector &data, Stamp &stmp)
 
 inline int GSInputPortProcessor::getIterations()
 {
-    yarp::os::LockGuard guard(mutex);
+    std::lock_guard<std::mutex> guard(mutex);
 
     int ret=count;
     return ret;
@@ -105,7 +103,7 @@ inline int GSInputPortProcessor::getIterations()
 // time is in ms
 void GSInputPortProcessor::getEstFrequency(int &ite, double &av, double &min, double &max)
 {
-    yarp::os::LockGuard guard(mutex);
+    std::lock_guard<std::mutex> guard(mutex);
 
     ite=count;
     min=deltaTMin*1000;
@@ -134,7 +132,7 @@ int GSInputPortProcessor::getChannels()
 
 bool yarp::dev::GenericSensorClient::open(yarp::os::Searchable &config)
 {
-    ConstString carrier = config.check("carrier", Value("udp"), "default carrier for streaming robot state").asString().c_str();
+    std::string carrier = config.check("carrier", Value("udp"), "default carrier for streaming robot state").asString().c_str();
 
     local.clear();
     remote.clear();

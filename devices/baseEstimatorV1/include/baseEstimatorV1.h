@@ -29,7 +29,6 @@
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/GenericSensorInterfaces.h>
 #include <yarp/os/LogStream.h>
-#include <yarp/os/LockGuard.h>
 #include <yarp/eigen/Eigen.h>
 #include <yarp/sig/Vector.h>
 #include <yarp/sig/Matrix.h>

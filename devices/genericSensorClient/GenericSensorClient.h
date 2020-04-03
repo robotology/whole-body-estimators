@@ -13,9 +13,12 @@
 #include <yarp/dev/PreciselyTimed.h>
 #include <yarp/dev/GenericSensorInterfaces.h>
 #include <yarp/sig/Vector.h>
-#include <yarp/os/Semaphore.h>
+
 #include <yarp/os/Time.h>
 #include <yarp/dev/PolyDriver.h>
+
+#include <mutex>
+#include <string>
 
 /**
  * Class copied from the InputPortProcessor class in AnalogSensorClient.
@@ -23,7 +26,7 @@
  */
 class GSInputPortProcessor : public yarp::os::BufferedPort<yarp::sig::Vector>
 {
-    yarp::os::Mutex mutex;
+    std::mutex mutex;
     yarp::sig::Vector lastVector;
     yarp::os::Stamp lastStamp;
     double deltaT;
@@ -85,8 +88,8 @@ class GenericSensorClient: public yarp::dev::DeviceDriver,
 {
 protected:
     GSInputPortProcessor inputPort;
-    yarp::os::ConstString local;
-    yarp::os::ConstString remote;
+    std::string local;
+    std::string remote;
     yarp::os::Stamp lastTs; //used by IPreciselyTimed
 
     void  removeLeadingTrailingSlashesOnly(std::string &name);
