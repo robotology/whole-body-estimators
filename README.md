@@ -23,7 +23,7 @@ The current implementations available in the `devices` folder include,
   ## Optional Dependencies
   * [walking-controllers](https://github.com/robotology/walking-controllers): to test the floating base estimation along side walking controllers
 
-It must be noted that all of these dependencies can be directly installed together in one place using the [robotology-superbuild](https://github.com/robotology/robotology-superbuild).
+It must be noted that all of these dependencies can be directly installed together in one place using the [robotology-superbuild](https://github.com/robotology/robotology-superbuild), in particular enabling its `Dynamics` component. 
 
 # :hammer: Build the suite
 ## Linux
@@ -39,8 +39,9 @@ make
 Notice: `sudo` is not necessary if you specify the `CMAKE_INSTALL_PREFIX`. In this case it is necessary to add in the `.bashrc` or `.bash_profile` the following lines:
 ``` sh
 export WBDEstimator_INSTALL_DIR=/path/where/you/installed
-export YARP_DATA_DIRS=${YARP_DATA_DIRS}:${WBDEstimator_INSTALL_DIR}/share/yarp:${WBDEstimator_INSTALL_DIR}/lib/yarp
+export YARP_DATA_DIRS=${YARP_DATA_DIRS}:${WBDEstimator_INSTALL_DIR}/share/yarp
 ```
+Note that this is not necessary if you install `whole-body-estimators` via the `robotology-superbuild` .
 
 # Using the estimators
 - [`baseEstimatorV1`](devices/baseEstimatorV1/README.md) Please follow the documentation available here to run the floating base estimator.
