@@ -83,7 +83,8 @@ jobs:
           uses: actions/cache@v1
           with:
             path: ${{ github.workspace }}/install/deps
-            key: source-deps-${{runner.os}}-vcpkg-robotology-${{env.vcpkg_robotology_TAG}}-ycm-${{env.YCM_TAG}}-yarp-${{env.YARP_TAG}}-icub-main-${{env.ICUB_TAG}}-iDynTree-${{env.iDynTree_TAG}}
+            # Including ${{ runner.temp }} is a workaround for https://github.com/robotology/whole-body-estimators/issues/60
+            key: source-deps-${{runner.os}}-${{runner.temp}}-vcpkg-robotology-${{env.vcpkg_robotology_TAG}}-ycm-${{env.YCM_TAG}}-yarp-${{env.YARP_TAG}}-icub-main-${{env.ICUB_TAG}}-iDynTree-${{env.iDynTree_TAG}}
                                                         
         - name: Source-based Dependencies [Windows]
           if: steps.cache-source-deps.outputs.cache-hit != 'true' && matrix.os == 'windows-latest'
