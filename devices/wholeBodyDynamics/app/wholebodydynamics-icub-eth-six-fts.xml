@@ -10,6 +10,10 @@
         <param name="imuFrameName">imu_frame</param>
         <param name="useJointVelocity">true</param>
         <param name="useJointAcceleration">true</param>
+        <param name="imuFilterCutoffInHz">3.0</param>
+        <param name="forceTorqueFilterCutoffInHz">3.0</param>
+        <param name="jointVelFilterCutoffInHz">3.0</param> <!-- used if useJointVelocity is set to true -->
+        <param name="jointAccFilterCutoffInHz">3.0</param> <!-- used if useJointAcceleration is set to true -->
 
 
         <!-- map between iDynTree links (identified by a name)

@@ -602,11 +602,7 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
 {
     // Fill setting with their default values
     settings.kinematicSource             = IMU;
-    settings.imuFilterCutoffInHz         = 3.0;
-    settings.forceTorqueFilterCutoffInHz = 3.0;
-    settings.jointVelFilterCutoffInHz    = 3.0;
-    settings.jointAccFilterCutoffInHz    = 3.0;
-
+    
     yarp::os::Property prop;
     prop.fromString(config.toString().c_str());
 
@@ -709,7 +705,58 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     {
         settings.useJointAcceleration = prop.find(useJointAccelerationOptionName.c_str()).asBool();
     }
+       
+    // Check for measurements low pass filter cutoff frequencies   
+    if (!applyLPFSettingsFromConfig(prop, "imuFilterCutoffInHz"))
+    {
+        yError() << "wholeBodyDynamics : missing required string parameter imuFilterCutoffInHz";
+        return false;
+    }
+    
+    if (!applyLPFSettingsFromConfig(prop, "forceTorqueFilterCutoffInHz"))
+    {
+        yError() << "wholeBodyDynamics : missing required string parameter forceTorqueFilterCutoffInHz";
+        return false;
+    }
+    
+    if (settings.useJointVelocity && !applyLPFSettingsFromConfig(prop, "jointVelFilterCutoffInHz"))
+    {
+        yError() << "wholeBodyDynamics : missing required string parameter jointVelFilterCutoffInHz";
+        return false;
+    }
+    
+    
+    if (settings.useJointAcceleration && !applyLPFSettingsFromConfig(prop, "jointAccFilterCutoffInHz"))
+    {
+        yError() << "wholeBodyDynamics : missing required string parameter jointAccFilterCutoffInHz";
+        return false;
+    }
+    
+    yInfo() << "wholeBodyDynamics : Using the following filter cutoff frequencies,";
+    yInfo() << "wholeBodyDynamics: imuFilterCutoffInHz: " <<   settings.imuFilterCutoffInHz << " Hz.";
+    yInfo() << "wholeBodyDynamics: forceTorqueFilterCutoffInHz: " <<   settings.forceTorqueFilterCutoffInHz << " Hz.";
+    if (settings.useJointVelocity) { yInfo() << "wholeBodyDynamics: jointVelFilterCutoffInHz: " <<   settings.jointVelFilterCutoffInHz << " Hz."; }
+    if (settings.useJointAcceleration) { yInfo() << "wholeBodyDynamics: jointAccFilterCutoffInHz: " <<   settings.jointAccFilterCutoffInHz << " Hz."; }
+    
+    return true;
+}
 
+bool WholeBodyDynamicsDevice::applyLPFSettingsFromConfig(const yarp::os::Property& prop, const std::string& setting_name)
+{
+    if( prop.check(setting_name) &&
+        prop.find(setting_name).isDouble() )
+    {
+        double cut_off_freq = prop.find(setting_name).asDouble();
+        if (setting_name == "imuFilterCutoffInHz") { settings.imuFilterCutoffInHz = cut_off_freq; }
+        if (setting_name == "forceTorqueFilterCutoffInHz") { settings.forceTorqueFilterCutoffInHz = cut_off_freq; }
+        if (setting_name == "jointVelFilterCutoffInHz") { settings.jointVelFilterCutoffInHz = cut_off_freq; }
+        if (setting_name == "jointAccFilterCutoffInHz") { settings.jointAccFilterCutoffInHz = cut_off_freq; }        
+    }
+    else
+    {        
+        return false;
+    }
+    
     return true;
 }
 
