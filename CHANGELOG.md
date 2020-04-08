@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed launch-wholebodydynamics-`*`.xml configuration files in order to properly open `wholebodydynamics` device without silently skipping it. (See [!56](https://github.com/robotology/whole-body-estimators/pull/56)).
 - Fixed a few YARP related and iDynTree related deprecations in `wholebodydynamics`, `genericSensorClient` and `baseEstimatorV1`. (See [!58](https://github.com/robotology/whole-body-estimators/pull/58)).
+- Fixed a bug in `wholebodydynamics` related to hard-coded cut-off frequency parameters used for low-pass filtering measurements. (See [!63](https://github.com/robotology/whole-body-estimators/pull/63)).
 
 ### Added
 - Github Workflows to check compilation on `ubuntu-latest`, `macOS-latest` and `windows-latest`. (See [!47](https://github.com/robotology/whole-body-estimators/pull/47)).

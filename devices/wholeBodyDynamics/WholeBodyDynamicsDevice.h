@@ -474,6 +474,7 @@ private:
     bool loadSettingsFromConfig(yarp::os::Searchable& config);
     bool loadSecondaryCalibrationSettingsFromConfig(yarp::os::Searchable& config);
     bool loadGravityCompensationSettingsFromConfig(yarp::os::Searchable & config);
+    bool applyLPFSettingsFromConfig(const yarp::os::Property& config, const std::string& setting_name);
 
     /**
      * Class actually doing computations.
