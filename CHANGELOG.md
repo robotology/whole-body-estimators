@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## [0.2.1] - 2020-04-08
 ### Fixed
 - Fixed launch-wholebodydynamics-`*`.xml configuration files in order to properly open `wholebodydynamics` device without silently skipping it. (See [!56](https://github.com/robotology/whole-body-estimators/pull/56)).
 - Fixed a few YARP related and iDynTree related deprecations in `wholebodydynamics`, `genericSensorClient` and `baseEstimatorV1`. (See [!58](https://github.com/robotology/whole-body-estimators/pull/58)).
