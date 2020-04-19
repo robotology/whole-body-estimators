@@ -30,7 +30,6 @@
 #include <wholeBodyDynamics_IDLServer.h>
 #include "SixAxisForceTorqueMeasureHelpers.h"
 #include "GravityCompensationHelpers.h"
-#include "UnknownWrenchContact.h"
 
 #include <vector>
 #include <array>
@@ -713,16 +712,20 @@ private:
       * specified, and a full wrench on the first suitable frame (i.e. frame belonging to the submodel)
       *  is added.
       */
-     //std::string selectedContactFrames{"default"};
-     std::vector<std::string> defaultContactFrames;
-     std::vector<std::string> overrideContactFrames;
+     std::vector<std::string> contactFramesNames;
      std::vector<std::string> contactWrenchType;
      std::vector<std::vector<double>> contactWrenchDirection;
      std::vector<std::vector<double>> contactWrenchPosition;
-     std::vector<iDynTree::FrameIndex> subModelIndex2DefaultContact;
-     std::vector<std::vector<iDynTree::FrameIndex>> subModelIndex2OverrideContact;
+     std::vector<std::vector<iDynTree::FrameIndex>> subModelIndex2Contact;
      bool overrideContactFramesSelected{false};
      std::vector<int> subModelVarSize;
+     std::vector<int> nrUnknownsInExtWrench;
+     std::vector<iDynTree::UnknownWrenchContact> unknownExtWrench;
+
+     /**
+      * Fills the variables `overrideContactFrames`, `contactWrenchType`, `contactWrenchDirection` and `contactWrenchPosition` in case the parameter `` exists in the configuration file.
+      */
+     bool parseOverrideContactFramesData(yarp::os::Bottle *_propOverrideContactFrames, yarp::os::Bottle *_propContactWrenchType, yarp::os::Bottle *_propContactWrenchDirection, yarp::os::Bottle *_propContactWrenchPosition);
 
      /**
       * Port used to read the location of external contacts
