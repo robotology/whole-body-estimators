@@ -32,7 +32,6 @@
 #include "GravityCompensationHelpers.h"
 
 #include <vector>
-#include <array>
 
 
 namespace yarp {
@@ -716,11 +715,11 @@ private:
      std::vector<std::string> contactWrenchType;
      std::vector<std::vector<double>> contactWrenchDirection;
      std::vector<std::vector<double>> contactWrenchPosition;
-     std::vector<std::vector<iDynTree::FrameIndex>> subModelIndex2Contact;
      bool overrideContactFramesSelected{false};
-     std::vector<int> subModelVarSize;
+     std::vector<int> nrUnknownsInSubModel;
      std::vector<int> nrUnknownsInExtWrench;
      std::vector<iDynTree::UnknownWrenchContact> unknownExtWrench;
+     std::vector<iDynTree::FrameIndex> contactFramesIdxValidForSubModel; //array of contact frames that don't cause nrUnknownsInSubModel > 6
 
      /**
       * Fills the variables `overrideContactFrames`, `contactWrenchType`, `contactWrenchDirection` and `contactWrenchPosition` in case the parameter `` exists in the configuration file.
