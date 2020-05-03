@@ -144,6 +144,7 @@ class wholeBodyDynamicsDeviceFilters
  * |                |   portName_1   | string (name of the port opened to stream the external wrench | - | - | Yes    | Bottle of three elements describing the wrench published on the port: the first element is the link of which the published external wrench is applied. This wrench is expressed around the origin of the frame named as second paramter, and with the orientation of the third parameter.  |  |
  * |                |   ...   | | - | ..                                        | Yes       | ..  |  |
  * |                |   portName_n   | .. | - | -                               | Yes       | ..  | |
+ * | outputWrenchPortInfoType |   -   | string | - | netWrench | No       | Variable for choosing the type of information published in the YARP ports of the group "WBD_OUTPUT_EXTERNAL_WRENCH_PORTS". The user can select between "netWrench" and "contactWrenches"  | If an invalid value is put, the device ignores it and "netWrench" is selected |
  * | GRAVITY_COMPENSATION |  -       | group             | -     | -            | No        |  Group for providing estimates of the torque necessary to compensate gravity. | Gravity calls setImpedanceOffset when the considered joints is in COMPLIANT_INTERACTION_MODE   |
  * |                      | enableGravityCompensation | bool | -  | -           | No        |  |  |
  * |                      | gravityCompensationBaseLink| string | - | -         | No        | ..  | |
@@ -761,6 +762,18 @@ private:
     //  port, but for backward compatibility we have to stream external wrenches
     //  informations on individual ports)
     std::vector< outputWrenchPortInformation > outputWrenchPorts;
+
+    /**
+     * An enumerator and a variable for storing the type of information
+     * published in the YARP ports of the group
+     * "WBD_OUTPUT_EXTERNAL_WRENCH_PORTS". It is either
+     * "netWrench" or "contactWrenches"
+     */
+    enum outputWrenchPortInfoType {
+        netWrench,
+        contactWrenches
+    };
+    outputWrenchPortInfoType m_outputWrenchPortInfoType{netWrench};
 
     /**
      * Ports for streaming fitelerd ft data without offset

@@ -317,7 +317,6 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
     if(propOverrideContactFrames==0)
     {
         //overrideContactFrames don't exist -> considering defaultContactFrames
-        yInfo() << "wholeBodyDynamics : openContactFrames :  Parsing the parameters from defaultContactFrames.\n";
         if(propDefaultContactFrames==0)
         {
             yError() << "wholeBodyDynamics : openContactFrames : Error parsing parameters: \"defaultContactFrames\" should be followed by a list\n";
@@ -344,7 +343,6 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
     else
     {
         //overrideContactFrames exist -> they are parsed instead of defaultContactFrames
-        yInfo() << "wholeBodyDynamics : openContactFrames : Parsing the parameters from overrideContactFrames.\n";
         overrideContactFramesSelected = true;
 
         bool OverrideFrameParsedOK = parseOverrideContactFramesData(propOverrideContactFrames, propContactWrenchType, propContactWrenchDirection, propContactWrenchPosition);
@@ -417,7 +415,6 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
             //add the submodel index to the valid submodel indexes group
             validSubModelsIndexes[i] = subModelIdx;
             nrUnknownsInSubModel[subModelIdx] += nrUnknownsInExtWrench[i];
-            yInfo() << "Adding frame " << contactFramesNames[i] << " (idx= " << contactFramesIdx[i] << ") for subModel no " << subModelIdx << " Number of unknowns has become= " << nrUnknownsInSubModel[subModelIdx];
         }
     }
 
@@ -696,6 +693,16 @@ bool WholeBodyDynamicsDevice::openExternalWrenchesPorts(os::Searchable& config)
     {
         yError() << "wholeBodyDynamics impossible to open port for publishing external wrenches";
         return false;
+    }
+
+    std::string outputWrenchPortInfoType = config.find("outputWrenchPortInfoType").asString();
+    if(outputWrenchPortInfoType == "contactWrenches")
+    {
+        m_outputWrenchPortInfoType = contactWrenches;
+    }
+    else
+    {
+        m_outputWrenchPortInfoType = netWrench;
     }
 
     return ok;
@@ -1735,7 +1742,6 @@ void WholeBodyDynamicsDevice::readContactPoints()
             }
         }
     }
-    
     return;
 }
 
@@ -1975,8 +1981,8 @@ void WholeBodyDynamicsDevice::publishExternalWrenches()
         iDynTree::FrameIndex orientation = this->outputWrenchPorts[i].orientation_frame_index;
         iDynTree::FrameIndex origin      = this->outputWrenchPorts[i].origin_frame_index;
 
-        //If NO data is read from "/wholeBodyDynamics/skin_contacts:i"
-        if(contactsReadFromSkin.empty())
+        //If contact wrenches are selected to be published from the configuration file
+        if(m_outputWrenchPortInfoType == contactWrenches)
         {
             outputWrenchPorts[i].output_vector.clear();
             yarp::sig::Vector wrench_vector;
@@ -1995,8 +2001,8 @@ void WholeBodyDynamicsDevice::publishExternalWrenches()
                 }
             }
         }
-        //If some data is read from "/wholeBodyDynamics/skin_contacts:i"
-        else
+        //If net-wrench (default) are selected to be published from the configuration file
+        else if(m_outputWrenchPortInfoType == netWrench)
         {
             iDynTree::Wrench & link_f = netExternalWrenchesExertedByTheEnviroment(link);
 
