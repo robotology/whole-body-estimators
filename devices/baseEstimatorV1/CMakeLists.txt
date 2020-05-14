@@ -34,12 +34,12 @@ set_property(TARGET floatingBaseEstimationRPC-service PROPERTY POSITION_INDEPEND
 yarp_add_plugin(baseEstimatorV1  ${FBE_SOURCES} ${FBE_HEADERS})
 
 target_include_directories(baseEstimatorV1 PRIVATE
-                           ${CMAKE_CURRENT_SOURCE_DIR}/include
-                           ${Eigen3_INCLUDE_DIRS})
+                           ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_link_libraries(baseEstimatorV1 ${YARP_LIBRARIES}
+target_link_libraries(baseEstimatorV1 PUBLIC ${YARP_LIBRARIES}
                                       ${iDynTree_LIBRARIES}
-                                      floatingBaseEstimationRPC-service)
+                                      floatingBaseEstimationRPC-service
+                                      PRIVATE Eigen3::Eigen)
 
 yarp_install(TARGETS baseEstimatorV1
              COMPONENT Runtime
