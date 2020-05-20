@@ -1,7 +1,6 @@
 #define SKIN_EVENTS_TIMEOUT 0.2
 #include "WholeBodyDynamicsDevice.h"
 
-#include <yarp/os/LockGuard.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/os/Property.h>
 #include <yarp/os/ResourceFinder.h>
@@ -789,11 +788,7 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
 {
     // Fill setting with their default values
     settings.kinematicSource             = IMU;
-    settings.imuFilterCutoffInHz         = 3.0;
-    settings.forceTorqueFilterCutoffInHz = 3.0;
-    settings.jointVelFilterCutoffInHz    = 3.0;
-    settings.jointAccFilterCutoffInHz    = 3.0;
-
+    
     yarp::os::Property prop;
     prop.fromString(config.toString().c_str());
 
@@ -896,7 +891,58 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     {
         settings.useJointAcceleration = prop.find(useJointAccelerationOptionName.c_str()).asBool();
     }
+       
+    // Check for measurements low pass filter cutoff frequencies   
+    if (!applyLPFSettingsFromConfig(prop, "imuFilterCutoffInHz"))
+    {
+        yError() << "wholeBodyDynamics : missing required string parameter imuFilterCutoffInHz";
+        return false;
+    }
+    
+    if (!applyLPFSettingsFromConfig(prop, "forceTorqueFilterCutoffInHz"))
+    {
+        yError() << "wholeBodyDynamics : missing required string parameter forceTorqueFilterCutoffInHz";
+        return false;
+    }
+    
+    if (settings.useJointVelocity && !applyLPFSettingsFromConfig(prop, "jointVelFilterCutoffInHz"))
+    {
+        yError() << "wholeBodyDynamics : missing required string parameter jointVelFilterCutoffInHz";
+        return false;
+    }
+    
+    
+    if (settings.useJointAcceleration && !applyLPFSettingsFromConfig(prop, "jointAccFilterCutoffInHz"))
+    {
+        yError() << "wholeBodyDynamics : missing required string parameter jointAccFilterCutoffInHz";
+        return false;
+    }
+    
+    yInfo() << "wholeBodyDynamics : Using the following filter cutoff frequencies,";
+    yInfo() << "wholeBodyDynamics: imuFilterCutoffInHz: " <<   settings.imuFilterCutoffInHz << " Hz.";
+    yInfo() << "wholeBodyDynamics: forceTorqueFilterCutoffInHz: " <<   settings.forceTorqueFilterCutoffInHz << " Hz.";
+    if (settings.useJointVelocity) { yInfo() << "wholeBodyDynamics: jointVelFilterCutoffInHz: " <<   settings.jointVelFilterCutoffInHz << " Hz."; }
+    if (settings.useJointAcceleration) { yInfo() << "wholeBodyDynamics: jointAccFilterCutoffInHz: " <<   settings.jointAccFilterCutoffInHz << " Hz."; }
+    
+    return true;
+}
 
+bool WholeBodyDynamicsDevice::applyLPFSettingsFromConfig(const yarp::os::Property& prop, const std::string& setting_name)
+{
+    if( prop.check(setting_name) &&
+        prop.find(setting_name).isDouble() )
+    {
+        double cut_off_freq = prop.find(setting_name).asDouble();
+        if (setting_name == "imuFilterCutoffInHz") { settings.imuFilterCutoffInHz = cut_off_freq; }
+        if (setting_name == "forceTorqueFilterCutoffInHz") { settings.forceTorqueFilterCutoffInHz = cut_off_freq; }
+        if (setting_name == "jointVelFilterCutoffInHz") { settings.jointVelFilterCutoffInHz = cut_off_freq; }
+        if (setting_name == "jointAccFilterCutoffInHz") { settings.jointAccFilterCutoffInHz = cut_off_freq; }        
+    }
+    else
+    {        
+        return false;
+    }
+    
     return true;
 }
 
@@ -1048,7 +1094,7 @@ bool WholeBodyDynamicsDevice::loadGravityCompensationSettingsFromConfig(os::Sear
 
 bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     bool ok;
 
@@ -1310,7 +1356,7 @@ bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
 
 bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     bool ok = true;
     ok = ok && this->attachAllControlBoard(p);
@@ -2036,7 +2082,7 @@ void WholeBodyDynamicsDevice::publishFilteredFTWithoutOffset()
 
 void WholeBodyDynamicsDevice::run()
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     if( correctlyConfigured )
     {
@@ -2068,7 +2114,7 @@ void WholeBodyDynamicsDevice::run()
 
 bool WholeBodyDynamicsDevice::detachAll()
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     correctlyConfigured = false;
 
@@ -2195,7 +2241,7 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithExternalWrenchesOnTwoFrames(co
 
 bool WholeBodyDynamicsDevice::calib(const std::string& calib_code, const int32_t nr_of_samples)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     yWarning() << "wholeBodyDynamics : calib ignoring calib_code " << calib_code;
 
@@ -2212,7 +2258,7 @@ bool WholeBodyDynamicsDevice::calib(const std::string& calib_code, const int32_t
 
 bool WholeBodyDynamicsDevice::calibStanding(const std::string& calib_code, const int32_t nr_of_samples)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     yWarning() << "wholeBodyDynamics : calibStanding ignoring calib_code " << calib_code;
 
@@ -2229,7 +2275,7 @@ bool WholeBodyDynamicsDevice::calibStanding(const std::string& calib_code, const
 
 bool WholeBodyDynamicsDevice::calibStandingLeftFoot(const std::string& calib_code, const int32_t nr_of_samples)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     yWarning() << " wholeBodyDynamics : calibStandingLeftFoot ignoring calib_code " << calib_code;
 
@@ -2245,7 +2291,7 @@ bool WholeBodyDynamicsDevice::calibStandingLeftFoot(const std::string& calib_cod
 
 bool WholeBodyDynamicsDevice::calibStandingRightFoot(const std::string& calib_code, const int32_t nr_of_samples)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     yWarning() << " wholeBodyDynamics : calibStandingRightFoot ignoring calib_code " << calib_code;
 
@@ -2262,7 +2308,7 @@ bool WholeBodyDynamicsDevice::calibStandingRightFoot(const std::string& calib_co
 
 bool WholeBodyDynamicsDevice::calibStandingOnOneLink(const std::string &standing_frame, const int32_t nr_of_samples)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     bool ok = this->setupCalibrationWithExternalWrenchOnOneFrame(standing_frame,nr_of_samples);
 
@@ -2278,7 +2324,7 @@ bool WholeBodyDynamicsDevice::calibStandingOnTwoLinks(const std::string &first_s
                                                       const std::string &second_standing_frame,
                                                       const int32_t nr_of_samples)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     bool ok = this->setupCalibrationWithExternalWrenchesOnTwoFrames(first_standing_frame,second_standing_frame,nr_of_samples);
 
@@ -2292,7 +2338,7 @@ bool WholeBodyDynamicsDevice::calibStandingOnTwoLinks(const std::string &first_s
 
 bool WholeBodyDynamicsDevice::resetOffset(const std::string& calib_code)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     yWarning() << "wholeBodyDynamics : calib ignoring calib_code " << calib_code;
 
@@ -2313,14 +2359,14 @@ bool WholeBodyDynamicsDevice::changeFixedLinkSimpleLeggedOdometry(const std::str
 
 double WholeBodyDynamicsDevice::get_forceTorqueFilterCutoffInHz()
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     return this->settings.forceTorqueFilterCutoffInHz;
 }
 
 bool WholeBodyDynamicsDevice::set_forceTorqueFilterCutoffInHz(const double newCutoff)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     this->settings.forceTorqueFilterCutoffInHz = newCutoff;
 
@@ -2329,14 +2375,14 @@ bool WholeBodyDynamicsDevice::set_forceTorqueFilterCutoffInHz(const double newCu
 
 double WholeBodyDynamicsDevice::get_jointVelFilterCutoffInHz()
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     return this->settings.jointVelFilterCutoffInHz;
 }
 
 bool WholeBodyDynamicsDevice::set_jointVelFilterCutoffInHz(const double newCutoff)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     this->settings.jointVelFilterCutoffInHz = newCutoff;
 
@@ -2345,14 +2391,14 @@ bool WholeBodyDynamicsDevice::set_jointVelFilterCutoffInHz(const double newCutof
 
 double WholeBodyDynamicsDevice::get_jointAccFilterCutoffInHz()
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     return this->settings.jointAccFilterCutoffInHz;
 }
 
 bool WholeBodyDynamicsDevice::set_jointAccFilterCutoffInHz(const double newCutoff)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     this->settings.jointAccFilterCutoffInHz = newCutoff;
 
@@ -2362,14 +2408,14 @@ bool WholeBodyDynamicsDevice::set_jointAccFilterCutoffInHz(const double newCutof
 
 double WholeBodyDynamicsDevice::get_imuFilterCutoffInHz()
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     return this->settings.imuFilterCutoffInHz;
 }
 
 bool WholeBodyDynamicsDevice::set_imuFilterCutoffInHz(const double newCutoff)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     this->settings.imuFilterCutoffInHz = newCutoff;
 
@@ -2378,7 +2424,7 @@ bool WholeBodyDynamicsDevice::set_imuFilterCutoffInHz(const double newCutoff)
 
 bool WholeBodyDynamicsDevice::useFixedFrameAsKinematicSource(const std::string& fixedFrame)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     iDynTree::FrameIndex fixedFrameIndex = estimator.model().getFrameIndex(fixedFrame);
 
@@ -2400,7 +2446,7 @@ bool WholeBodyDynamicsDevice::useFixedFrameAsKinematicSource(const std::string& 
 
 bool WholeBodyDynamicsDevice::useIMUAsKinematicSource()
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     yInfo() << "wholeBodyDynamics : successfully set the kinematic source to be the IMU ";
 
@@ -2411,7 +2457,7 @@ bool WholeBodyDynamicsDevice::useIMUAsKinematicSource()
 
 bool WholeBodyDynamicsDevice::setUseOfJointVelocities(const bool enable)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     this->settings.useJointVelocity = enable;
 
@@ -2420,7 +2466,7 @@ bool WholeBodyDynamicsDevice::setUseOfJointVelocities(const bool enable)
 
 bool WholeBodyDynamicsDevice::setUseOfJointAccelerations(const bool enable)
 {
-    yarp::os::LockGuard guard(this->deviceMutex);
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     this->settings.useJointAcceleration = enable;
 
@@ -2429,7 +2475,7 @@ bool WholeBodyDynamicsDevice::setUseOfJointAccelerations(const bool enable)
 
 std::string WholeBodyDynamicsDevice::getCurrentSettingsString()
 {
-   yarp::os::LockGuard guard(this->deviceMutex);
+   std::lock_guard<std::mutex> guard(this->deviceMutex);
 
    return settings.toString();
 }

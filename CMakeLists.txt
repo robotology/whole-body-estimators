@@ -5,9 +5,15 @@
 cmake_minimum_required(VERSION 3.5)
 project(whole-body-estimators LANGUAGES CXX
                               VERSION 0.2)
-                             
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+## avoid having M_PI error by importing math symbols from standard cmath
+add_definitions(-D_USE_MATH_DEFINES)
+# and export all symbols in Windows
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON)
+
 
 option(BUILD_SHARED_LIBS "Build libraries as shared as opposed to static" ON)
 
@@ -25,6 +31,7 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
 set(YARP_REQUIRED_VERSION 3.0.1)
 
 find_package(YARP ${YARP_REQUIRED_VERSION} REQUIRED)
+find_package(Eigen3 3.2.92 REQUIRED)
 
 yarp_configure_plugins_installation(${PROJECT_NAME})
 

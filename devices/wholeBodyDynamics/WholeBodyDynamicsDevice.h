@@ -10,7 +10,6 @@
 #include <yarp/dev/Wrapper.h>
 #include <yarp/os/RateThread.h>
 #include <yarp/os/RpcServer.h>
-#include <yarp/os/Semaphore.h>
 #include <yarp/dev/IVirtualAnalogSensor.h>
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/GenericSensorInterfaces.h>
@@ -20,7 +19,7 @@
 
 // iDynTree includes
 #include <iDynTree/Estimation/ExtWrenchesAndJointTorquesEstimator.h>
-#include <iDynTree/iCub/skinDynLibConversions.h>
+#include <iDynTree/skinDynLibConversions.h>
 #include <iDynTree/KinDynComputations.h>
 
 // Filters
@@ -32,6 +31,7 @@
 #include "GravityCompensationHelpers.h"
 
 #include <vector>
+#include <mutex>
 
 
 namespace yarp {
@@ -338,7 +338,7 @@ private:
         yarp::dev::IEncoders        * encs;
         yarp::dev::IMultipleWrapper * multwrap;
         yarp::dev::IImpedanceControl * impctrl;
-        yarp::dev::IControlMode2    * ctrlmode;
+        yarp::dev::IControlMode    * ctrlmode;
         yarp::dev::IInteractionMode * intmode;
     } remappedControlBoardInterfaces;
 
@@ -370,7 +370,7 @@ private:
      * (managed by the yarprobotinterface thread) and by the RPC call
      * invoked by the RPC thread.
      */
-    yarp::os::Mutex deviceMutex;
+    std::mutex deviceMutex;
 
     /**
      * A port for editing remotly the setting of wholeBodyDynamics
@@ -479,6 +479,7 @@ private:
     bool loadSettingsFromConfig(yarp::os::Searchable& config);
     bool loadSecondaryCalibrationSettingsFromConfig(yarp::os::Searchable& config);
     bool loadGravityCompensationSettingsFromConfig(yarp::os::Searchable & config);
+    bool applyLPFSettingsFromConfig(const yarp::os::Property& config, const std::string& setting_name);
 
     /**
      * Class actually doing computations.
