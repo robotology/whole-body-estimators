@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed a bug in `wholebodydynamics` related to hard-coded cut-off frequency parameters used for low-pass filtering measurements. (See [!63](https://github.com/robotology/whole-body-estimators/pull/63)).
 
 ### Added
+- Added the possibility in `wholeBodyDynamics` device to set the assumptions about the external wrench type (full wrenches, pure forces or pure forces with known direction) from the configuration file. (See[!48](https://github.com/robotology/whole-body-estimators/pull/48)).
 - Github Workflows to check compilation on `ubuntu-latest`, `macOS-latest` and `windows-latest`. (See [!47](https://github.com/robotology/whole-body-estimators/pull/47)).
 - Disabled fail-fast strategy for CI/C++ builds to not stop checks completely when one of the build fails (See [!52](https://github.com/robotology/whole-body-estimators/pull/52)).
 - Added caching of source-based dependencies for CI/C++ builds to speed up the build workflows (See [!54](https://github.com/robotology/whole-body-estimators/pull/54)).
