@@ -17,7 +17,7 @@ env:
     YCM_TAG: v0.11.0
     YARP_TAG: v3.3.2
     ICUB_TAG: v1.15.0
-    iDynTree_TAG: v1.0.2   
+    iDynTree_TAG: v1.1.0   
     
 jobs:
     build:
