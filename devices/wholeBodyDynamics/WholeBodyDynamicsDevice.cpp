@@ -924,6 +924,19 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     if (settings.useJointVelocity) { yInfo() << "wholeBodyDynamics: jointVelFilterCutoffInHz: " <<   settings.jointVelFilterCutoffInHz << " Hz."; }
     if (settings.useJointAcceleration) { yInfo() << "wholeBodyDynamics: jointAccFilterCutoffInHz: " <<   settings.jointAccFilterCutoffInHz << " Hz."; }
     
+    if ( !(prop.check("startWithZeroFTSensorOffsets") && prop.find("startWithZeroFTSensorOffsets").isBool()) )
+    {
+        settings.startWithZeroFTSensorOffsets = false;
+    }
+    else
+    {
+        settings.startWithZeroFTSensorOffsets = prop.find("startWithZeroFTSensorOffsets").asBool();
+        if (settings.startWithZeroFTSensorOffsets)
+        {
+            yInfo() << "wholeBodyDynamics: setting startWithZeroFTSensorOffsets was set to true , FT sensor offsets will be automatically reset to zero.";
+        }
+    }
+    
     return true;
 }
 
@@ -942,7 +955,7 @@ bool WholeBodyDynamicsDevice::applyLPFSettingsFromConfig(const yarp::os::Propert
     {        
         return false;
     }
-    
+
     return true;
 }
 
@@ -1363,8 +1376,16 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
     ok = ok && this->attachAllVirtualAnalogSensor(p);
     ok = ok && this->attachAllFTs(p);
     ok = ok && this->attachAllIMUs(p);
-
-    ok = ok && this->setupCalibrationWithExternalWrenchOnOneFrame("base_link",100);
+    
+    if (settings.startWithZeroFTSensorOffsets)
+    {
+        this->setFTSensorOffsetsToZero();
+        validOffsetAvailable = true;
+    }
+    else
+    {
+        ok = ok && this->setupCalibrationWithExternalWrenchOnOneFrame("base_link",100);
+    }
 
     if( ok )
     {
@@ -1373,6 +1394,14 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
     }
 
     return ok;
+}
+
+void WholeBodyDynamicsDevice::setFTSensorOffsetsToZero()
+{
+    for(size_t ft = 0; ft < this->getNrOfFTSensors(); ft++)
+    {
+        ftProcessors[ft].offset().zero();            
+    }
 }
 
 double deg2rad(const double angleInDeg)
@@ -2342,10 +2371,7 @@ bool WholeBodyDynamicsDevice::resetOffset(const std::string& calib_code)
 
     yWarning() << "wholeBodyDynamics : calib ignoring calib_code " << calib_code;
 
-    for(size_t ft = 0; ft < this->getNrOfFTSensors(); ft++)
-    {
-        ftProcessors[ft].offset().zero();
-    }
+    this->setFTSensorOffsetsToZero();
 
     return true;
 }
