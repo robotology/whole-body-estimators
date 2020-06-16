@@ -8,6 +8,11 @@ find_package(iDynTree ${iDynTree_VERSION} REQUIRED)
 
 find_package(ICUB REQUIRED)
 
+find_package(YARP REQUIRED COMPONENTS
+             eigen
+             os
+             sig)
+
 set(FBE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/baseEstimatorV1.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/WalkingLogger.tpp
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/WalkingLogger.hpp
@@ -37,6 +42,9 @@ target_include_directories(baseEstimatorV1 PRIVATE
                            ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_link_libraries(baseEstimatorV1 PUBLIC ${YARP_LIBRARIES}
+                                      YARP::YARP_eigen
+                                      YARP::YARP_os
+                                      YARP::YARP_sig
                                       ${iDynTree_LIBRARIES}
                                       floatingBaseEstimationRPC-service
                                       PRIVATE Eigen3::Eigen)
