@@ -26,4 +26,6 @@ struct wholeBodyDynamicsSettings {
     8: double jointAccFilterCutoffInHz;    /** Cutoff frequency(in Hz) of the first order filter of the joint accelerations */
     9: bool useJointVelocity; /** Use the joint velocity measurement if this is true, assume they are zero otherwise. */
     10: bool useJointAcceleration; /** Use the joint acceleration measurment if this is true, assume they are zero otherwise. */
+    11: bool startWithZeroFTSensorOffsets   /** Use zero FT sensor offsets at startup. If this flag is set to false, the device estimates the offsets of FT sensors at startup. Note that this option allows to enable/disable skipping the manual calling of resetOffsets to reset the offsets for FT sensors, most specially during simulations*/
+ 
 }

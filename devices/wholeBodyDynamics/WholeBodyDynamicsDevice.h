@@ -126,9 +126,14 @@ class wholeBodyDynamicsDeviceFilters
  * | forceTorqueFilterCutoffInHz | - | double            | Hz    |      -        | Yes      | Cutoff frequency of the filter used to filter FT measures.  |  The used filter is a simple first order filter. |
  * | jointVelFilterCutoffInHz    | - | double            | Hz    |      -        | Yes      | Cutoff frequency of the filter used to filter joint velocities measures. | The used filter is a simple first order filter. |
  * | jointAccFilterCutoffInHz    | - | double            | Hz    |      -        | Yes      | Cutoff frequency of the filter used to filter joint accelerations measures. | The used filter is a simple first order filter. |
+ * | startWithZeroFTSensorOffsets    | - | bool            | -    |      False       | No      | Use zero FT sensor offsets at startup. If this flag is set to false, the device estimates the offsets of FT sensors at startup|
  * | defaultContactFrames      | -   | vector of strings (name of frames ) |-| - |  Yes     | Vector of default contact frames. If no external force read from the skin is found on a given submodel, the defaultContactFrames list is scanned and the first frame found on the submodel is the one at which origin the unknown contact force is assumed to be. | - |
  * | alwaysUpdateAllVirtualTorqueSensors | -     |  bool |  -    |      -        |  Yes     | Enforce that a virtual sensor for each estimated axes is available. | Tipically this is set to false when the device is running in the robot, while to true if it is running outside the robot. |
  * | defaultContactFrames |      -   | vector of strings |  -    |    -          | Yes      | If not data is read from the skin, specify the location of the default contacts | For each submodel induced by the FT sensor, the first not used frame that belongs to that submodel is selected from the list. An error is raised if not suitable frame is found for a submodel. |
+ * | overrideContactFrames |      -   | vector of strings |  -    |    -          | No      | If not data is read from the skin, and this parameter exists, it will override 'defaultContactFrames'  | For each submodel induced by the FT sensor, the frames that belong to that submodel are selected from the list with constraint that the number of variables does not exceed 6. An error is raised if not suitable frame is found for a submodel. |
+ * | contactWrenchType |      -   | vector of strings |  -    |    -          | Yes if 'overrideContactFrames' exists      | It should contain one field for each override frame. The values can be either 'full', 'pure' or 'pureKnown'  | 'full' means the external wrench is full-wrench (6 unknown variables), 'pure' means pure force (3 unknown variables), and 'pureKnown' means pure force with known direction (1 unknown variable). |
+ * | contactWrenchDirection |      -   | vector of doubles |  -    |    -          | Yes if 'overrideContactFrames' exists      | It should contain 3 fields for each override frame.  |     |
+ * | contactWrenchPosition |      -   | vector of doubles |  -    |    -          | Yes if 'overrideContactFrames' exists      | It should contain 3 fields for each override frame.  |     |
  * | useJointVelocity     |        - | bool              |  -    |      true     |  No      | Select if the measured joint velocities (read from the getEncoderSpeeds method) are used for estimation, or if they should be forced to 0.0 . | The default value of true is deprecated, and in the future the parameter will be required. |
  * | useJointAcceleration |        - | bool              |  -    |      true     |  No      | Select if the measured joint accelerations (read from the getEncoderAccelerations method) are used for estimation, or if they should be forced to 0.0 . | The default value of true is deprecated, and in the future the parameter will be required. |
  * | streamFilteredFT     |        - | bool              |  -    |      false    |  No      | Select if the filtered and offset removed forces will be streamed or not. The name of the ports have the following syntax:  portname=(portPrefix+"/filteredFT/"+sensorName). Example: "myPrefix/filteredFT/l_leg_ft_sensor" | The value streamed by this ports is affected by the secondary calibration matrix, the estimated offset and temperature coefficients ( if any ). |
@@ -140,6 +145,7 @@ class wholeBodyDynamicsDeviceFilters
  * |                |   portName_1   | string (name of the port opened to stream the external wrench | - | - | Yes    | Bottle of three elements describing the wrench published on the port: the first element is the link of which the published external wrench is applied. This wrench is expressed around the origin of the frame named as second paramter, and with the orientation of the third parameter.  |  |
  * |                |   ...   | | - | ..                                        | Yes       | ..  |  |
  * |                |   portName_n   | .. | - | -                               | Yes       | ..  | |
+ * | outputWrenchPortInfoType |   -   | string | - | netWrench | No       | Variable for choosing the type of information published in the YARP ports of the group "WBD_OUTPUT_EXTERNAL_WRENCH_PORTS". The user can select between "netWrench" and "contactWrenches". Selecting "netWrench" makes the group publish the net external wrench excerted by the environment on the link specified in the group. Selecting "contactWrenches" makes the group publish all the contact wrenches of the link specified in the group. In the latter case the format of the data published in the ports will be `<contactWrenchOfIndex_1> <contactWrenchOfIndex_2> ... <contactWrenchOfIndex_(N-1)>`, and the order of the contact wrenches indexes is the same of when they are added (tested with `overrideContactFrames`).  | If an invalid value is put, the device ignores it and "netWrench" is selected |
  * | GRAVITY_COMPENSATION |  -       | group             | -     | -            | No        |  Group for providing estimates of the torque necessary to compensate gravity. | Gravity calls setImpedanceOffset when the considered joints is in COMPLIANT_INTERACTION_MODE   |
  * |                      | enableGravityCompensation | bool | -  | -           | No        |  |  |
  * |                      | gravityCompensationBaseLink| string | - | -         | No        | ..  | |
@@ -381,7 +387,7 @@ private:
     bool openRemapperControlBoard(os::Searchable& config);
     bool openRemapperVirtualSensors(os::Searchable& config);
     bool openEstimator(os::Searchable& config);
-    bool openDefaultContactFrames(os::Searchable& config);
+    bool openContactFrames(os::Searchable& config);
     bool openSkinContactListPorts(os::Searchable& config);
     bool openExternalWrenchesPorts(os::Searchable& config);    
     bool openFilteredFTPorts(os::Searchable& config);
@@ -485,7 +491,12 @@ private:
      * Buffers related methods
      */
     void resizeBuffers();
-
+    
+    /**
+     * Reset related methods
+     */
+    void setFTSensorOffsetsToZero();
+    
     /*
      * Buffers
      *
@@ -708,8 +719,20 @@ private:
       * specified, and a full wrench on the first suitable frame (i.e. frame belonging to the submodel)
       *  is added.
       */
-     std::vector<std::string> defaultContactFrames;
-     std::vector<iDynTree::FrameIndex> subModelIndex2DefaultContact;
+     std::vector<std::string> contactFramesNames;
+     std::vector<std::string> contactWrenchType;
+     std::vector<std::vector<double>> contactWrenchDirection;
+     std::vector<std::vector<double>> contactWrenchPosition;
+     bool overrideContactFramesSelected{false};
+     std::vector<int> nrUnknownsInSubModel;
+     std::vector<int> nrUnknownsInExtWrench;
+     std::vector<iDynTree::UnknownWrenchContact> unknownExtWrench;
+     std::vector<iDynTree::FrameIndex> contactFramesIdxValidForSubModel; //array of contact frames that don't cause nrUnknownsInSubModel > 6
+
+     /**
+      * Fills the variables `overrideContactFrames`, `contactWrenchType`, `contactWrenchDirection` and `contactWrenchPosition` in case the parameter `` exists in the configuration file.
+      */
+     bool parseOverrideContactFramesData(yarp::os::Bottle *_propOverrideContactFrames, yarp::os::Bottle *_propContactWrenchType, yarp::os::Bottle *_propContactWrenchDirection, yarp::os::Bottle *_propContactWrenchPosition);
 
      /**
       * Port used to read the location of external contacts
@@ -746,6 +769,18 @@ private:
     //  port, but for backward compatibility we have to stream external wrenches
     //  informations on individual ports)
     std::vector< outputWrenchPortInformation > outputWrenchPorts;
+
+    /**
+     * An enumerator and a variable for storing the type of information
+     * published in the YARP ports of the group
+     * "WBD_OUTPUT_EXTERNAL_WRENCH_PORTS". It is either
+     * "netWrench" or "contactWrenches"
+     */
+    enum outputWrenchPortInfoType {
+        netWrench,
+        contactWrenches
+    };
+    outputWrenchPortInfoType m_outputWrenchPortInfoType{netWrench};
 
     /**
      * Ports for streaming fitelerd ft data without offset
