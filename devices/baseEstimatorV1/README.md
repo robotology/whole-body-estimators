@@ -18,21 +18,26 @@ This estimator uses the kinematics, IMU mounted on the head and the contact forc
     ``` sh
     gazebo -slibgazebo_yarp_clock.so
     ```
-4. Run `yarprobotinterface` with corresponding device configuration file.
-  - To run `baseEstimatorV1`,
+4. Prior to launching the `baseEstimatorV1`, launch the `wholeBodyDynamics` device.
 
     ``` sh
-     YARP_CLOCK=/clock yarprobotinterface --config launch-fbe-analogsens.xml
+     YARP_CLOCK=/clock yarprobotinterface --config launch-wholebodydynamics.xml
     ```
-    This launches both the floating base estimation device and the whole body dynamics device.
 5. Reset the offset of the FT sensors. Open a terminal and write
 
    ```
    yarp rpc /wholeBodyDynamics/rpc
    >> resetOffset all
    ```
+   Note that this step can be avoided if a flag `startWithZeroFTSensorOffsets` is set to true in the `wholeBodyDynamics` configuration file (This is applicable only in the simulation.).
+6. Run `yarprobotinterface` with corresponding device configuration file.
+  - To run `baseEstimatorV1`,
 
-6. communicate with the `base-estimator` through RPC service calls:
+    ``` sh
+     YARP_CLOCK=/clock yarprobotinterface --config launch-fbe-analogsens.xml
+    ```
+    This launches the floating base estimation device.
+7. communicate with the `base-estimator` through RPC service calls:
    ```
    yarp rpc /base-estimator/rpc
    ```
@@ -46,7 +51,7 @@ This estimator uses the kinematics, IMU mounted on the head and the contact forc
    * `useJointVelocityLPF flag`: use a low pass filter on the joint velocities, `flag` can be `true` or `false`;
    * `setJointVelocityLPFCutoffFrequency freq`: set the cut-off frequency for the low pass filter on the joint velocities;
    * `resetLeggedOdometry`: reset the floating base pose and reset the legged odometry to the inital state;
-   * `resetLeggedOdometryWithRefFrame frame x y z roll pitch yaw`: reset the legged odometry by mentioning an intial reference to the world frame with respect to the initial fixed frame;
+   * `resetLeggedOdometryWithRefFrame frame x y z roll pitch yaw`: reset the legged odometry by mentioning an initial reference to the world frame with respect to the initial fixed frame;
    * `getRefFrameForWorld`: get the initial fixed frame with respect to which the world frame was set;
 
 ## Configuration
