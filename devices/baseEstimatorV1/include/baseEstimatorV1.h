@@ -406,25 +406,29 @@ namespace yarp {
         /**
          * @brief publish internal state of attitude estimator through YARP port
          *        roll pitch yaw omegax omegay omegaz gyrobiasx gyrobiasy gyrobiasz
+         *        here omegax omegay omegaz are expressed in IMU local frame
+         *        orientation is with respect to the inertial frame that the IMU assumes
          */
         void publishIMUAttitudeEstimatorStates();
 
         /**
          * @brief publish internal state of QEKF through YARP port
          *        roll pitch yaw
+         *        orientation is with respect to the inertial frame that the IMU assumes
          */
         void publishIMUAttitudeQEKFEstimates();
 
         /**
          * @brief publish floating base state through YARP port
          *        x y z roll pitch yaw joint_positions
-         *        roll pitch yaw
          */
         void publishFloatingBaseState();
 
         /**
          * @brief publish floating base pose and velocity through YARP port
          *        x y z roll pitch yaw vx vy vz omegax omegay omegaz
+         *        the velocity assumes a mixed-velocity representation
+         *        as defined in [Multibody Dynamics Notation](https://pure.tue.nl/ws/portalfiles/portal/139293126/A_Multibody_Dynamics_Notation_Revision_2_.pdf)
          */
         void publishFloatingBasePoseVelocity();
 
