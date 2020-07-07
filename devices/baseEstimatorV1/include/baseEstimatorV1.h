@@ -385,15 +385,6 @@ namespace yarp {
         bool updateBaseVelocity();
 
         /**
-         * @brief computes the floating base velocity using IMU measurements
-         *        linear velocity is obtained through Euler-integration of linear acceleration
-         *        obtained from the proper sensor acceleration of the IMU
-         *        angular velocity is given by the attitude estimator
-         * @return true/false success/failure
-         */
-        bool updateBaseVelocityWithIMU();
-
-        /**
          * @brief sets robot state for kindyncomputations object using estimated base pose,
          *  kinematic measurements and zero base velocity
          * @return true/false success/failure
