@@ -8,32 +8,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE robot PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
 <robot name="iCubGenova04" portprefix="baseestimation" build="1"  xmlns:xi="http://www.w3.org/2001/XInclude">
-    <!-- open control boards -->
-    <device name="torso_mc" type="remote_controlboard">
-        <param name="remote">/icub/torso</param>
-        <param name="local">/baseestimation/torso</param>
-    </device>
-    <device name="left_arm_mc" type="remote_controlboard">
-        <param name="remote">/icub/left_arm</param>
-        <param name="local">/baseestimation/left_arm</param>
-    </device>
-    <device name="right_arm_mc" type="remote_controlboard">
-        <param name="remote">/icub/right_arm</param>
-        <param name="local">/baseestimation/right_arm</param>
-    </device>
-    <device name="left_leg_mc" type="remote_controlboard">
-        <param name="remote">/icub/left_leg</param>
-        <param name="local">/baseestimation/left_leg</param>
-    </device>
-    <device name="right_leg_mc" type="remote_controlboard">
-        <param name="remote">/icub/right_leg</param>
-        <param name="local">/baseestimation/right_leg</param>
-    </device>
-    <device name="head_mc" type="remote_controlboard">
-        <param name="remote">/icub/head</param>
-        <param name="local">/baseestimation/head</param>
-    </device>
-
 
     <!-- open remote control board remapper -->
     <device name="all_joints_mc" type="remotecontrolboardremapper">
