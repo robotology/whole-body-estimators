@@ -540,57 +540,6 @@ bool yarp::dev::baseEstimatorV1::getCOMPositionAndVelocity(iDynTree::Position& c
     return true;
 }
 
-bool yarp::dev::baseEstimatorV1::updateBaseVelocityWithIMU()
-{
-    using iDynTree::toEigen;
-    iDynTree::Vector3 y_acc;
-
-    for (size_t imu = 0; imu < (size_t)m_whole_body_imu_interface.size(); imu++)
-    {
-        if (m_raw_IMU_measurements[imu].sensor_name == m_imu_name)
-        {
-            y_acc = m_raw_IMU_measurements[imu].linear_proper_acceleration;
-
-            break;
-        }
-    }
-
-    // w_R_b*b_R_w*w_R_wimu(imu_ang_vel)
-    iDynTree::Rotation wIMU_R_IMU;
-    iDynTree::Vector10 attitude_estimator_state;
-    iDynTree::Span<double> state_buffer(attitude_estimator_state.data(), attitude_estimator_state.size());
-    if (m_attitude_estimator_type == "mahony")
-    {
-        m_imu_attitude_observer->getOrientationEstimateAsRotationMatrix(wIMU_R_IMU);
-        m_imu_attitude_observer->getInternalState(state_buffer);
-    }
-    else if (m_attitude_estimator_type == "qekf")
-    {
-        m_imu_attitude_qekf->getOrientationEstimateAsRotationMatrix(wIMU_R_IMU);
-        m_imu_attitude_qekf->getInternalState(state_buffer);
-    }
-
-    iDynTree::Rotation w_R_IMU = m_imu_calibration_matrix*wIMU_R_IMU;
-    iDynTree::Vector3 gravity;
-    gravity.zero();
-    gravity(2) = -9.8;
-
-    iDynTree::Vector6 base_vel;
-    // compute left trivialized base velocity
-    auto imu_lin_vel{toEigen(base_vel).block<3, 1>(0, 0)};
-    imu_lin_vel = imu_lin_vel + m_device_period_in_s*((toEigen(w_R_IMU)*toEigen(y_acc)) + toEigen(gravity));
-
-    iDynTree::Vector3 imu_ang_vel;
-    imu_ang_vel(0) = attitude_estimator_state(4);
-    imu_ang_vel(1) = attitude_estimator_state(5);
-    imu_ang_vel(2) = attitude_estimator_state(6);
-    toEigen(base_vel).block<3, 1>(3, 0) = (toEigen(w_R_IMU)*toEigen(imu_ang_vel));
-
-    iDynTree::toYarp(base_vel, m_world_velocity_base_from_imu);
-    return true;
-}
-
-
 void yarp::dev::baseEstimatorV1::publishFloatingBaseState()
 {
     yarp::os::Bottle &state_bottle = m_floating_base_state_port.prepare();
@@ -814,7 +763,7 @@ void yarp::dev::baseEstimatorV1::run()
 
             updateBasePoseWithIMUEstimates();
             updateBaseVelocity();
-            //updateBaseVelocityWithIMU();
+
             getCOMPositionAndVelocity(m_com_position, m_com_velocity);
             publish();
             if (m_dump_data)
