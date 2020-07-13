@@ -1458,6 +1458,7 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     //std::vector<std::string>     tempDeviceNames;
     std::vector<IAnalogSensor *> ftList;
     std::vector<std::string>     ftDeviceNames;
+    std::vector<std::string>     ftAnalogSensorNames;
     for(auto devIdx = 0; devIdx <p.size(); devIdx++)
     {
         ISixAxisForceTorqueSensors * fts = nullptr;
@@ -1475,6 +1476,7 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
             {
                 ftList.push_back(pAnalogSens);
                 ftDeviceNames.push_back(p[devIdx]->key);
+                ftAnalogSensorNames.push_back(p[devIdx]->key);
             }
         }
 
@@ -1540,7 +1542,7 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     }
     if (checkCounter!=tempSensors){
         yError("wholeBodyDynamics : Not all temperature sensors have the same name as the ft sensors, expected %d , found %d",tempSensors,checkCounter);
-
+        return false;
     }
     //End of temporary temperature check
 
@@ -1557,7 +1559,7 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         int deviceThatHasTheSameNameOfTheSensor = -1;
         for(size_t deviceIdx = 0; deviceIdx < ftList.size(); deviceIdx++)
         {
-            if( ftDeviceNames[deviceIdx] == sensorName )
+            if( ftAnalogSensorNames[deviceIdx] == sensorName )
             {
                 deviceThatHasTheSameNameOfTheSensor = deviceIdx;
             }
