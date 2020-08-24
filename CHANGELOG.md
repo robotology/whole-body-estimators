@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 ### Added
 - Added 'startWithZeroFTSensorOffsets' option when passed starts the WBD device with zero offsets for FT sensors, bypassing the offset calibration. (See [!72](https://github.com/robotology/whole-body-estimators/pull/72)).
+- Added support for compensating temperature in Force/Torque sensors readings and for specify user offline offset. (See [!45](https://github.com/robotology/whole-body-estimators/pull/45))
 
 ## [0.2.1] - 2020-04-08
 ### Fixed
