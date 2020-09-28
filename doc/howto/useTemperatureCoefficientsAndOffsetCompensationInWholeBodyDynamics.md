@@ -1,4 +1,7 @@
+# Using Temperature Compensation for FT Sensor Calibration and Pre-estimated offsets in WholeBodyDynamics
+
 To enable the use of temperature compensation and constant offset features in wholebodydynamics device, it is required to add some variables in the config file. The variables can be grouped into three:
+
 - Indicate which sensors belong to the multiple analog sensor category
 - Add the temperature coefficients
 - Add the offline offset

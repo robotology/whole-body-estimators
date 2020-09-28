@@ -1,3 +1,5 @@
+# Force Control on iCub
+
 **NOTE: This document was originally authored by Daniele Pucci, Silvio Traversaro and Francesco Romano. This document is directly ported from [robotology-legacy/codyco-modules/doc/force_control_on_icub.md](https://github.com/robotology-legacy/codyco-modules/blob/master/doc/force_control_on_icub.md).**
 
 This is a new and incomplete version of http://wiki.icub.org/wiki/Force_Control , updated with 
