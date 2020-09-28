@@ -12,7 +12,7 @@ The current implementations available in the `devices` folder include,
 
 ![Floating Base Estimation Algorithm V1](doc/resources/fbeV1.png)
 
-- `wholeBodyDynamics` primarily implements external contact wrench and internal joint torques estimation using various sensor modalities of the robot. Please see the document [Force Control on iCub](doc/howto/force_control_on_icub.md) for more details (This is ported from its original archived repository [robotology-legacy/codyco-modules](https://github.com/robotology-legacy/codyco-modules)). It additionally includes supporting algorithms for  gravity compensation torques estimation, and force-torque sensors calibration.
+- `wholeBodyDynamics` primarily implements external contact wrench and internal joint torques estimation using various sensor modalities of the robot. Please see the document [Force Control on iCub](doc/howto/force_control_on_icub.md) for more details (This is ported from its original archived repository [robotology-legacy/codyco-modules](https://github.com/robotology-legacy/codyco-modules)). It additionally includes supporting algorithms for  gravity compensation torques estimation, and force-torque sensors calibration, and external wrench estimation using tactile skin.
 
 
 # :page_facing_up: Dependencies
