@@ -1,6 +1,6 @@
 # Overview
 
-For an overview on `wholeBodyDynamics` and to understand how to run the device, please see [Force Control on iCub](../../doc/howto/force_control_on_icub.md). Below, you will find th description of the features/parameters included by the `wholeBodyDynamics` device.
+For an overview on `wholeBodyDynamics` and to understand how to run the device, please see [Force Control on iCub](../../doc/howto/force_control_on_icub.md). Below, you will find the description of the features/parameters included by the `wholeBodyDynamics` device.
 
 
 
