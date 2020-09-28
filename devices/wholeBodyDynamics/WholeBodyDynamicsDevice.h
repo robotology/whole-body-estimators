@@ -115,8 +115,8 @@ class wholeBodyDynamicsDeviceFilters
  * \section WholeBodyDynamicsDevice
  * A device that takes a list of axes and estimates the joint torques for each one of this axes.
  * 
- * For a detailed documentation of the parameters used within this device, please see
- * robotology/whole-body-estimators/devices/wholeBodyDynamics/README.md
+ * For a detailed documentation of the parameters used within this device, 
+ * please see the README.md in the directory of this header file.
  *
  */
 class WholeBodyDynamicsDevice :  public yarp::dev::DeviceDriver,
