@@ -92,7 +92,52 @@ Typically this estimates are provided only for the upper joints (arms and torso)
 
 #### Temperature Compensation Coefficients for FT Calibration and using Pre-estimated FT Offsets
 
-For a detailed explanation, please see the document [Using temperature coefficients and pre-estimated FT offsets](../../doc/howto/useTemperatureCoefficientsAndOffsetCompensationInWholeBodyDynamics.md).
+##### Temperature Coefficients
+  This device support to specify a set of temperature coefficients matrix to apply on the top of the (already calibrated) measure coming from the F/T sensors.
+  :warning:  This feature is meant to be experimental, and will be removed at any time.
+
+  The group of options that regulates this group is the following:
+
+| Parameter name | SubParameter   | Type              | Units | Default Value | Required |   Description                                                     | Notes |
+|:--------------:|:--------------:|:-----------------:|:-----:|:-------------:|:--------:|:-----------------------------------------------------------------:|:-----:|
+| FT_TEMPERATURE_COEFFICIENTS |  -       | group         | -     | -             | No       |  Group for providing secondary calibration matrix for FT sensors. |   |
+|                             | ftSensorName_1 | vector of 7 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x7 temperature coefficients matrix, specified in row-major order. | The temperature message coming from the sensor will be *multiplied* by the specified matrix to get the actual measurement used.  |
+|                             | ...            | vector of 7 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x7 temperature coefficients matrix, specified in row-major order. | The temperature message coming from the sensor will be *multiplied* by the specified matrix to get the actual measurement used.  |
+|                             | ftSensorName_n | vector of 7 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x7 temperature coefficients matrix, specified in row-major order. | The temperature message coming from the sensor will be *multiplied* by the specified matrix to get the actual measurement used.  |
+
+  All sensors not specified will use a 1x7 zero vector as a temperature coefficients matrix, where the first 6 are temperature correction for each axis and the 7th value is the temperature offset.
+
+  Example of part of a configuration file using `.xml` `yarprobotinterface` format (remember to put the fractional dot!).
+  ``` xml
+       <group name="FT_TEMPERATURE_COEFFICIENTS">
+              <param name="l_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0,0.0)</param>
+              <param name="r_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0,0.0)</param>
+       </group>
+  ```
+
+ ##### Force Torque Sensor Pre-estimated Offset
+  This device support to specify a set an constant offset vector to apply on the top of the (already calibrated) measure coming from the F/T sensors.
+  :warning:  This feature is meant to be experimental, and will be removed at any time.
+
+  The group of options that regulates this group is the following:
+| Parameter name | SubParameter   | Type              | Units | Default Value | Required |   Description                                                     | Notes |
+|:--------------:|:--------------:|:-----------------:|:-----:|:-------------:|:--------:|:-----------------------------------------------------------------:|:-----:|
+| FT_OFFSET |  -       | group         | -     | -             | No       |  Group for providing secondary calibration matrix for FT sensors. |   |
+|           | ftSensorName_1 | vector of 6 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x6 temperature coefficients matrix, specified in row-major order. | The constant offset estimated offline will be substracted to the sensor measurements to get the actual measurement used.  |
+|           | ...            | vector of 6 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x6 temperature coefficients matrix, specified in row-major order. | The constant offset estimated offline will be substracted to the sensor measurements to get the actual measurement used.  |
+|           | ftSensorName_n | vector of 6 doubles| Unitless, 1/m or m depending on the element. | Zero Vector   | No  | Elements of the  1x6 temperature coefficients matrix, specified in row-major order. | The constant offset estimated offline will be substracted to the sensor measurements to get the actual measurement used.  |
+
+  All sensors not specified will use a 1x6 zero vector as a constant offset, where the 6 are offset for each axis.
+
+  Example of part of a configuration file using `.xml` `yarprobotinterface` format (remember to put the fractional dot!).
+  ``` xml
+       <group name="FT_OFFSET">
+              <param name="l_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0)</param>
+              <param name="r_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0)</param>
+       </group>
+  ```
+
+For a detailed explanation on their usage, please see the document [Using temperature coefficients and pre-estimated FT offsets](../../doc/howto/useTemperatureCoefficientsAndOffsetCompensationInWholeBodyDynamics.md).
 
   #### Filters
 
