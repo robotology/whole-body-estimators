@@ -12,6 +12,8 @@ The current implementations available in the `devices` folder include,
 
 ![Floating Base Estimation Algorithm V1](doc/resources/fbeV1.png)
 
+- `wholeBodyDynamics` primarily implements external contact wrench and internal joint torques estimation using various sensor modalities of the robot. Please see the document [Force Control on iCub](doc/howto/force_control_on_icub.md) for more details (This is ported from its original archived repository [robotology-legacy/codyco-modules](https://github.com/robotology-legacy/codyco-modules)). It additionally includes supporting algorithms for  gravity compensation torques estimation, and force-torque sensors calibration.
+
 
 # :page_facing_up: Dependencies
 * [YCM](https://github.com/robotology/ycm) extra CMake Modules for YARP and friends.
@@ -45,6 +47,7 @@ Note that this is not necessary if you install `whole-body-estimators` via the `
 
 # Using the estimators
 - [`baseEstimatorV1`](devices/baseEstimatorV1/README.md) Please follow the documentation available here to run the floating base estimator.
+- [`wholeBodyDynamics`](devices/wholeBodyDynamics/README.md) Please follow the documentation for a description of features/parameters of the device and please follow the documentation in [Force Control on iCub](doc/howto/force_control_on_icub.md) for running the whole body dynamics device.
 
 # Authors
 ```
