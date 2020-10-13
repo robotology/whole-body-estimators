@@ -13,8 +13,6 @@ yarp_prepare_plugin(virtualAnalogRemapper CATEGORY device
 if(ENABLE_virtualAnalogRemapper)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-    include_directories(SYSTEM
-                        ${YARP_INCLUDE_DIRS})
 
     yarp_add_plugin(virtualAnalogRemapper VirtualAnalogRemapper.h VirtualAnalogRemapper.cpp)
 

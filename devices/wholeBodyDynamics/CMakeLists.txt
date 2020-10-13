@@ -7,8 +7,6 @@ find_package(YARP REQUIRED)
 find_package(ICUB REQUIRED)
 find_package(iDynTree REQUIRED)
 
-list(APPEND CMAKE_MODULE_PATH "${YARP_MODULE_PATH}")
-include(YarpInstallationHelpers)
 
 yarp_prepare_plugin(wholebodydynamics CATEGORY device
                                       TYPE yarp::dev::WholeBodyDynamicsDevice
@@ -20,7 +18,6 @@ if(ENABLE_wholebodydynamics)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     include_directories(SYSTEM
-                        ${YARP_INCLUDE_DIRS}
                         ${EIGEN3_INCLUDE_DIR}
                         ${skinDynLib_INCLUDE_DIRS})
 

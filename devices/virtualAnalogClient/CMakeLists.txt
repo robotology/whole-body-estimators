@@ -13,8 +13,6 @@ yarp_prepare_plugin(virtualAnalogClient CATEGORY device
 
 if(ENABLE_virtualAnalogClient)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-    include_directories(SYSTEM
-                        ${YARP_INCLUDE_DIRS})
 
     yarp_add_plugin(virtualAnalogClient VirtualAnalogClient.h VirtualAnalogClient.cpp)
 
