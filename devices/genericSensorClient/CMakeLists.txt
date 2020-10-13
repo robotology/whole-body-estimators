@@ -13,8 +13,6 @@ yarp_prepare_plugin(genericSensorClient CATEGORY device
 if(ENABLE_genericSensorClient)
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-    include_directories(SYSTEM
-                        ${YARP_INCLUDE_DIRS})
 
     yarp_add_plugin(genericSensorClient GenericSensorClient.h GenericSensorClient.cpp)
 

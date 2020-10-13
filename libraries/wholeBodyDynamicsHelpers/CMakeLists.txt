@@ -15,7 +15,6 @@ add_library(${PROJECT_NAME} ${WHOLEBODYDYNAMICS_HELPERS_HDRS} ${WHOLEBODYDYNAMIC
 target_include_directories(${PROJECT_NAME} PUBLIC
                                            "$<BUILD_INTERFACE:include>"
                                            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/wholeBodyDynamics>")
-target_include_directories(${PROJECT_NAME} PUBLIC  ${YARP_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY PUBLIC_HEADER ${WHOLEBODYDYNAMICS_HELPERS_SRCS})

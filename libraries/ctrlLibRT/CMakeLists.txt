@@ -2,7 +2,7 @@
 # Authors: Silvio Traversaro
 # CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.5)
 
 find_package(Eigen3 REQUIRED)
 
@@ -20,7 +20,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
                                            "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/${PROJECT_NAME}>")
 
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
-target_include_directories(${PROJECT_NAME} PUBLIC  ${YARP_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR})
+target_include_directories(${PROJECT_NAME} PUBLIC  ${EIGEN3_INCLUDE_DIR})
 target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY PUBLIC_HEADER ${${PROJECT_NAME}_HELPERS_SRCS})
