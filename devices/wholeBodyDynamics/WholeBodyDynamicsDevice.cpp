@@ -26,13 +26,14 @@ const double wholeBodyDynamics_sensorTimeoutInSeconds = 2.0;
 
 WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): RateThread(10),
                                                     portPrefix("/wholeBodyDynamics"),
-                                                    streamFilteredFT(false),
                                                     correctlyConfigured(false),
                                                     sensorReadCorrectly(false),
                                                     estimationWentWell(false),
                                                     validOffsetAvailable(false),
                                                     lastReadingSkinContactListStamp(0.0),
+                                                    streamFilteredFT(false),
                                                     checkTemperatureEvery_seconds(0.55),
+                                                    useSkinForContacts{true},
                                                     settingsEditor(settings)
 {
     // Calibration quantities
@@ -48,7 +49,6 @@ WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): RateThread(10),
     tempMeasurements.resize(0);
     ftTempMapping.resize(0);
     prevFTTempTimeStamp=0;
-
 }
 
 WholeBodyDynamicsDevice::~WholeBodyDynamicsDevice()
@@ -345,7 +345,7 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
             return false;
         }
     }
-    
+
     // We build the contactFramesIdx vector
     std::vector<iDynTree::FrameIndex> contactFramesIdx;
     contactFramesIdx.clear();
@@ -436,7 +436,7 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
 bool WholeBodyDynamicsDevice::parseOverrideContactFramesData(yarp::os::Bottle *_propOverrideContactFrames, yarp::os::Bottle *_propContactWrenchType, yarp::os::Bottle *_propContactWrenchDirection, yarp::os::Bottle *_propContactWrenchPosition)
 {
     //fill the variable `contactFramesNames`
-    contactFramesNames.resize(_propOverrideContactFrames->size());    
+    contactFramesNames.resize(_propOverrideContactFrames->size());
     for(int ax=0; ax < _propOverrideContactFrames->size(); ax++)
     {
         contactFramesNames[ax] = _propOverrideContactFrames->get(ax).asString().c_str();
@@ -451,7 +451,7 @@ bool WholeBodyDynamicsDevice::parseOverrideContactFramesData(yarp::os::Bottle *_
     else
     {
         //fill the other variables from the prop objects
-        contactWrenchType.resize(_propContactWrenchType->size());    
+        contactWrenchType.resize(_propContactWrenchType->size());
         for(int ax=0; ax < _propContactWrenchType->size(); ax++)
         {
             contactWrenchType[ax] = _propContactWrenchType->get(ax).asString().c_str();
@@ -833,7 +833,7 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
 {
     // Fill setting with their default values
     settings.kinematicSource             = IMU;
-    
+
     yarp::os::Property prop;
     prop.fromString(config.toString().c_str());
 
@@ -913,6 +913,12 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
         streamFilteredFT = prop.find("streamFilteredFT").asBool();
     }
 
+    if ( prop.check("useSkinForContacts") &&
+         prop.find("useSkinForContacts").isBool())
+    {
+        useSkinForContacts = prop.find("useSkinForContacts").asBool();
+    }
+
     std::string useJointVelocityOptionName = "useJointVelocity";
     if( !(prop.check(useJointVelocityOptionName.c_str()) && prop.find(useJointVelocityOptionName.c_str()).isBool()) )
     {
@@ -936,39 +942,39 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     {
         settings.useJointAcceleration = prop.find(useJointAccelerationOptionName.c_str()).asBool();
     }
-       
-    // Check for measurements low pass filter cutoff frequencies   
+
+    // Check for measurements low pass filter cutoff frequencies
     if (!applyLPFSettingsFromConfig(prop, "imuFilterCutoffInHz"))
     {
         yError() << "wholeBodyDynamics : missing required string parameter imuFilterCutoffInHz";
         return false;
     }
-    
+
     if (!applyLPFSettingsFromConfig(prop, "forceTorqueFilterCutoffInHz"))
     {
         yError() << "wholeBodyDynamics : missing required string parameter forceTorqueFilterCutoffInHz";
         return false;
     }
-    
+
     if (settings.useJointVelocity && !applyLPFSettingsFromConfig(prop, "jointVelFilterCutoffInHz"))
     {
         yError() << "wholeBodyDynamics : missing required string parameter jointVelFilterCutoffInHz";
         return false;
     }
-    
-    
+
+
     if (settings.useJointAcceleration && !applyLPFSettingsFromConfig(prop, "jointAccFilterCutoffInHz"))
     {
         yError() << "wholeBodyDynamics : missing required string parameter jointAccFilterCutoffInHz";
         return false;
     }
-    
+
     yInfo() << "wholeBodyDynamics : Using the following filter cutoff frequencies,";
     yInfo() << "wholeBodyDynamics: imuFilterCutoffInHz: " <<   settings.imuFilterCutoffInHz << " Hz.";
     yInfo() << "wholeBodyDynamics: forceTorqueFilterCutoffInHz: " <<   settings.forceTorqueFilterCutoffInHz << " Hz.";
     if (settings.useJointVelocity) { yInfo() << "wholeBodyDynamics: jointVelFilterCutoffInHz: " <<   settings.jointVelFilterCutoffInHz << " Hz."; }
     if (settings.useJointAcceleration) { yInfo() << "wholeBodyDynamics: jointAccFilterCutoffInHz: " <<   settings.jointAccFilterCutoffInHz << " Hz."; }
-    
+
     if ( !(prop.check("startWithZeroFTSensorOffsets") && prop.find("startWithZeroFTSensorOffsets").isBool()) )
     {
         settings.startWithZeroFTSensorOffsets = false;
@@ -981,7 +987,7 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
             yInfo() << "wholeBodyDynamics: setting startWithZeroFTSensorOffsets was set to true , FT sensor offsets will be automatically reset to zero.";
         }
     }
-    
+
     return true;
 }
 
@@ -994,10 +1000,10 @@ bool WholeBodyDynamicsDevice::applyLPFSettingsFromConfig(const yarp::os::Propert
         if (setting_name == "imuFilterCutoffInHz") { settings.imuFilterCutoffInHz = cut_off_freq; }
         if (setting_name == "forceTorqueFilterCutoffInHz") { settings.forceTorqueFilterCutoffInHz = cut_off_freq; }
         if (setting_name == "jointVelFilterCutoffInHz") { settings.jointVelFilterCutoffInHz = cut_off_freq; }
-        if (setting_name == "jointAccFilterCutoffInHz") { settings.jointAccFilterCutoffInHz = cut_off_freq; }        
+        if (setting_name == "jointAccFilterCutoffInHz") { settings.jointAccFilterCutoffInHz = cut_off_freq; }
     }
     else
-    {        
+    {
         return false;
     }
 
@@ -1370,18 +1376,21 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
 
     ok = this->openContactFrames(config);
-    if( !ok ) 
+    if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in opening default contact frame settings.";
         return false;
     }
 
     // Open the skin-related ports
-    ok = this->openSkinContactListPorts(config);
-    if( !ok )
+    if (useSkinForContacts)
     {
-        yError() << "wholeBodyDynamics: Problem in opening skin-related port.";
-        return false;
+        ok = this->openSkinContactListPorts(config);
+        if( !ok )
+        {
+            yError() << "wholeBodyDynamics: Problem in opening skin-related port.";
+            return false;
+        }
     }
 
     // Open the ports related to publishing external wrenches
@@ -1650,7 +1659,7 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
     ok = ok && this->attachAllVirtualAnalogSensor(p);
     ok = ok && this->attachAllFTs(p);
     ok = ok && this->attachAllIMUs(p);
-    
+
     if (settings.startWithZeroFTSensorOffsets)
     {
         this->setFTSensorOffsetsToZero();
@@ -1674,7 +1683,7 @@ void WholeBodyDynamicsDevice::setFTSensorOffsetsToZero()
 {
     for(size_t ft = 0; ft < this->getNrOfFTSensors(); ft++)
     {
-        ftProcessors[ft].offset().zero();            
+        ftProcessors[ft].offset().zero();
     }
 }
 
@@ -1980,13 +1989,70 @@ void WholeBodyDynamicsDevice::readContactPoints()
     size_t nrOfSubModels = estimator.submodels().getNrOfSubModels();
 
     // read skin
-    iCub::skinDynLib::skinContactList *scl =this->portContactsInput.read(false); //scl=null could also mean no new message
-    if(scl)
+    if (useSkinForContacts)
     {
-        //< \todo TODO check for envelope?
-        lastReadingSkinContactListStamp = yarp::os::Time::now();
-        if(scl->empty())   // if no skin contacts => leave the old contacts but reset pressure and contact list
+        iCub::skinDynLib::skinContactList *scl =this->portContactsInput.read(false); //scl=null could also mean no new message
+        if(scl)
         {
+            //< \todo TODO check for envelope?
+            lastReadingSkinContactListStamp = yarp::os::Time::now();
+            if(scl->empty())   // if no skin contacts => leave the old contacts but reset pressure and contact list
+            {
+                if (contactsReadFromSkin.empty())
+                {
+                    //iterate for each added contact frame
+                    for(size_t ovFrame = 0; ovFrame < contactFramesNames.size(); ovFrame++)
+                    {
+                        if(contactFramesIdxValidForSubModel[ovFrame] != iDynTree::FRAME_INVALID_INDEX)
+                        {
+                            bool ok = measuredContactLocations.addNewContactInFrame(estimator.model(),
+                                                                                    contactFramesIdxValidForSubModel[ovFrame], //frameIndex in iDynTree
+                                                                                    unknownExtWrench[ovFrame]);
+                            if( !ok )
+                            {
+                                yWarning() << "wholeBodyDynamics: Failing in adding override contact for submodel " << estimator.submodels().getSubModelOfFrame(estimator.model(),contactFramesIdxValidForSubModel[ovFrame]);
+                            }
+                        }
+                    }
+
+                    return;
+                }
+
+                //< \todo TODO this (using the last contacts if no contacts are detected) should be at subtree level, not at global level??
+                // ask what is intended with this TODO
+                else
+                {
+                    for(iCub::skinDynLib::skinContactList::iterator it=contactsReadFromSkin.begin(); it!=contactsReadFromSkin.end(); it++)
+                    {
+                        it->setPressure(0.0);
+                        it->setActiveTaxels(0);
+                        numberOfContacts++;
+                    }
+                }
+            }
+            else
+            {
+                contactsReadFromSkin.clear();
+                for(iCub::skinDynLib::skinContactList::iterator it=scl->begin(); it!=scl->end(); it++)
+                {
+                    //  less than 10 taxels are active then suppose zero moment
+                    if( it->getActiveTaxels()<10)
+                    {
+                        it->fixMoment();
+                    }
+                    contactsReadFromSkin.insert(contactsReadFromSkin.end(),*it);
+                    numberOfContacts++;
+                }
+            }
+        }
+        else
+        {
+            if(yarp::os::Time::now()-lastReadingSkinContactListStamp>SKIN_EVENTS_TIMEOUT && lastReadingSkinContactListStamp!=0.0)
+            {
+                contactsReadFromSkin.clear();
+            }
+            // For now just put the default contact points
+            //This logic only gives the location of the contacts but it does not store any value of pressure or wrench in the contact,
             if (contactsReadFromSkin.empty())
             {
                 //iterate for each added contact frame
@@ -2015,71 +2081,17 @@ void WholeBodyDynamicsDevice::readContactPoints()
                 {
                     it->setPressure(0.0);
                     it->setActiveTaxels(0);
+                    //yDebug() << "wholeBodyDynamics: skincontactlist empty, setting pressure and active taxels to 0";
                     numberOfContacts++;
                 }
             }
+
+            //return;
         }
-        else
-        {
-            contactsReadFromSkin.clear();
-            for(iCub::skinDynLib::skinContactList::iterator it=scl->begin(); it!=scl->end(); it++)
-            {
-                //  less than 10 taxels are active then suppose zero moment
-                if( it->getActiveTaxels()<10)
-                {
-                    it->fixMoment();
-                }
-                contactsReadFromSkin.insert(contactsReadFromSkin.end(),*it);
-                numberOfContacts++;
-            }
-        }
+
+        // convert skinContactList into LinkUnknownWrenchContacts TODO: change function to keep and store wrench information only contact location and force directionis kept
+        conversionHelper.fromSkinDynLibToiDynTree(estimator.model(),contactsReadFromSkin,measuredContactLocations);
     }
-    else
-    {
-        if(yarp::os::Time::now()-lastReadingSkinContactListStamp>SKIN_EVENTS_TIMEOUT && lastReadingSkinContactListStamp!=0.0)
-        {
-            contactsReadFromSkin.clear();
-        }
-        // For now just put the default contact points
-        //This logic only gives the location of the contacts but it does not store any value of pressure or wrench in the contact,
-        if (contactsReadFromSkin.empty())
-        {
-            //iterate for each added contact frame
-            for(size_t ovFrame = 0; ovFrame < contactFramesNames.size(); ovFrame++)
-            {
-                if(contactFramesIdxValidForSubModel[ovFrame] != iDynTree::FRAME_INVALID_INDEX)
-                {
-                    bool ok = measuredContactLocations.addNewContactInFrame(estimator.model(),
-                                                                            contactFramesIdxValidForSubModel[ovFrame], //frameIndex in iDynTree
-                                                                            unknownExtWrench[ovFrame]);
-                    if( !ok )
-                    {
-                        yWarning() << "wholeBodyDynamics: Failing in adding override contact for submodel " << estimator.submodels().getSubModelOfFrame(estimator.model(),contactFramesIdxValidForSubModel[ovFrame]);
-                    }
-                }
-            }
-
-            return;
-        }
-
-        //< \todo TODO this (using the last contacts if no contacts are detected) should be at subtree level, not at global level??
-        // ask what is intended with this TODO
-        else
-        {
-            for(iCub::skinDynLib::skinContactList::iterator it=contactsReadFromSkin.begin(); it!=contactsReadFromSkin.end(); it++)
-            {
-                it->setPressure(0.0);
-                it->setActiveTaxels(0);
-                //yDebug() << "wholeBodyDynamics: skincontactlist empty, setting pressure and active taxels to 0";
-                numberOfContacts++;
-            }
-        }
-
-        //return;
-    }
-
-    // convert skinContactList into LinkUnknownWrenchContacts TODO: change function to keep and store wrench information only contact location and force directionis kept
-    conversionHelper.fromSkinDynLibToiDynTree(estimator.model(),contactsReadFromSkin,measuredContactLocations);
 
     //declare and initialize contact count to 0
     std::vector<int> contacts_for_given_subModel(nrOfSubModels,0);
@@ -2220,7 +2232,10 @@ void WholeBodyDynamicsDevice::publishEstimatedQuantities()
             publishTorques();
 
             //Send external contacts
-            publishContacts();
+            if (useSkinForContacts)
+            {
+                publishContacts();
+            }
 
             //Send external wrench estimates
             publishExternalWrenches();
@@ -2465,7 +2480,10 @@ bool WholeBodyDynamicsDevice::detachAll()
     closeExternalWrenchesPorts();
     closeRPCPort();
     closeSettingsPort();
-    closeSkinContactListsPorts();
+    if (useSkinForContacts)
+    {
+        closeSkinContactListsPorts();
+    }
 
 
     return true;
