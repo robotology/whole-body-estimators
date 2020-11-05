@@ -15,6 +15,7 @@
         <param name="jointVelFilterCutoffInHz">3.0</param> <!-- used if useJointVelocity is set to true -->
         <param name="jointAccFilterCutoffInHz">3.0</param> <!-- used if useJointAcceleration is set to true -->
         <param name="startWithZeroFTSensorOffsets">true</param> <!-- bypass using resetOffset of FT sensors in simulation -->
+        <param name="useSkinForContacts">true</param> <!-- bypass handling skinDynLib for robots without skin -->
 
         <!-- map between iDynTree links (identified by a name)
              and skinDynLib links (identified by their frame name, a BodyPart enum

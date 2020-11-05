@@ -114,8 +114,8 @@ class wholeBodyDynamicsDeviceFilters
 /**
  * \section WholeBodyDynamicsDevice
  * A device that takes a list of axes and estimates the joint torques for each one of this axes.
- * 
- * For a detailed documentation of the parameters used within this device, 
+ *
+ * For a detailed documentation of the parameters used within this device,
  * please see the README.md in the directory of this header file.
  *
  */
@@ -178,6 +178,11 @@ private:
       * In this way, we are sure we do not miss any change in the measurements.
       */
     double checkTemperatureEvery_seconds;
+
+    /**
+     * Flag to use tactil skin data to update contact points and related data
+     */
+    bool useSkinForContacts;
 
     /**
      * Names of the axis (joint with at least a degree of freedom) used in estimation.
@@ -344,7 +349,7 @@ private:
      */
     bool loadSettingsFromConfig(yarp::os::Searchable& config);
     bool loadSecondaryCalibrationSettingsFromConfig(yarp::os::Searchable& config);
-    bool loadGravityCompensationSettingsFromConfig(yarp::os::Searchable & config);    
+    bool loadGravityCompensationSettingsFromConfig(yarp::os::Searchable & config);
     bool loadTemperatureCoefficientsSettingsFromConfig(yarp::os::Searchable& config);
     bool loadFTSensorOffsetFromConfig(yarp::os::Searchable& config);
     bool applyLPFSettingsFromConfig(const yarp::os::Property& config, const std::string& setting_name);
@@ -358,12 +363,12 @@ private:
      * Buffers related methods
      */
     void resizeBuffers();
-    
+
     /**
      * Reset related methods
      */
     void setFTSensorOffsetsToZero();
-    
+
     /*
      * Buffers
      *
