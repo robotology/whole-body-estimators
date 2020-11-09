@@ -18,6 +18,8 @@ env:
     YARP_TAG: v3.3.2
     ICUB_TAG: v1.15.0
     iDynTree_TAG: v1.1.0   
+    # Overwrite the VCPKG_INSTALLATION_ROOT env variable defined by Github Actions to point to our vcpkg
+    VCPKG_INSTALLATION_ROOT: C:\robotology\vcpkg
     
 jobs:
     build:
@@ -62,8 +64,6 @@ jobs:
             md C:/robotology/vcpkg
             wget https://github.com/robotology/robotology-superbuild-dependencies-vcpkg/releases/download/${env:vcpkg_robotology_TAG}/vcpkg-robotology.zip
             unzip vcpkg-robotology.zip -d C:/robotology/vcpkg
-            # Overwrite the VCPKG_INSTALLATION_ROOT env variable defined by Github Actions to point to our vcpkg
-            echo "::set-env name=VCPKG_INSTALLATION_ROOT::C:/robotology/vcpkg"
                
         - name: Dependencies [macOS]
           if: matrix.os == 'macOS-latest'

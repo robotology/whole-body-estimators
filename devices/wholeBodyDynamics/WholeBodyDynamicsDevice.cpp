@@ -11,7 +11,7 @@
 
 #include <iDynTree/yarp/YARPConversions.h>
 #include <iDynTree/Core/Utils.h>
-
+#include <iDynTree/Core/EigenHelpers.h>
 #include <cassert>
 #include <cmath>
 
@@ -26,12 +26,14 @@ const double wholeBodyDynamics_sensorTimeoutInSeconds = 2.0;
 
 WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): RateThread(10),
                                                     portPrefix("/wholeBodyDynamics"),
-                                                    streamFilteredFT(false),
                                                     correctlyConfigured(false),
                                                     sensorReadCorrectly(false),
                                                     estimationWentWell(false),
                                                     validOffsetAvailable(false),
                                                     lastReadingSkinContactListStamp(0.0),
+                                                    streamFilteredFT(false),
+                                                    checkTemperatureEvery_seconds(0.55),
+                                                    useSkinForContacts{true},
                                                     settingsEditor(settings)
 {
     // Calibration quantities
@@ -43,7 +45,10 @@ WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): RateThread(10),
     calibrationBuffers.measurementSumBuffer.resize(0);
     calibrationBuffers.nrOfSamplesToUseForCalibration = 0;
     calibrationBuffers.nrOfSamplesUsedUntilNowForCalibration = 0;
-
+    // temperature measuremnts vector
+    tempMeasurements.resize(0);
+    ftTempMapping.resize(0);
+    prevFTTempTimeStamp=0;
 }
 
 WholeBodyDynamicsDevice::~WholeBodyDynamicsDevice()
@@ -142,46 +147,34 @@ void addVectorOfStringToProperty(yarp::os::Property& prop, std::string key, std:
     return;
 }
 
-bool getUsedDOFsList(os::Searchable& config, std::vector<std::string> & usedDOFs)
+bool getConfigParamsAsList(os::Searchable& config,std::string propertyName , std::vector<std::string> & list)
 {
     yarp::os::Property prop;
     prop.fromString(config.toString().c_str());
-
-    yarp::os::Bottle *propAxesNames=prop.find("axesNames").asList();
-    if(propAxesNames==0)
+    yarp::os::Bottle *propNames=prop.find(propertyName).asList();
+    if(propNames==nullptr)
     {
-       yError() <<"WholeBodyDynamicsDevice: Error parsing parameters: \"axesNames\" should be followed by a list\n";
-       return false;
+        yError() <<"WholeBodyDynamicsDevice: Error parsing parameters: \" "<<propertyName<<" \" should be followed by a list\n";
+        return false;
     }
 
-    usedDOFs.resize(propAxesNames->size());
-    for(int ax=0; ax < propAxesNames->size(); ax++)
+    list.resize(propNames->size());
+    for(auto elem=0u; elem < propNames->size(); elem++)
     {
-        usedDOFs[ax] = propAxesNames->get(ax).asString().c_str();
+        list[elem] = propNames->get(elem).asString().c_str();
     }
 
     return true;
 }
 
+bool getUsedDOFsList(os::Searchable& config, std::vector<std::string> & usedDOFs)
+{
+    return getConfigParamsAsList(config,"axesNames",usedDOFs);
+}
+
 bool getGravityCompensationDOFsList(os::Searchable& config, std::vector<std::string> & gravityCompensationDOFs)
 {
-    yarp::os::Property prop;
-    prop.fromString(config.toString().c_str());
-
-    yarp::os::Bottle *propAxesNames=prop.find("gravityCompensationAxesNames").asList();
-    if(propAxesNames==0)
-    {
-       yError() <<"wholeBodyDynamics : Error parsing parameters: \"gravityCompensationAxesNames\" should be followed by a list\n";
-       return false;
-    }
-
-    gravityCompensationDOFs.resize(propAxesNames->size());
-    for(int ax=0; ax < propAxesNames->size(); ax++)
-    {
-        gravityCompensationDOFs[ax] = propAxesNames->get(ax).asString().c_str();
-    }
-
-    return true;
+    return getConfigParamsAsList(config,"gravityCompensationAxesNames",gravityCompensationDOFs);
 }
 
 
@@ -352,7 +345,7 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
             return false;
         }
     }
-    
+
     // We build the contactFramesIdx vector
     std::vector<iDynTree::FrameIndex> contactFramesIdx;
     contactFramesIdx.clear();
@@ -443,7 +436,7 @@ bool WholeBodyDynamicsDevice::openContactFrames(os::Searchable& config)
 bool WholeBodyDynamicsDevice::parseOverrideContactFramesData(yarp::os::Bottle *_propOverrideContactFrames, yarp::os::Bottle *_propContactWrenchType, yarp::os::Bottle *_propContactWrenchDirection, yarp::os::Bottle *_propContactWrenchPosition)
 {
     //fill the variable `contactFramesNames`
-    contactFramesNames.resize(_propOverrideContactFrames->size());    
+    contactFramesNames.resize(_propOverrideContactFrames->size());
     for(int ax=0; ax < _propOverrideContactFrames->size(); ax++)
     {
         contactFramesNames[ax] = _propOverrideContactFrames->get(ax).asString().c_str();
@@ -458,7 +451,7 @@ bool WholeBodyDynamicsDevice::parseOverrideContactFramesData(yarp::os::Bottle *_
     else
     {
         //fill the other variables from the prop objects
-        contactWrenchType.resize(_propContactWrenchType->size());    
+        contactWrenchType.resize(_propContactWrenchType->size());
         for(int ax=0; ax < _propContactWrenchType->size(); ax++)
         {
             contactWrenchType[ax] = _propContactWrenchType->get(ax).asString().c_str();
@@ -707,6 +700,54 @@ bool WholeBodyDynamicsDevice::openExternalWrenchesPorts(os::Searchable& config)
     return ok;
 }
 
+bool WholeBodyDynamicsDevice::openMultipleAnalogSensorRemapper(os::Searchable &config)
+{
+    // Pass to the remapper just the relevant parameters (sensorList)
+    yarp::os::Property prop;
+    prop.fromString(config.toString().c_str());
+    yarp::os::Property propMASRemapper;
+    yarp::os::Bottle & propMasNames=prop.findGroup("multipleAnalogSensorsNames");
+    propMASRemapper.put("device","multipleanalogsensorsremapper");
+    bool ok=false;
+    for (auto types=1u;types<propMasNames.size();types++){
+        yarp::os::Bottle * mas_type = propMasNames.get(types).asList();
+        if( mas_type->size() != 2 || mas_type->get(1).asList() == nullptr )
+        {
+            yError() << "wholeBodyDynamics: multipleAnalogSensorsNames group is malformed (" << mas_type->toString() << "). ";
+            return false;
+        }
+        else {
+            ok=true;
+        }
+
+        propMASRemapper.addGroup(mas_type->get(0).asString());
+        yarp::os::Bottle  MASnames;
+        yarp::os::Bottle & MASnamesList= MASnames.addList();
+        for(auto i=0u; i < mas_type->get(1).asList()->size(); i++)
+        {
+            MASnamesList.addString(mas_type->get(1).asList()->get(i).asString());
+        }
+        propMASRemapper.put(mas_type->get(0).asString(),MASnames.get(0));
+
+    }
+    ok = multipleAnalogRemappedDevice.open(propMASRemapper);
+    if( !ok )
+    {
+        return ok;
+    }
+    // View relevant interfaces for the multipleAnalogRemappedDevice
+    ok = ok && multipleAnalogRemappedDevice.view(remappedMASInterfaces.temperatureSensors);
+    ok = ok && multipleAnalogRemappedDevice.view(remappedMASInterfaces.ftMultiSensors);
+    ok = ok && multipleAnalogRemappedDevice.view(remappedMASInterfaces.multwrap);
+    if( !ok )
+    {
+        yError() << "wholeBodyDynamics : openMultipleAnalogSensorRemapper : error while opening the necessary interfaces in multipleAnalogRemappedDevice";
+        return ok;
+    }
+
+   return true;
+}
+
 bool WholeBodyDynamicsDevice::openFilteredFTPorts(os::Searchable& config)
 {
     bool ok = true;
@@ -764,6 +805,10 @@ void WholeBodyDynamicsDevice::resizeBuffers()
 
     ftProcessors.resize(nrOfFTSensors);
 
+    // Resize temperature sensor inside F/T sensors
+    this->tempMeasurements.resize(nrOfFTSensors,0.0);
+    this->ftTempMapping.resize(nrOfFTSensors,-1);
+
     // Resize filters
     filters.init(nrOfFTSensors,
                  settings.forceTorqueFilterCutoffInHz,
@@ -788,7 +833,7 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
 {
     // Fill setting with their default values
     settings.kinematicSource             = IMU;
-    
+
     yarp::os::Property prop;
     prop.fromString(config.toString().c_str());
 
@@ -868,6 +913,12 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
         streamFilteredFT = prop.find("streamFilteredFT").asBool();
     }
 
+    if ( prop.check("useSkinForContacts") &&
+         prop.find("useSkinForContacts").isBool())
+    {
+        useSkinForContacts = prop.find("useSkinForContacts").asBool();
+    }
+
     std::string useJointVelocityOptionName = "useJointVelocity";
     if( !(prop.check(useJointVelocityOptionName.c_str()) && prop.find(useJointVelocityOptionName.c_str()).isBool()) )
     {
@@ -891,39 +942,39 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     {
         settings.useJointAcceleration = prop.find(useJointAccelerationOptionName.c_str()).asBool();
     }
-       
-    // Check for measurements low pass filter cutoff frequencies   
+
+    // Check for measurements low pass filter cutoff frequencies
     if (!applyLPFSettingsFromConfig(prop, "imuFilterCutoffInHz"))
     {
         yError() << "wholeBodyDynamics : missing required string parameter imuFilterCutoffInHz";
         return false;
     }
-    
+
     if (!applyLPFSettingsFromConfig(prop, "forceTorqueFilterCutoffInHz"))
     {
         yError() << "wholeBodyDynamics : missing required string parameter forceTorqueFilterCutoffInHz";
         return false;
     }
-    
+
     if (settings.useJointVelocity && !applyLPFSettingsFromConfig(prop, "jointVelFilterCutoffInHz"))
     {
         yError() << "wholeBodyDynamics : missing required string parameter jointVelFilterCutoffInHz";
         return false;
     }
-    
-    
+
+
     if (settings.useJointAcceleration && !applyLPFSettingsFromConfig(prop, "jointAccFilterCutoffInHz"))
     {
         yError() << "wholeBodyDynamics : missing required string parameter jointAccFilterCutoffInHz";
         return false;
     }
-    
+
     yInfo() << "wholeBodyDynamics : Using the following filter cutoff frequencies,";
     yInfo() << "wholeBodyDynamics: imuFilterCutoffInHz: " <<   settings.imuFilterCutoffInHz << " Hz.";
     yInfo() << "wholeBodyDynamics: forceTorqueFilterCutoffInHz: " <<   settings.forceTorqueFilterCutoffInHz << " Hz.";
     if (settings.useJointVelocity) { yInfo() << "wholeBodyDynamics: jointVelFilterCutoffInHz: " <<   settings.jointVelFilterCutoffInHz << " Hz."; }
     if (settings.useJointAcceleration) { yInfo() << "wholeBodyDynamics: jointAccFilterCutoffInHz: " <<   settings.jointAccFilterCutoffInHz << " Hz."; }
-    
+
     if ( !(prop.check("startWithZeroFTSensorOffsets") && prop.find("startWithZeroFTSensorOffsets").isBool()) )
     {
         settings.startWithZeroFTSensorOffsets = false;
@@ -936,7 +987,7 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
             yInfo() << "wholeBodyDynamics: setting startWithZeroFTSensorOffsets was set to true , FT sensor offsets will be automatically reset to zero.";
         }
     }
-    
+
     return true;
 }
 
@@ -949,11 +1000,19 @@ bool WholeBodyDynamicsDevice::applyLPFSettingsFromConfig(const yarp::os::Propert
         if (setting_name == "imuFilterCutoffInHz") { settings.imuFilterCutoffInHz = cut_off_freq; }
         if (setting_name == "forceTorqueFilterCutoffInHz") { settings.forceTorqueFilterCutoffInHz = cut_off_freq; }
         if (setting_name == "jointVelFilterCutoffInHz") { settings.jointVelFilterCutoffInHz = cut_off_freq; }
-        if (setting_name == "jointAccFilterCutoffInHz") { settings.jointAccFilterCutoffInHz = cut_off_freq; }        
+        if (setting_name == "jointAccFilterCutoffInHz") { settings.jointAccFilterCutoffInHz = cut_off_freq; }
     }
     else
-    {        
+    {
         return false;
+    }
+
+    // Set time to check for a new temperature measurement. The default value is 0.55;
+    // is set in the device constructor
+    if( prop.check("checkTemperatureEvery_seconds") &&
+        prop.find("checkTemperatureEvery_seconds").isDouble())
+    {
+        checkTemperatureEvery_seconds = prop.find("checkTemperatureEvery_seconds").asDouble();
     }
 
     return true;
@@ -1012,6 +1071,130 @@ bool WholeBodyDynamicsDevice::loadSecondaryCalibrationSettingsFromConfig(os::Sea
             {
                 yError() << "wholeBodyDynamics: secondary calibration matrix specified for FT sensor " << iDynTree_sensorName
                           << " but no sensor with that name found in the model";
+                return false;
+            }
+        }
+        ret = true;
+    }
+
+    return ret;
+
+}
+
+bool WholeBodyDynamicsDevice::loadTemperatureCoefficientsSettingsFromConfig(os::Searchable& config)
+{
+    bool ret;
+    yarp::os::Property propAll;
+    propAll.fromString(config.toString().c_str());
+
+    if( !propAll.check("FT_TEMPERATURE_COEFFICIENTS") )
+    {
+        ret = true;
+    }
+    else
+    {
+        yarp::os::Bottle & propTempCoeff = propAll.findGroup("FT_TEMPERATURE_COEFFICIENTS");
+        for(auto i=1u; i < propTempCoeff.size(); i++ )
+        {
+            yarp::os::Bottle * map_bot = propTempCoeff.get(i).asList();
+            if( map_bot->size() != 2 || map_bot->get(1).asList() == nullptr ||
+                    map_bot->get(1).asList()->size() != 7 )
+            {
+                yError() << "wholeBodyDynamics: FT_TEMPERATURE_COEFFICIENTS group is malformed (" << map_bot->toString() << "). ";
+                return false;
+            }
+
+            std::string iDynTree_sensorName = map_bot->get(0).asString();
+            iDynTree::Vector6 temperatureCoeffs;
+            double tempOffset=0;
+
+            for(auto r=0u; r < 6; r++)
+            {
+                temperatureCoeffs(r) = map_bot->get(1).asList()->get(r).asDouble();
+            }
+            tempOffset= map_bot->get(1).asList()->get(6).asDouble();
+
+            // Linearly search for the specified sensor
+            bool sensorFound = false;
+            for(auto ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
+            {
+
+                if( estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() == iDynTree_sensorName )
+                {
+                    yDebug() << "wholeBodyDynamics: using temperature coefficients for sensor " << iDynTree_sensorName << " temperatureCoeffs values " << temperatureCoeffs.toString();
+
+                    ftProcessors[ft].temperatureCoefficients() = temperatureCoeffs;
+                    ftProcessors[ft].tempOffset() =tempOffset;
+                    sensorFound = true;
+                    break;
+                }
+            }
+
+            // If a specified sensor was not found, give an error
+            if( !sensorFound )
+            {
+                yError() << "wholeBodyDynamics: temperature coefficients matrix specified for FT sensor " << iDynTree_sensorName
+                         << " but no sensor with that name found in the model";
+                return false;
+            }
+        }
+        ret = true;
+    }
+
+    return ret;
+
+}
+
+bool WholeBodyDynamicsDevice::loadFTSensorOffsetFromConfig(os::Searchable& config)
+{
+    bool ret;
+    yarp::os::Property propAll;
+    propAll.fromString(config.toString().c_str());
+
+    if( !propAll.check("FT_OFFSET") )
+    {
+        ret = true;
+    }
+    else
+    {
+        yarp::os::Bottle & propSecondCalib = propAll.findGroup("FT_OFFSET");
+        for(auto i=1u; i < propSecondCalib.size(); i++ )
+        {
+            yarp::os::Bottle * map_bot = propSecondCalib.get(i).asList();
+            if( map_bot->size() != 2 || map_bot->get(1).asList() == nullptr ||
+                    map_bot->get(1).asList()->size() != 6 )
+            {
+                yError() << "wholeBodyDynamics: FT_OFFSET group is malformed (" << map_bot->toString() << "). ";
+                return false;
+            }
+
+            std::string iDynTree_sensorName = map_bot->get(0).asString();
+            iDynTree::Wrench  ftOffset;
+
+            for(int r=0; r < 6; r++)
+            {
+                ftOffset(r) = map_bot->get(1).asList()->get(r).asDouble();
+            }
+
+
+            // Linearly search for the specified sensor
+            bool sensorFound = false;
+            for(int ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
+            {
+                if( estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() == iDynTree_sensorName )
+                {
+                    yDebug() << "wholeBodyDynamics: using FT offset"<< ftOffset.toString() <<" for sensor " << iDynTree_sensorName;
+
+                    ftProcessors[ft].estimatedOffset() = ftOffset;
+                    sensorFound = true;
+                }
+            }
+
+            // If a specified sensor was not found, give an error
+            if( !sensorFound )
+            {
+                yError() << "wholeBodyDynamics: FT offset specified for FT sensor " << iDynTree_sensorName
+                         << " but no sensor with that name found in the model";
                 return false;
             }
         }
@@ -1113,7 +1296,7 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     // Load settings in the class
     ok = this->loadSettingsFromConfig(config);
-   if( !ok ) 
+   if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in loading settings from config.";
         return false;
@@ -1121,51 +1304,67 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     // Create the estimator
     ok = this->openEstimator(config);
-     if( !ok ) 
+     if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in opening estimator object.";
         return false;
-    } 
+    }
 
     // Open settings related to gravity compensation (we need the estimator to be open)
     ok = this->loadGravityCompensationSettingsFromConfig(config);
-    if( !ok ) 
+    if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in opening gravity compensator settings.";
         return false;
-    } 
+    }
 
     // Open settings related to gravity compensation (we need the estimator to be open)
     ok = this->loadSecondaryCalibrationSettingsFromConfig(config);
-    if( !ok ) 
+    if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in loading secondary calibration matrix settings.";
         return false;
-    } 
+    }
+
+    // Open settings related to gravity compensation (we need the estimator to be open)
+    ok = this->loadTemperatureCoefficientsSettingsFromConfig(config);
+    if( !ok )
+    {
+        yError() << "wholeBodyDynamics: Problem in loading temperature coefficients matrix settings.";
+        return false;
+    }
+
+    // Open settings related to gravity compensation (we need the estimator to be open)
+    ok = this->loadFTSensorOffsetFromConfig(config);
+    if( !ok )
+    {
+        yError() << "wholeBodyDynamics: Problem in loading offline estimated ft offsets settings.";
+        return false;
+    }
 
     // Open rpc port
     ok = this->openRPCPort();
-    if( !ok ) 
+    if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in opening rpc port.";
         return false;
-    } 
+    }
 
     // Open settings port
     ok = this->openSettingsPort();
-    if( !ok ) 
+    if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in opening settings port.";
         return false;
-    } 
+    }
 
     // Open the controlboard remapper
     ok = this->openRemapperControlBoard(config);
-    if( !ok ) 
+    if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in opening controlboard remapper.";
         return false;
-    } 
+    }
 
      // Open the virtualsensor remapper
     ok = this->openRemapperVirtualSensors(config);
@@ -1173,30 +1372,42 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
     {
         yError() << "wholeBodyDynamics: Problem in opening virtual analog sensors remapper.";
         return false;
-    } 
+    }
+
 
     ok = this->openContactFrames(config);
-    if( !ok ) 
+    if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in opening default contact frame settings.";
         return false;
-    } 
+    }
 
     // Open the skin-related ports
-    ok = this->openSkinContactListPorts(config);
-    if( !ok ) 
+    if (useSkinForContacts)
     {
-        yError() << "wholeBodyDynamics: Problem in opening skin-related port.";
-        return false;
-    } 
+        ok = this->openSkinContactListPorts(config);
+        if( !ok )
+        {
+            yError() << "wholeBodyDynamics: Problem in opening skin-related port.";
+            return false;
+        }
+    }
 
     // Open the ports related to publishing external wrenches
     ok = this->openExternalWrenchesPorts(config);
-    if( !ok ) 
+    if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in opening external wrenches port.";
         return false;
-    } 
+    }
+
+    // Open the multiple analog sensor remapper
+    ok = this->openMultipleAnalogSensorRemapper(config);
+    if( !ok )
+    {
+        yError() << "wholeBodyDynamics: Problem in opening multiple analog sensor remapper.";
+        return false;
+    }
 
     // Open the ports related to publishing filtered ft wrenches
     if (streamFilteredFT){
@@ -1250,21 +1461,41 @@ bool WholeBodyDynamicsDevice::attachAllVirtualAnalogSensor(const PolyDriverList&
 
 bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
 {
+    yInfo()<<"Starting attach MAS and analog ft";
+    PolyDriverList ftSensorList;
+    PolyDriverList tempSensorList;
+    //std::vector<std::string>     tempDeviceNames;
     std::vector<IAnalogSensor *> ftList;
     std::vector<std::string>     ftDeviceNames;
-    for(size_t devIdx = 0; devIdx < (size_t)p.size(); devIdx++)
+    std::vector<std::string>     ftAnalogSensorNames;
+    for(auto devIdx = 0; devIdx <p.size(); devIdx++)
     {
+        ISixAxisForceTorqueSensors * fts = nullptr;
+        ITemperatureSensors *tempS =nullptr;
+        if( p[devIdx]->poly->view(fts) )
+        {
+            ftSensorList.push(const_cast<PolyDriverDescriptor&>(*p[devIdx]));
+            ftDeviceNames.push_back(p[devIdx]->key);
+        }
         // A device is considered an ft if it implements IAnalogSensor and has 6 channels
-        IAnalogSensor * pAnalogSens = 0;
+        IAnalogSensor * pAnalogSens = nullptr;
         if( p[devIdx]->poly->view(pAnalogSens) )
         {
-            if( pAnalogSens->getChannels() == (int)wholeBodyDynamics_nrOfChannelsOfYARPFTSensor )
+            if( pAnalogSens->getChannels() ==static_cast<int>(wholeBodyDynamics_nrOfChannelsOfYARPFTSensor) )
             {
                 ftList.push_back(pAnalogSens);
                 ftDeviceNames.push_back(p[devIdx]->key);
+                ftAnalogSensorNames.push_back(p[devIdx]->key);
             }
         }
+
+        if( p[devIdx]->poly->view(tempS) )
+        {
+            tempSensorList.push(const_cast<PolyDriverDescriptor&>(*p[devIdx]));
+           // tempDeviceNames.push_back(p[devIdx]->key);
+        }
     }
+    yDebug()<<"wholeBodyDynamicsDevice :: number of ft sensors found in both ft + mas"<<ftDeviceNames.size()<< "where analog are "<<ftList.size()<<" and mas are "<<ftSensorList.size();
 
     if( ftList.size() != estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) )
     {
@@ -1274,6 +1505,58 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         return false;
     }
 
+    // Attach the controlBoardList to the controlBoardRemapper
+    bool ok = remappedMASInterfaces.multwrap->attachAll(ftSensorList);
+    ok = ok & remappedMASInterfaces.multwrap->attachAll(tempSensorList);
+
+    if( !ok  )
+    {
+        yError() << " WholeBodyDynamicsDevice::attachAll in attachAll of the remappedMASInterfaces";
+        return false;
+    }
+
+    // Check if the MASremapper and the estimator have a consistent number of ft sensors
+    int tempSensors = 0;
+    tempSensors=static_cast<int>( remappedMASInterfaces.temperatureSensors->getNrOfTemperatureSensors());
+    if( tempSensors > static_cast<int>( estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)) )
+    {
+        yError() << "wholeBodyDynamics : The multipleAnalogRemappedDevice has more sensors than those in the open estimator ft sensors list";
+        return false;
+    }
+
+    int checkCounter=0;
+    std::string ftName;
+    std::string tempName;
+    int ftMap=-1;
+    for (int tSensor=0;tSensor<tempSensors;tSensor++){
+        remappedMASInterfaces.temperatureSensors->getTemperatureSensorName(tSensor,tempName);
+        int individualCheck=0;
+        for (int ft=0;ft<static_cast<int>( estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)); ft++){
+            ftName=estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
+            if (tempName==ftName){
+                individualCheck++;
+                ftMap=ft;
+            }
+        }
+        if (individualCheck!=1){
+            yWarning()<< "wholeBodyDynamics : A temperature sensor name in multipleAnalogRemappedDevice do not match the name of the ft sensors";
+            yDebug()<<"wholeBodyDynamics : Could not find or found multiple times sensor "<<tempName<<" among ft sensor names";
+        }
+        else {
+            checkCounter++;
+            // assuming the name is the same the order withing the mas interfaces might have a different id so we need a mapping
+            ftTempMapping[static_cast<size_t>(ftMap)]=tSensor;
+            yInfo()<< "wholeBodyDynamics: ftTempMapping "<< ftMap << " is ft position in model "<< tSensor <<"="<<ftTempMapping[ftMap] << " sensor name "<< tempName;
+        }
+    }
+    if (checkCounter!=tempSensors){
+        yError("wholeBodyDynamics : Not all temperature sensors have the same name as the ft sensors, expected %d , found %d",tempSensors,checkCounter);
+        return false;
+    }
+    //End of temporary temperature check
+
+
+    // Old check performed on ft sensors
     // For now we assume that the name of the F/T sensor device match the sensor name in the URDF
     // In the future we could use a new fancy sensor interface
     ftSensors.resize(ftList.size());
@@ -1285,7 +1568,7 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         int deviceThatHasTheSameNameOfTheSensor = -1;
         for(size_t deviceIdx = 0; deviceIdx < ftList.size(); deviceIdx++)
         {
-            if( ftDeviceNames[deviceIdx] == sensorName )
+            if( ftAnalogSensorNames[deviceIdx] == sensorName )
             {
                 deviceThatHasTheSameNameOfTheSensor = deviceIdx;
             }
@@ -1376,7 +1659,7 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
     ok = ok && this->attachAllVirtualAnalogSensor(p);
     ok = ok && this->attachAllFTs(p);
     ok = ok && this->attachAllIMUs(p);
-    
+
     if (settings.startWithZeroFTSensorOffsets)
     {
         this->setFTSensorOffsetsToZero();
@@ -1400,7 +1683,7 @@ void WholeBodyDynamicsDevice::setFTSensorOffsetsToZero()
 {
     for(size_t ft = 0; ft < this->getNrOfFTSensors(); ft++)
     {
-        ftProcessors[ft].offset().zero();            
+        ftProcessors[ft].offset().zero();
     }
 }
 
@@ -1422,14 +1705,38 @@ void convertVectorFromDegreesToRadians(iDynTree::VectorDynSize & vector)
 bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
 {
     bool FTSensorsReadCorrectly = true;
+    bool TempSensorReadCorrectly = true;
+    double timeFTStamp=yarp::os::Time::now();
+    bool readTemperatureSensorThisTime=false;
+    yarp::dev::MAS_status    sensorStatus;
     for(size_t ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
     {
         iDynTree::Wrench bufWrench;
         int ftRetVal = ftSensors[ft]->read(ftMeasurement);
+        if (timeFTStamp-prevFTTempTimeStamp>checkTemperatureEvery_seconds){
+            if (ftTempMapping[ft]!=-1){
+                sensorStatus=remappedMASInterfaces.temperatureSensors->getTemperatureSensorStatus(ftTempMapping[ft]);
+                std::string nameOfSensor;
+                remappedMASInterfaces.temperatureSensors->getTemperatureSensorName(ftTempMapping[ft],nameOfSensor);
 
+
+                if (sensorStatus==MAS_OK ){
+                    TempSensorReadCorrectly=remappedMASInterfaces.temperatureSensors->getTemperatureSensorMeasure(ftTempMapping[ft],tempMeasurements[ft],timeFTStamp);
+                     remappedMASInterfaces.temperatureSensors->getTemperatureSensorStatus(ftTempMapping[ft]);
+                }
+                else
+                { //should be yError() but lets leave it like this for now
+                    yInfo()<<"wholeBodyDynamics : Temp sensor "<< nameOfSensor << " return status "<< sensorStatus;
+                }
+                readTemperatureSensorThisTime=true;
+            }
+            else {
+                tempMeasurements[ft]=0;
+            }
+        }
         bool ok = (ftRetVal == IAnalogSensor::AS_OK);
 
-        FTSensorsReadCorrectly = FTSensorsReadCorrectly && ok;
+        FTSensorsReadCorrectly = FTSensorsReadCorrectly && ok && TempSensorReadCorrectly;
 
         if( !ok && verbose )
         {
@@ -1440,7 +1747,7 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
         bool isNaN = false;
         for (size_t i = 0; i < ftMeasurement.size(); i++)
         {
-            if( std::isnan(ftMeasurement[i]) )
+            if( std::isnan(ftMeasurement[i]) ||  std::isnan(tempMeasurements[ft]))
             {
                 isNaN = true;
                 break;
@@ -1461,7 +1768,9 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
             rawSensorsMeasurements.setMeasurement(iDynTree::SIX_AXIS_FORCE_TORQUE,ft,bufWrench);
         }
     }
-
+    if (readTemperatureSensorThisTime) {
+        prevFTTempTimeStamp=timeFTStamp;
+    }
     return FTSensorsReadCorrectly;
 }
 
@@ -1573,7 +1882,7 @@ void WholeBodyDynamicsDevice::filterSensorsAndRemoveSensorOffsets()
         iDynTree::Wrench rawFTMeasure;
         rawSensorsMeasurements.getMeasurement(iDynTree::SIX_AXIS_FORCE_TORQUE,ft,rawFTMeasure);
 
-        iDynTree::Wrench rawFTMeasureWithOffsetRemoved  = ftProcessors[ft].filt(rawFTMeasure);
+        iDynTree::Wrench rawFTMeasureWithOffsetRemoved  = ftProcessors[ft].filt(rawFTMeasure,tempMeasurements[ft]);
 
         // Filter the data
         iDynTree::toYarp(rawFTMeasureWithOffsetRemoved,filters.bufferYarp6);
@@ -1680,13 +1989,70 @@ void WholeBodyDynamicsDevice::readContactPoints()
     size_t nrOfSubModels = estimator.submodels().getNrOfSubModels();
 
     // read skin
-    iCub::skinDynLib::skinContactList *scl =this->portContactsInput.read(false); //scl=null could also mean no new message
-    if(scl)
+    if (useSkinForContacts)
     {
-        //< \todo TODO check for envelope?
-        lastReadingSkinContactListStamp = yarp::os::Time::now();
-        if(scl->empty())   // if no skin contacts => leave the old contacts but reset pressure and contact list
+        iCub::skinDynLib::skinContactList *scl =this->portContactsInput.read(false); //scl=null could also mean no new message
+        if(scl)
         {
+            //< \todo TODO check for envelope?
+            lastReadingSkinContactListStamp = yarp::os::Time::now();
+            if(scl->empty())   // if no skin contacts => leave the old contacts but reset pressure and contact list
+            {
+                if (contactsReadFromSkin.empty())
+                {
+                    //iterate for each added contact frame
+                    for(size_t ovFrame = 0; ovFrame < contactFramesNames.size(); ovFrame++)
+                    {
+                        if(contactFramesIdxValidForSubModel[ovFrame] != iDynTree::FRAME_INVALID_INDEX)
+                        {
+                            bool ok = measuredContactLocations.addNewContactInFrame(estimator.model(),
+                                                                                    contactFramesIdxValidForSubModel[ovFrame], //frameIndex in iDynTree
+                                                                                    unknownExtWrench[ovFrame]);
+                            if( !ok )
+                            {
+                                yWarning() << "wholeBodyDynamics: Failing in adding override contact for submodel " << estimator.submodels().getSubModelOfFrame(estimator.model(),contactFramesIdxValidForSubModel[ovFrame]);
+                            }
+                        }
+                    }
+
+                    return;
+                }
+
+                //< \todo TODO this (using the last contacts if no contacts are detected) should be at subtree level, not at global level??
+                // ask what is intended with this TODO
+                else
+                {
+                    for(iCub::skinDynLib::skinContactList::iterator it=contactsReadFromSkin.begin(); it!=contactsReadFromSkin.end(); it++)
+                    {
+                        it->setPressure(0.0);
+                        it->setActiveTaxels(0);
+                        numberOfContacts++;
+                    }
+                }
+            }
+            else
+            {
+                contactsReadFromSkin.clear();
+                for(iCub::skinDynLib::skinContactList::iterator it=scl->begin(); it!=scl->end(); it++)
+                {
+                    //  less than 10 taxels are active then suppose zero moment
+                    if( it->getActiveTaxels()<10)
+                    {
+                        it->fixMoment();
+                    }
+                    contactsReadFromSkin.insert(contactsReadFromSkin.end(),*it);
+                    numberOfContacts++;
+                }
+            }
+        }
+        else
+        {
+            if(yarp::os::Time::now()-lastReadingSkinContactListStamp>SKIN_EVENTS_TIMEOUT && lastReadingSkinContactListStamp!=0.0)
+            {
+                contactsReadFromSkin.clear();
+            }
+            // For now just put the default contact points
+            //This logic only gives the location of the contacts but it does not store any value of pressure or wrench in the contact,
             if (contactsReadFromSkin.empty())
             {
                 //iterate for each added contact frame
@@ -1715,71 +2081,17 @@ void WholeBodyDynamicsDevice::readContactPoints()
                 {
                     it->setPressure(0.0);
                     it->setActiveTaxels(0);
+                    //yDebug() << "wholeBodyDynamics: skincontactlist empty, setting pressure and active taxels to 0";
                     numberOfContacts++;
                 }
             }
+
+            //return;
         }
-        else
-        {
-            contactsReadFromSkin.clear();
-            for(iCub::skinDynLib::skinContactList::iterator it=scl->begin(); it!=scl->end(); it++)
-            {
-                //  less than 10 taxels are active then suppose zero moment
-                if( it->getActiveTaxels()<10)
-                {
-                    it->fixMoment();                    
-                }
-                contactsReadFromSkin.insert(contactsReadFromSkin.end(),*it);
-                numberOfContacts++;
-            }
-        }
+
+        // convert skinContactList into LinkUnknownWrenchContacts TODO: change function to keep and store wrench information only contact location and force directionis kept
+        conversionHelper.fromSkinDynLibToiDynTree(estimator.model(),contactsReadFromSkin,measuredContactLocations);
     }
-    else
-    {
-        if(yarp::os::Time::now()-lastReadingSkinContactListStamp>SKIN_EVENTS_TIMEOUT && lastReadingSkinContactListStamp!=0.0)
-        {
-            contactsReadFromSkin.clear();
-        }
-        // For now just put the default contact points
-        //This logic only gives the location of the contacts but it does not store any value of pressure or wrench in the contact,
-        if (contactsReadFromSkin.empty())
-        {
-            //iterate for each added contact frame
-            for(size_t ovFrame = 0; ovFrame < contactFramesNames.size(); ovFrame++)
-            {
-                if(contactFramesIdxValidForSubModel[ovFrame] != iDynTree::FRAME_INVALID_INDEX)
-                {
-                    bool ok = measuredContactLocations.addNewContactInFrame(estimator.model(),
-                                                                            contactFramesIdxValidForSubModel[ovFrame], //frameIndex in iDynTree
-                                                                            unknownExtWrench[ovFrame]);
-                    if( !ok )
-                    {
-                        yWarning() << "wholeBodyDynamics: Failing in adding override contact for submodel " << estimator.submodels().getSubModelOfFrame(estimator.model(),contactFramesIdxValidForSubModel[ovFrame]);
-                    }
-                }
-            }
-
-            return;
-        }
-
-        //< \todo TODO this (using the last contacts if no contacts are detected) should be at subtree level, not at global level??
-        // ask what is intended with this TODO
-        else
-        {
-            for(iCub::skinDynLib::skinContactList::iterator it=contactsReadFromSkin.begin(); it!=contactsReadFromSkin.end(); it++)
-            {
-                it->setPressure(0.0);
-                it->setActiveTaxels(0);
-                //yDebug() << "wholeBodyDynamics: skincontactlist empty, setting pressure and active taxels to 0";
-                numberOfContacts++;
-            }
-        }
-
-        //return;
-    }
-
-    // convert skinContactList into LinkUnknownWrenchContacts TODO: change function to keep and store wrench information only contact location and force directionis kept
-    conversionHelper.fromSkinDynLibToiDynTree(estimator.model(),contactsReadFromSkin,measuredContactLocations);
 
     //declare and initialize contact count to 0
     std::vector<int> contacts_for_given_subModel(nrOfSubModels,0);
@@ -1860,7 +2172,8 @@ void WholeBodyDynamicsDevice::computeCalibration()
                 rawSensorsMeasurements.getMeasurement(iDynTree::SIX_AXIS_FORCE_TORQUE,ft,measuredRawFT);
 
                 // We apply only the secondary calibration matrix because we are actually computing the offset right now
-                measuredRawFT = ftProcessors[ft].applySecondaryCalibrationMatrix(measuredRawFT);
+                measuredRawFT = ftProcessors[ft].applySecondaryCalibrationMatrix(measuredRawFT,tempMeasurements[ft]);
+
 
                 addToSummer(calibrationBuffers.offsetSumBuffer[ft],measuredRawFT-estimatedFT);
                 addToSummer(calibrationBuffers.measurementSumBuffer[ft],measuredRawFT);
@@ -1919,7 +2232,10 @@ void WholeBodyDynamicsDevice::publishEstimatedQuantities()
             publishTorques();
 
             //Send external contacts
-            publishContacts();
+            if (useSkinForContacts)
+            {
+                publishContacts();
+            }
 
             //Send external wrench estimates
             publishExternalWrenches();
@@ -2158,12 +2474,16 @@ bool WholeBodyDynamicsDevice::detachAll()
 
     this->remappedControlBoardInterfaces.multwrap->detachAll();
     this->remappedVirtualAnalogSensorsInterfaces.multwrap->detachAll();
+    this->remappedMASInterfaces.multwrap->detachAll();
 
     closeFilteredFTPorts();
     closeExternalWrenchesPorts();
     closeRPCPort();
     closeSettingsPort();
-    closeSkinContactListsPorts();
+    if (useSkinForContacts)
+    {
+        closeSkinContactListsPorts();
+    }
 
 
     return true;
@@ -2173,6 +2493,7 @@ bool WholeBodyDynamicsDevice::close()
 {
     this->remappedControlBoard.close();
     this->remappedVirtualAnalogSensors.close();
+    this->multipleAnalogRemappedDevice.close();
 
     correctlyConfigured = false;
 
@@ -2372,6 +2693,30 @@ bool WholeBodyDynamicsDevice::resetOffset(const std::string& calib_code)
     yWarning() << "wholeBodyDynamics : calib ignoring calib_code " << calib_code;
 
     this->setFTSensorOffsetsToZero();
+
+    return true;
+}
+
+bool WholeBodyDynamicsDevice::usePreEstimatedOffset()
+{
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
+
+    yWarning() << "wholeBodyDynamics : using offset estimated offline.";
+
+    for(size_t ft = 0; ft < this->getNrOfFTSensors(); ft++)
+    {
+        double norm = iDynTree::toEigen(ftProcessors[ft].estimatedOffset()).norm();
+        if (norm!= 0.0){ // if norm is exactly 0.0 it means there was no offset  in the configuration file so it should be skipped
+//TODO: think of a more robust way instead of norm=0.0
+            //The offset estimated offline is meant to be added, while it is substracted in the six axis force torque  measure helpers, so we changed the sign here. There might be a better solution though.
+            yInfo()<< " Value of pre estimated offset is (actual value used is '-' this value): "<< ftProcessors[ft].estimatedOffset().toString() << "for sensor in position "<<ft;
+            ftProcessors[ft].offset()=-ftProcessors[ft].estimatedOffset();
+        }
+        else {
+            yInfo()<< " Norm was exactly 0.0 for ft sensor in position "<<ft<< " so we are using offset calculated using calib all";
+        }
+
+    }
 
     return true;
 }
@@ -2643,5 +2988,3 @@ wholeBodyDynamicsDeviceFilters::~wholeBodyDynamicsDeviceFilters()
 
 }
 }
-
-

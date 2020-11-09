@@ -81,6 +81,13 @@ service wholeBodyDynamics_IDLServer
   bool resetOffset(1:string calib_code)
 
   /**
+   * Use the offline estimated offset of the sensor.
+   * Only sensors with a specified offset in configuration file are affected by this method.s
+   * @return true/false on success/failure
+   */
+  bool usePreEstimatedOffset()
+
+  /**
   * Quit the module.
   * @return true/false on success/failure
   */

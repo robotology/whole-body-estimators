@@ -97,6 +97,13 @@ public:
     virtual bool resetOffset(const std::string& calib_code);
 
     /**
+     * Use the offline estimated offset of the sensor.
+     * Only sensors with a specified offset in configuration file are affected by this method.s
+     * @return true/false on success/failure
+     */
+    virtual bool usePreEstimatedOffset();
+
+    /**
      * Quit the module.
      * @return true/false on success/failure
      */

@@ -393,6 +393,49 @@ bool wholeBodyDynamics_IDLServer_resetOffset_helper::read(yarp::os::ConnectionRe
     return true;
 }
 
+class wholeBodyDynamics_IDLServer_usePreEstimatedOffset_helper :
+        public yarp::os::Portable
+{
+public:
+    explicit wholeBodyDynamics_IDLServer_usePreEstimatedOffset_helper();
+    bool write(yarp::os::ConnectionWriter& connection) const override;
+    bool read(yarp::os::ConnectionReader& connection) override;
+
+    thread_local static bool s_return_helper;
+};
+
+thread_local bool wholeBodyDynamics_IDLServer_usePreEstimatedOffset_helper::s_return_helper = {};
+
+wholeBodyDynamics_IDLServer_usePreEstimatedOffset_helper::wholeBodyDynamics_IDLServer_usePreEstimatedOffset_helper()
+{
+    s_return_helper = {};
+}
+
+bool wholeBodyDynamics_IDLServer_usePreEstimatedOffset_helper::write(yarp::os::ConnectionWriter& connection) const
+{
+    yarp::os::idl::WireWriter writer(connection);
+    if (!writer.writeListHeader(1)) {
+        return false;
+    }
+    if (!writer.writeTag("usePreEstimatedOffset", 1, 1)) {
+        return false;
+    }
+    return true;
+}
+
+bool wholeBodyDynamics_IDLServer_usePreEstimatedOffset_helper::read(yarp::os::ConnectionReader& connection)
+{
+    yarp::os::idl::WireReader reader(connection);
+    if (!reader.readListReturn()) {
+        return false;
+    }
+    if (!reader.readBool(s_return_helper)) {
+        reader.fail();
+        return false;
+    }
+    return true;
+}
+
 class wholeBodyDynamics_IDLServer_quit_helper :
         public yarp::os::Portable
 {
@@ -1216,6 +1259,16 @@ bool wholeBodyDynamics_IDLServer::resetOffset(const std::string& calib_code)
     return ok ? wholeBodyDynamics_IDLServer_resetOffset_helper::s_return_helper : bool{};
 }
 
+bool wholeBodyDynamics_IDLServer::usePreEstimatedOffset()
+{
+    wholeBodyDynamics_IDLServer_usePreEstimatedOffset_helper helper{};
+    if (!yarp().canWrite()) {
+        yError("Missing server method '%s'?", "bool wholeBodyDynamics_IDLServer::usePreEstimatedOffset()");
+    }
+    bool ok = yarp().write(helper, helper);
+    return ok ? wholeBodyDynamics_IDLServer_usePreEstimatedOffset_helper::s_return_helper : bool{};
+}
+
 bool wholeBodyDynamics_IDLServer::quit()
 {
     wholeBodyDynamics_IDLServer_quit_helper helper{};
@@ -1390,6 +1443,7 @@ std::vector<std::string> wholeBodyDynamics_IDLServer::help(const std::string& fu
         helpString.emplace_back("calibStandingOnOneLink");
         helpString.emplace_back("calibStandingOnTwoLinks");
         helpString.emplace_back("resetOffset");
+        helpString.emplace_back("usePreEstimatedOffset");
         helpString.emplace_back("quit");
         helpString.emplace_back("resetSimpleLeggedOdometry");
         helpString.emplace_back("changeFixedLinkSimpleLeggedOdometry");
@@ -1467,6 +1521,12 @@ std::vector<std::string> wholeBodyDynamics_IDLServer::help(const std::string& fu
             helpString.emplace_back("bool resetOffset(const std::string& calib_code) ");
             helpString.emplace_back("Reset the sensor offset to 0 0 0 0 0 0 (six zeros). ");
             helpString.emplace_back("@param calib_code argument to specify the sensors to reset (all,arms,legs,feet) ");
+            helpString.emplace_back("@return true/false on success/failure ");
+        }
+        if (functionName == "usePreEstimatedOffset") {
+            helpString.emplace_back("bool usePreEstimatedOffset() ");
+            helpString.emplace_back("Use the offline estimated offset of the sensor. ");
+            helpString.emplace_back("Only sensors with a specified offset in configuration file are affected by this method.s ");
             helpString.emplace_back("@return true/false on success/failure ");
         }
         if (functionName == "quit") {
@@ -1741,6 +1801,20 @@ bool wholeBodyDynamics_IDLServer::read(yarp::os::ConnectionReader& connection)
                     return false;
                 }
                 if (!writer.writeBool(wholeBodyDynamics_IDLServer_resetOffset_helper::s_return_helper)) {
+                    return false;
+                }
+            }
+            reader.accept();
+            return true;
+        }
+        if (tag == "usePreEstimatedOffset") {
+            wholeBodyDynamics_IDLServer_usePreEstimatedOffset_helper::s_return_helper = usePreEstimatedOffset();
+            yarp::os::idl::WireWriter writer(reader);
+            if (!writer.isNull()) {
+                if (!writer.writeListHeader(1)) {
+                    return false;
+                }
+                if (!writer.writeBool(wholeBodyDynamics_IDLServer_usePreEstimatedOffset_helper::s_return_helper)) {
                     return false;
                 }
             }
