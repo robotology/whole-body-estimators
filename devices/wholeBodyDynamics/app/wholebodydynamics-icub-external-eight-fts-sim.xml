@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE devices PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
+
+<devices robot="@WBD_YARP_ROBOT_NAME@" build="1">
+    <device name="wholebodydynamics" type="wholebodydynamics">
+        <param name="axesNames">(torso_pitch,torso_roll,torso_yaw,neck_pitch, neck_roll,neck_yaw,l_shoulder_pitch,l_shoulder_roll,l_shoulder_yaw,l_elbow,l_wrist_prosup,l_wrist_pitch,l_wrist_yaw,r_shoulder_pitch,r_shoulder_roll,r_shoulder_yaw,r_elbow,r_wrist_prosup,r_wrist_pitch,r_wrist_yaw,l_hip_pitch,l_hip_roll,l_hip_yaw,l_knee,l_ankle_pitch,l_ankle_roll,r_hip_pitch,r_hip_roll,r_hip_yaw,r_knee,r_ankle_pitch,r_ankle_roll)</param>
+        <param name="modelFile">model.urdf</param>
+        <param name="fixedFrameGravity">(0,0,-9.81)</param>
+        <param name="defaultContactFrames">(l_hand,r_hand,root_link,l_foot_front,l_foot_rear,r_foot_front,r_foot_rear,l_upper_leg,r_upper_leg)</param>
+        <param name="imuFrameName">imu_frame</param>
+        <param name="useJointVelocity">true</param>
+        <param name="useJointAcceleration">true</param>
+        <param name="imuFilterCutoffInHz">3.0</param>
+        <param name="forceTorqueFilterCutoffInHz">3.0</param>
+        <param name="jointVelFilterCutoffInHz">3.0</param> <!-- used if useJointVelocity is set to true -->
+        <param name="jointAccFilterCutoffInHz">3.0</param> <!-- used if useJointAcceleration is set to true -->
+        <param name="startWithZeroFTSensorOffsets">true</param> <!-- bypass using resetOffset of FT sensors in simulation -->
+        <param name="useSkinForContacts">false</param>
+
+
+        <group name="GRAVITY_COMPENSATION">
+            <param name="enableGravityCompensation">true</param>
+            <param name="gravityCompensationBaseLink">root_link</param>
+            <param name="gravityCompensationAxesNames">(torso_pitch,torso_roll,torso_yaw,neck_pitch,neck_roll,neck_yaw,l_shoulder_pitch,l_shoulder_roll,l_shoulder_yaw,l_elbow,r_shoulder_pitch,r_shoulder_roll,r_shoulder_yaw,r_elbow)</param>
+        </group>
+
+        <group name="WBD_OUTPUT_EXTERNAL_WRENCH_PORTS">
+            <param name="/wholeBodyDynamics/left_arm/endEffectorWrench:o">(l_hand,l_hand)</param>
+            <param name="/wholeBodyDynamics/right_arm/endEffectorWrench:o">(r_hand,l_hand)</param>
+            <param name="/wholeBodyDynamics/left_foot_front/cartesianEndEffectorWrench:o">(l_foot_front,l_foot_front,l_foot_front)</param>
+            <param name="/wholeBodyDynamics/left_foot_rear/cartesianEndEffectorWrench:o">(l_foot_rear,l_foot_rear,l_foot_rear)</param>
+            <param name="/wholeBodyDynamics/right_foot_front/cartesianEndEffectorWrench:o">(r_foot_front,r_foot_front,r_foot_front)</param>
+            <param name="/wholeBodyDynamics/right_foot_rear/cartesianEndEffectorWrench:o">(r_foot_rear,r_foot_rear,r_foot_rear)</param>
+
+        </group>
+
+        <action phase="startup" level="15" type="attach">
+            <paramlist name="networks">
+                <!-- motorcontrol -->
+                <elem name="left_leg">left_leg_mc</elem>
+                <elem name="right_leg">right_leg_mc</elem>
+                <elem name="torso">torso_mc</elem>
+                <elem name="right_arm">right_arm_mc</elem>
+                <elem name="left_arm">left_arm_mc</elem>
+                <elem name="head">head_mc</elem>
+                <!-- imu -->
+                <elem name="imu">inertial</elem>
+                <!-- ft -->
+                <elem name="l_arm_ft_sensor">left_upper_arm_strain</elem>
+                <elem name="r_arm_ft_sensor">right_upper_arm_strain</elem>
+                <elem name="l_leg_ft_sensor">left_upper_leg_strain</elem>
+                <elem name="r_leg_ft_sensor">right_upper_leg_strain</elem>
+                <elem name="l_foot_front_ft_sensor">left_lower_leg_front_strain</elem>
+                <elem name="l_foot_rear_ft_sensor">left_lower_leg_rear_strain</elem>
+                <elem name="r_foot_front_ft_sensor">right_lower_leg_front_strain</elem>
+                <elem name="r_foot_rear_ft_sensor">right_lower_leg_rear_strain</elem>
+            </paramlist>
+        </action>
+
+        <action phase="shutdown" level="2" type="detach" />
+
+    </device>
+</devices>
