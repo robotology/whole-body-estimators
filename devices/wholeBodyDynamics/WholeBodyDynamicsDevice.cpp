@@ -290,8 +290,6 @@ bool WholeBodyDynamicsDevice::openEstimator(os::Searchable& config)
         yWarning() << "wholeBodyDynamics : If you instead want to add the FT sensors to your model, please check iDynTree documentation on how to add sensors to models.";
     }
 
-    this->resizeBuffers();
-
     return true;
 }
 
@@ -975,6 +973,14 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     if (settings.useJointVelocity) { yInfo() << "wholeBodyDynamics: jointVelFilterCutoffInHz: " <<   settings.jointVelFilterCutoffInHz << " Hz."; }
     if (settings.useJointAcceleration) { yInfo() << "wholeBodyDynamics: jointAccFilterCutoffInHz: " <<   settings.jointAccFilterCutoffInHz << " Hz."; }
 
+    // Set time to check for a new temperature measurement. The default value is 0.55;
+    // is set in the device constructor
+    if( prop.check("checkTemperatureEvery_seconds") &&
+        prop.find("checkTemperatureEvery_seconds").isDouble())
+    {
+        checkTemperatureEvery_seconds = prop.find("checkTemperatureEvery_seconds").asDouble();
+    }
+
     if ( !(prop.check("startWithZeroFTSensorOffsets") && prop.find("startWithZeroFTSensorOffsets").isBool()) )
     {
         settings.startWithZeroFTSensorOffsets = false;
@@ -1005,14 +1011,6 @@ bool WholeBodyDynamicsDevice::applyLPFSettingsFromConfig(const yarp::os::Propert
     else
     {
         return false;
-    }
-
-    // Set time to check for a new temperature measurement. The default value is 0.55;
-    // is set in the device constructor
-    if( prop.check("checkTemperatureEvery_seconds") &&
-        prop.find("checkTemperatureEvery_seconds").isDouble())
-    {
-        checkTemperatureEvery_seconds = prop.find("checkTemperatureEvery_seconds").asDouble();
     }
 
     return true;
@@ -1293,22 +1291,24 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
     std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     bool ok;
+    // Create the estimator
+    ok = this->openEstimator(config);
+    if( !ok )
+    {
+        yError() << "wholeBodyDynamics: Problem in opening estimator object.";
+        return false;
+    }
 
     // Load settings in the class
     ok = this->loadSettingsFromConfig(config);
-   if( !ok )
+    if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in loading settings from config.";
         return false;
     }
 
-    // Create the estimator
-    ok = this->openEstimator(config);
-     if( !ok )
-    {
-        yError() << "wholeBodyDynamics: Problem in opening estimator object.";
-        return false;
-    }
+    // resize internal buffers
+    this->resizeBuffers();
 
     // Open settings related to gravity compensation (we need the estimator to be open)
     ok = this->loadGravityCompensationSettingsFromConfig(config);
