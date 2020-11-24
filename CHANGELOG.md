@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed bug in opening the `wholeBodyDynamics` device while using the `assume_fixed` parameter in the configuration instead of `imuFrameName`. (See [!93](https://github.com/robotology/whole-body-estimators/pull/93)).
 - Fixed parsing `checkTemperatureEvery_seconds` parameter in `wholeBodyDynamics` device. (See [!93](https://github.com/robotology/whole-body-estimators/pull/93)).
+- Fix `yarp::os::ConstString` deprecations (See [!94](https://github.com/robotology/whole-body-estimators/pull/94))
 
 ## [0.3.0] - 2020-11-09
 ### Added
