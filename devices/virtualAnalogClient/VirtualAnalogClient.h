@@ -19,6 +19,7 @@
 #include <yarp/dev/PolyDriver.h>
 
 #include <vector>
+#include <string>
 
 namespace yarp {
 namespace dev {
@@ -57,11 +58,11 @@ class VirtualAnalogClient:    public DeviceDriver,
                               public IAxisInfo
 {
 protected:
-    yarp::os::ConstString m_local;
-    yarp::os::ConstString m_remote;
+    std::string m_local;
+    std::string m_remote;
     int m_virtualAnalogSensorInteger;
 
-    std::vector<yarp::os::ConstString> m_axisName;
+    std::vector<std::string> m_axisName;
     std::vector<yarp::dev::JointTypeEnum> m_axisType;
 
     yarp::os::BufferedPort<yarp::os::Bottle> m_outputPort;
@@ -88,7 +89,7 @@ public:
     virtual bool updateVirtualAnalogSensorMeasure(int ch, double &measure);
 
     /** IAxisInfo methods (documented in IVirtualAnalogSensor class) */
-    virtual bool getAxisName(int axis, yarp::os::ConstString& name);
+    virtual bool getAxisName(int axis, std::string& name);
     virtual bool getJointType(int axis, yarp::dev::JointTypeEnum& type);
 };
 

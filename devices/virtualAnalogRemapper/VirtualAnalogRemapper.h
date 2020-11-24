@@ -13,6 +13,7 @@
 #include <yarp/dev/Wrapper.h>
 
 #include <vector>
+#include <string>
 
 namespace yarp {
 namespace dev {
@@ -126,7 +127,7 @@ public:
     virtual bool updateVirtualAnalogSensorMeasure(int ch, double &measure);
     
     /** IAxisInfo methods (documented in IVirtualAnalogSensor class) */
-    virtual bool getAxisName(int axis, yarp::os::ConstString& name);
+    virtual bool getAxisName(int axis, std::string& name);
     virtual bool getJointType(int axis, yarp::dev::JointTypeEnum& type);
 
     /** IMultipleWrapper methods (documented in IMultipleWrapper */
