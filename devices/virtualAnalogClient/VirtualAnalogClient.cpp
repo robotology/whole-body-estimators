@@ -43,7 +43,7 @@ bool VirtualAnalogClient::open(Searchable& config)
 
     m_remote = prop.find("remote").asString();
 
-    yarp::os::ConstString carrier;
+    std::string carrier;
     if( ( prop.check("carrier") && prop.find("carrier").isString() ) )
     {
         carrier = prop.find("carrier").asString();
@@ -75,7 +75,7 @@ bool VirtualAnalogClient::open(Searchable& config)
         Bottle * AxisTypeBot = prop.find("AxisType").asList();
         for(int jnt=0; jnt < AxisTypeBot->size(); jnt++)
         {
-            ConstString type = AxisTypeBot->get(jnt).asString();
+            std::string type = AxisTypeBot->get(jnt).asString();
             if (type == "revolute")
             {
                 m_axisType[jnt] = VOCAB_JOINTTYPE_REVOLUTE;
@@ -205,7 +205,7 @@ VAS_status VirtualAnalogClient::getVirtualAnalogSensorStatus(int /*ch*/)
     return yarp::dev::VAS_status::VAS_OK;
 }
 
-bool VirtualAnalogClient::getAxisName(int axis, ConstString& name)
+bool VirtualAnalogClient::getAxisName(int axis, std::string& name)
 {
     if( axis < 0 || axis >= this->getVirtualAnalogSensorChannels() )
     {

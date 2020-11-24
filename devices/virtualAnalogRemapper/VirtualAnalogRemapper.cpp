@@ -87,7 +87,7 @@ bool VirtualAnalogRemapper::attachAll(const PolyDriverList& p)
         int nrOfVirtualAxes = virtualAnalogList[devIdx]->getVirtualAnalogSensorChannels();
         for(int localAxis=0; localAxis < nrOfVirtualAxes; localAxis++)
         {
-            yarp::os::ConstString axisName;
+            std::string axisName;
             axisInfoList[devIdx]->getAxisName(localAxis,axisName);
 
             std::string axisNameStd = axisName.c_str();
@@ -296,7 +296,7 @@ yarp::dev::VAS_status VirtualAnalogRemapper::getVirtualAnalogSensorStatus(int ch
     return status;
 }
 
-bool VirtualAnalogRemapper::getAxisName(int axis, ConstString& name)
+bool VirtualAnalogRemapper::getAxisName(int axis, std::string& name)
 {
     if( axis < 0 || axis >= this->getVirtualAnalogSensorChannels() )
     {
