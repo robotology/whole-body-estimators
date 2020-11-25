@@ -866,16 +866,19 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
         settings.fixedFrameName = fixedFrameName;
     }
 
-    // Check for the imu frame
-    if( prop.check("imuFrameName") &&
-        prop.find("imuFrameName").isString() )
+    if (settings.kinematicSource != FIXED_FRAME)
     {
-        settings.imuFrameName = prop.find("imuFrameName").asString();
-    }
-    else
-    {
-        yError() << "wholeBodyDynamics : missing required string parameter imuFrameName";
-        return false;
+        // Check for the imu frame
+        if( prop.check("imuFrameName") &&
+            prop.find("imuFrameName").isString() )
+	{
+            settings.imuFrameName = prop.find("imuFrameName").asString();
+    	}
+    	else
+    	{
+            yError() << "wholeBodyDynamics : missing required string parameter imuFrameName";
+            return false;
+    	}
     }
 
     // fixedFrameGravity is always required even if you
@@ -1658,7 +1661,11 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
     ok = ok && this->attachAllControlBoard(p);
     ok = ok && this->attachAllVirtualAnalogSensor(p);
     ok = ok && this->attachAllFTs(p);
-    ok = ok && this->attachAllIMUs(p);
+    
+    if (settings.kinematicSource == IMU)
+    {
+        ok = ok && this->attachAllIMUs(p);
+    }
 
     if (settings.startWithZeroFTSensorOffsets)
     {
