@@ -183,6 +183,11 @@ private:
      * Flag to use tactil skin data to update contact points and related data
      */
     bool useSkinForContacts;
+    
+    /**
+     * Flag to check if IMU was attached during startup
+     */
+    bool isIMUAttached;
 
     /**
      * Names of the axis (joint with at least a degree of freedom) used in estimation.

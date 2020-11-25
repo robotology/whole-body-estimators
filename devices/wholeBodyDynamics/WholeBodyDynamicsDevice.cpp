@@ -34,6 +34,7 @@ WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): RateThread(10),
                                                     streamFilteredFT(false),
                                                     checkTemperatureEvery_seconds(0.55),
                                                     useSkinForContacts{true},
+                                                    isIMUAttached{false},
                                                     settingsEditor(settings)
 {
     // Calibration quantities
@@ -1665,6 +1666,7 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
     if (settings.kinematicSource == IMU)
     {
         ok = ok && this->attachAllIMUs(p);
+        isIMUAttached = true;
     }
 
     if (settings.startWithZeroFTSensorOffsets)
@@ -2825,6 +2827,11 @@ bool WholeBodyDynamicsDevice::useFixedFrameAsKinematicSource(const std::string& 
 bool WholeBodyDynamicsDevice::useIMUAsKinematicSource()
 {
     std::lock_guard<std::mutex> guard(this->deviceMutex);
+    if (!isIMUAttached)
+    {
+        yError() << "wholeBodyDynamics : IMU was not attached during startup, cannot use IMU as kinematics source. ";
+        return false;
+    }
 
     yInfo() << "wholeBodyDynamics : successfully set the kinematic source to be the IMU ";
 
