@@ -34,6 +34,7 @@ WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): RateThread(10),
                                                     streamFilteredFT(false),
                                                     checkTemperatureEvery_seconds(0.55),
                                                     useSkinForContacts{true},
+                                                    isIMUAttached{false},
                                                     settingsEditor(settings)
 {
     // Calibration quantities
@@ -866,16 +867,19 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
         settings.fixedFrameName = fixedFrameName;
     }
 
-    // Check for the imu frame
-    if( prop.check("imuFrameName") &&
-        prop.find("imuFrameName").isString() )
+    if (settings.kinematicSource != FIXED_FRAME)
     {
-        settings.imuFrameName = prop.find("imuFrameName").asString();
-    }
-    else
-    {
-        yError() << "wholeBodyDynamics : missing required string parameter imuFrameName";
-        return false;
+        // Check for the imu frame
+        if( prop.check("imuFrameName") &&
+            prop.find("imuFrameName").isString() )
+	{
+            settings.imuFrameName = prop.find("imuFrameName").asString();
+    	}
+    	else
+    	{
+            yError() << "wholeBodyDynamics : missing required string parameter imuFrameName";
+            return false;
+    	}
     }
 
     // fixedFrameGravity is always required even if you
@@ -1658,7 +1662,12 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
     ok = ok && this->attachAllControlBoard(p);
     ok = ok && this->attachAllVirtualAnalogSensor(p);
     ok = ok && this->attachAllFTs(p);
-    ok = ok && this->attachAllIMUs(p);
+    
+    if (settings.kinematicSource == IMU)
+    {
+        ok = ok && this->attachAllIMUs(p);
+        isIMUAttached = true;
+    }
 
     if (settings.startWithZeroFTSensorOffsets)
     {
@@ -2818,6 +2827,11 @@ bool WholeBodyDynamicsDevice::useFixedFrameAsKinematicSource(const std::string& 
 bool WholeBodyDynamicsDevice::useIMUAsKinematicSource()
 {
     std::lock_guard<std::mutex> guard(this->deviceMutex);
+    if (!isIMUAttached)
+    {
+        yError() << "wholeBodyDynamics : IMU was not attached during startup, cannot use IMU as kinematics source. ";
+        return false;
+    }
 
     yInfo() << "wholeBodyDynamics : successfully set the kinematic source to be the IMU ";
 
