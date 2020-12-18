@@ -229,6 +229,12 @@ private:
 
     /** IMU interface */
     yarp::dev::IGenericSensor * imuInterface;
+    
+    yarp::dev::IThreeAxisLinearAccelerometers* masAccInterface;
+    yarp::dev::IThreeAxisGyroscopes* masGyroInterface;
+    bool useMasIMU{true};
+    std::string masAccName{"rfeimu_acc"};
+    std::string masGyroName{"rfeimu_gyro"};
 
     /**
      * Setting for the whole body external wrenches and joint torques estimation.

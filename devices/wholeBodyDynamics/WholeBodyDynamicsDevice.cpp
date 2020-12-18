@@ -997,6 +997,30 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
             yInfo() << "wholeBodyDynamics: setting startWithZeroFTSensorOffsets was set to true , FT sensor offsets will be automatically reset to zero.";
         }
     }
+    
+    if( !prop.check("HW_USE_MAS_IMU") )
+    {
+        useMasIMU = false;
+    }
+    else
+    {        
+        yarp::os::Searchable & propMASIMU = prop.findGroup("HW_USE_MAS_IMU");
+        useMasIMU = true;
+
+        if( !(propMASIMU.check("accelerometer") && propMASIMU.find("accelerometer").isString()) )
+        {
+            yError() << "wholeBodyDynamics: HW_USE_MAS_IMU group found, but accelerometer string parameter missing";
+            return false;
+        }
+        masAccName = propMASIMU.find("accelerometer").asString();
+        
+        if( !(propMASIMU.check("gyroscope") && propMASIMU.find("gyroscope").isString()) )
+        {
+            yError() << "wholeBodyDynamics: HW_USE_MAS_IMU group found, but gyroscope string parameter missing";
+            return false;
+        }
+        masGyroName = propMASIMU.find("gyroscope").asString();
+    }
 
     return true;
 }
@@ -1610,30 +1634,77 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
 
 bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
 {
-    std::vector<IGenericSensor*> imuList;
-
-    for(size_t devIdx = 0; devIdx < (size_t)p.size(); devIdx++)
+    if (!useMasIMU)
     {
-        IGenericSensor * pGenericSensor = 0;
-        if( p[devIdx]->poly->view(pGenericSensor) )
+        std::vector<IGenericSensor*> imuList;
+
+        for(size_t devIdx = 0; devIdx < (size_t)p.size(); devIdx++)
         {
-            imuList.push_back(pGenericSensor);
+            IGenericSensor * pGenericSensor = 0;
+            if( p[devIdx]->poly->view(pGenericSensor) )
+            {
+                imuList.push_back(pGenericSensor);
+            }
+        }
+
+        size_t nrOfIMUDetected = imuList.size();
+
+        if( nrOfIMUDetected != 1 )
+        {
+            yError() << "WholeBodyDynamicsDevice was expecting only one IMU, but it did not find " << nrOfIMUDetected << " in the attached devices";
+            return false;
+        }
+
+        if( imuList.size() == 1 )
+        {
+            this->imuInterface = imuList[0];
         }
     }
-
-    size_t nrOfIMUDetected = imuList.size();
-
-    if( nrOfIMUDetected != 1 )
+    else
     {
-        yError() << "WholeBodyDynamicsDevice was expecting only one IMU, but it did not find " << nrOfIMUDetected << " in the attached devices";
-        return false;
+        for(size_t devIdx = 0; devIdx < (size_t)p.size(); devIdx++)
+        {
+            IThreeAxisLinearAccelerometers * pAcc{nullptr};
+            if( p[devIdx]->poly->view(pAcc) )
+            {                
+                if (pAcc->getNrOfThreeAxisLinearAccelerometers() != 1)
+                {
+                     yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- Nr acc should be 1";
+                    return false;
+                }
+                
+                std::string accName;
+                pAcc->getThreeAxisLinearAccelerometerName(0, accName);
+                if (accName != masAccName)
+                {
+                    yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- acc name mismatch";
+                    return false;
+                }
+                
+                masAccInterface = pAcc;
+            }
+            
+            IThreeAxisGyroscopes * pGyro{nullptr};
+            if( p[devIdx]->poly->view(pGyro) )
+            {
+                if (pGyro->getNrOfThreeAxisGyroscopes() != 1)
+                {
+                     yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- Nr gyro should be 1";
+                    return false;
+                }
+                
+                std::string gyroName;
+                pGyro->getThreeAxisGyroscopeName(0, gyroName);
+                if (gyroName != masGyroName)
+                {
+                    yError() << "WholeBodyDynamicsDevice MAS IMU ERROR - gyro name mismatch";
+                    return false;
+                }
+                
+                masGyroInterface = pGyro;
+            }
+        }
     }
-
-    if( imuList.size() == 1 )
-    {
-        this->imuInterface = imuList[0];
-    }
-
     // We try to read for a brief moment the sensors for two reasons:
     // so we can make sure that they actually work, and to make sure that the buffers are correctly initialized
     bool verbose = false;
@@ -1789,23 +1860,41 @@ bool WholeBodyDynamicsDevice::readIMUSensors(bool verbose)
     rawIMUMeasurements.linProperAcc.zero();
     rawIMUMeasurements.angularVel.zero();
 
-    bool ok = imuInterface->read(imuMeasurement);
-
-    if( !ok && verbose )
+    bool ok{false};
+    if (!useMasIMU)
     {
-        yWarning() << "wholeBodyDynamics warning : imu sensor was not readed correctly, using old measurement";
+        ok = imuInterface->read(imuMeasurement);
+
+        if( !ok && verbose )
+        {
+            yWarning() << "wholeBodyDynamics warning : imu sensor was not readed correctly, using old measurement";
+        }
+
+        if( ok )
+        {
+            // Check format of IMU in YARP http://wiki.icub.org/wiki/Inertial_Sensor
+            rawIMUMeasurements.angularVel(0) = deg2rad(imuMeasurement[6]);
+            rawIMUMeasurements.angularVel(1) = deg2rad(imuMeasurement[7]);
+            rawIMUMeasurements.angularVel(2) = deg2rad(imuMeasurement[8]);
+
+            rawIMUMeasurements.linProperAcc(0) = imuMeasurement[3];
+            rawIMUMeasurements.linProperAcc(1) = imuMeasurement[4];
+            rawIMUMeasurements.linProperAcc(2) = imuMeasurement[5];
+        }
     }
-
-    if( ok )
+    else
     {
-        // Check format of IMU in YARP http://wiki.icub.org/wiki/Inertial_Sensor
-        rawIMUMeasurements.angularVel(0) = deg2rad(imuMeasurement[6]);
-        rawIMUMeasurements.angularVel(1) = deg2rad(imuMeasurement[7]);
-        rawIMUMeasurements.angularVel(2) = deg2rad(imuMeasurement[8]);
+        double time_stamp;
+        yarp::sig::Vector acc(3), gyro(3);
+        ok = masAccInterface->getThreeAxisLinearAccelerometerMeasure(0, acc, time_stamp);
+        ok = masGyroInterface->getThreeAxisGyroscopeMeasure(0, gyro, time_stamp) && ok;
+        rawIMUMeasurements.angularVel(0) = deg2rad(gyro[0]);
+        rawIMUMeasurements.angularVel(1) = deg2rad(gyro[1]);
+        rawIMUMeasurements.angularVel(2) = deg2rad(gyro[2]);
 
-        rawIMUMeasurements.linProperAcc(0) = imuMeasurement[3];
-        rawIMUMeasurements.linProperAcc(1) = imuMeasurement[4];
-        rawIMUMeasurements.linProperAcc(2) = imuMeasurement[5];
+        rawIMUMeasurements.linProperAcc(0) = acc[0];
+        rawIMUMeasurements.linProperAcc(1) = acc[1];
+        rawIMUMeasurements.linProperAcc(2) = acc[2];
     }
 
     return ok;
