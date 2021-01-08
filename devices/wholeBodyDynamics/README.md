@@ -21,7 +21,7 @@ For an overview on `wholeBodyDynamics` and to understand how to run the device, 
 | forceTorqueFilterCutoffInHz | - | double            | Hz    |      -        | Yes      | Cutoff frequency of the filter used to filter FT measures.  |  The used filter is a simple first order filter. |
 | jointVelFilterCutoffInHz    | - | double            | Hz    |      -        | Yes      | Cutoff frequency of the filter used to filter joint velocities measures. | The used filter is a simple first order filter. |
 | jointAccFilterCutoffInHz    | - | double            | Hz    |      -        | Yes      | Cutoff frequency of the filter used to filter joint accelerations measures. | The used filter is a simple first order filter. |
-| startWithZeroFTSensorOffsets    | - | bool            | -    |      False       | No      | Use zero FT sensor offsets at startup. If this flag is set to false, the device estimates the offsets of FT sensors at startup|
+| startWithZeroFTSensorOffsets    | - | bool            | -    |      False       | No      | Use zero FT sensor offsets at startup. If this flag is set to false, the device estimates the offsets of FT sensors at startup||
 | defaultContactFrames      | -   | vector of strings (name of frames ) |-| - |  Yes     | Vector of default contact frames. If no external force read from the skin is found on a given submodel, the defaultContactFrames list is scanned and the first frame found on the submodel is the one at which origin the unknown contact force is assumed to be. | - |
 | alwaysUpdateAllVirtualTorqueSensors | -     |  bool |  -    |      -        |  Yes     | Enforce that a virtual sensor for each estimated axes is available. | Tipically this is set to false when the device is running in the robot, while to true if it is running outside the robot. |
 | defaultContactFrames |      -   | vector of strings |  -    |    -          | Yes      | If not data is read from the skin, specify the location of the default contacts | For each submodel induced by the FT sensor, the first not used frame that belongs to that submodel is selected from the list. An error is raised if not suitable frame is found for a submodel. |
@@ -46,6 +46,9 @@ For an overview on `wholeBodyDynamics` and to understand how to run the device, 
 |                      | enableGravityCompensation | bool | -  | -           | No        |  |  |
 |                      | gravityCompensationBaseLink| string | - | -         | No        | ..  | |
 |                      | gravityCompensationAxesNames | vector of strings | - | - | No   | Axes for which the gravity compensation is published. | |
+| HW_USE_MAS_IMU |  -  | group             | -     | -     | No       |  Group to enable attach to Multiple Analog Sensor interface based IMU. | If the group is not present, the default behavior of attaching to IGenericSensor interface IMU will be carried out. |
+|                |   accelerometer   | string  | - | - | Yes    | Should match the sensor id used to open the device containing MAS IThreeAxisLinearAcccelerometers interface  |  |
+|                |   gyroscope   | string  | - | - | Yes    | Should match the sensor id used to open the device containing MAS IThreeAxisGyroscopes interface  |  |
 
   The axes contained in the `axesNames` parameter are then mapped to the wrapped `controlboard` in the `attachAll` method, using `controlBoardRemapper` class.
   Furthermore are also used to match the yarp axes to the joint names found in the passed URDF file.
