@@ -45,6 +45,8 @@ target_link_libraries(baseEstimatorV1 PUBLIC ${YARP_LIBRARIES}
                                       YARP::YARP_eigen
                                       YARP::YARP_os
                                       YARP::YARP_sig
+                                      YARP::YARP_dev
+                                      ctrlLib
                                       ${iDynTree_LIBRARIES}
                                       floatingBaseEstimationRPC-service
                                       PRIVATE Eigen3::Eigen)
