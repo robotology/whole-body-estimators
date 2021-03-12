@@ -872,14 +872,14 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
         // Check for the imu frame
         if( prop.check("imuFrameName") &&
             prop.find("imuFrameName").isString() )
-	{
+    {
             settings.imuFrameName = prop.find("imuFrameName").asString();
-    	}
-    	else
-    	{
+        }
+        else
+        {
             yError() << "wholeBodyDynamics : missing required string parameter imuFrameName";
             return false;
-    	}
+        }
     }
 
     // fixedFrameGravity is always required even if you
@@ -997,13 +997,13 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
             yInfo() << "wholeBodyDynamics: setting startWithZeroFTSensorOffsets was set to true , FT sensor offsets will be automatically reset to zero.";
         }
     }
-    
+
     if( !prop.check("HW_USE_MAS_IMU") )
     {
         useMasIMU = false;
     }
     else
-    {        
+    {
         yarp::os::Searchable & propMASIMU = prop.findGroup("HW_USE_MAS_IMU");
         useMasIMU = true;
 
@@ -1013,7 +1013,7 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
             return false;
         }
         masAccName = propMASIMU.find("accelerometer").asString();
-        
+
         if( !(propMASIMU.check("gyroscope") && propMASIMU.find("gyroscope").isString()) )
         {
             yError() << "wholeBodyDynamics: HW_USE_MAS_IMU group found, but gyroscope string parameter missing";
@@ -1318,6 +1318,9 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 {
     std::lock_guard<std::mutex> guard(this->deviceMutex);
 
+    double tick = yarp::os::Time::now();
+    yDebug() << "Opening estimator.";
+
     bool ok;
     // Create the estimator
     ok = this->openEstimator(config);
@@ -1326,6 +1329,11 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         yError() << "wholeBodyDynamics: Problem in opening estimator object.";
         return false;
     }
+
+    yDebug() << "Estimator opened in " << yarp::os::Time::now() - tick << "s.";
+
+    tick = yarp::os::Time::now();
+    yDebug() << "Loading settings from configuration files.";
 
     // Load settings in the class
     ok = this->loadSettingsFromConfig(config);
@@ -1370,6 +1378,11 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         return false;
     }
 
+    yDebug() << "Settings loaded in " << yarp::os::Time::now() - tick << "s.";
+
+    tick = yarp::os::Time::now();
+    yDebug() << "Opening RPC port.";
+
     // Open rpc port
     ok = this->openRPCPort();
     if( !ok )
@@ -1377,6 +1390,11 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         yError() << "wholeBodyDynamics: Problem in opening rpc port.";
         return false;
     }
+
+    yDebug() << "RPC port opened in " << yarp::os::Time::now() - tick << "s.";
+
+    tick = yarp::os::Time::now();
+    yDebug() << "Opening settings port.";
 
     // Open settings port
     ok = this->openSettingsPort();
@@ -1386,6 +1404,11 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         return false;
     }
 
+    yDebug() << "Settings port opened in " << yarp::os::Time::now() - tick << "s.";
+
+    tick = yarp::os::Time::now();
+    yDebug() << "Opening remapper control board.";
+
     // Open the controlboard remapper
     ok = this->openRemapperControlBoard(config);
     if( !ok )
@@ -1393,6 +1416,11 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         yError() << "wholeBodyDynamics: Problem in opening controlboard remapper.";
         return false;
     }
+
+    yDebug() << "Remapper control board opened in " << yarp::os::Time::now() - tick << "s.";
+
+    tick = yarp::os::Time::now();
+    yDebug() << "Opening remapper virtual sensors.";
 
      // Open the virtualsensor remapper
     ok = this->openRemapperVirtualSensors(config);
@@ -1402,6 +1430,10 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         return false;
     }
 
+    yDebug() << "Remapper virtual sensors opened in " << yarp::os::Time::now() - tick << "s.";
+
+    tick = yarp::os::Time::now();
+    yDebug() << "Opening contact frames.";
 
     ok = this->openContactFrames(config);
     if( !ok )
@@ -1410,16 +1442,26 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         return false;
     }
 
+    yDebug() << "Contact frames opened in " << yarp::os::Time::now() - tick << "s.";
+
     // Open the skin-related ports
     if (useSkinForContacts)
     {
+        tick = yarp::os::Time::now();
+        yDebug() << "Opening skin contact list ports.";
+
         ok = this->openSkinContactListPorts(config);
         if( !ok )
         {
             yError() << "wholeBodyDynamics: Problem in opening skin-related port.";
             return false;
         }
+
+        yDebug() << "Skin contact list opened in " << yarp::os::Time::now() - tick << "s.";
     }
+
+    tick = yarp::os::Time::now();
+    yDebug() << "Opening external wrenches ports.";
 
     // Open the ports related to publishing external wrenches
     ok = this->openExternalWrenchesPorts(config);
@@ -1429,6 +1471,11 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         return false;
     }
 
+    yDebug() << "External port wrenches opened in " << yarp::os::Time::now() - tick << "s.";
+
+    tick = yarp::os::Time::now();
+    yDebug() << "Opening multiple analog sensors remapper.";
+
     // Open the multiple analog sensor remapper
     ok = this->openMultipleAnalogSensorRemapper(config);
     if( !ok )
@@ -1437,14 +1484,21 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         return false;
     }
 
+    yDebug() << "Multiple analog sensors remapper opened in " << yarp::os::Time::now() - tick << "s.";
+
     // Open the ports related to publishing filtered ft wrenches
     if (streamFilteredFT){
+        tick = yarp::os::Time::now();
+        yDebug() << "Opening filtered FT ports.";
+
         ok = this->openFilteredFTPorts(config);
         if( !ok )
         {
             yError() << "wholeBodyDynamics: Problem in opening filtered ft ports.";
             return false;
         }
+
+        yDebug() << "Filtered FT ports opened in " << yarp::os::Time::now() - tick << "s.";
     }
 
     return true;
@@ -1666,13 +1720,13 @@ bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
         {
             IThreeAxisLinearAccelerometers * pAcc{nullptr};
             if( p[devIdx]->poly->view(pAcc) )
-            {                
+            {
                 if (pAcc->getNrOfThreeAxisLinearAccelerometers() != 1)
                 {
                      yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- Nr acc should be 1";
                     return false;
                 }
-                
+
                 std::string accName;
                 pAcc->getThreeAxisLinearAccelerometerName(0, accName);
                 if (accName != masAccName)
@@ -1680,10 +1734,10 @@ bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
                     yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- acc name mismatch";
                     return false;
                 }
-                
+
                 masAccInterface = pAcc;
             }
-            
+
             IThreeAxisGyroscopes * pGyro{nullptr};
             if( p[devIdx]->poly->view(pGyro) )
             {
@@ -1692,7 +1746,7 @@ bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
                      yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- Nr gyro should be 1";
                     return false;
                 }
-                
+
                 std::string gyroName;
                 pGyro->getThreeAxisGyroscopeName(0, gyroName);
                 if (gyroName != masGyroName)
@@ -1700,7 +1754,7 @@ bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
                     yError() << "WholeBodyDynamicsDevice MAS IMU ERROR - gyro name mismatch";
                     return false;
                 }
-                
+
                 masGyroInterface = pGyro;
             }
         }
@@ -1730,16 +1784,34 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
     std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     bool ok = true;
+    double tick = yarp::os::Time::now();
+    yDebug() << "Attaching all control board.";
     ok = ok && this->attachAllControlBoard(p);
+    yDebug() << "Attaching all control board took " << yarp::os::Time::now() - tick << "s.";
+
+    tick = yarp::os::Time::now();
+    yDebug() << "Attaching all virtual analog sensors.";
     ok = ok && this->attachAllVirtualAnalogSensor(p);
+    yDebug() << "Attaching all virtual analog sensors took " << yarp::os::Time::now() - tick << "s.";
+
+    tick = yarp::os::Time::now();
+    yDebug() << "Attaching all FTs.";
     ok = ok && this->attachAllFTs(p);
-    
+    yDebug() << "Attaching all Fts took " << yarp::os::Time::now() - tick << "s.";
+
+
     if (settings.kinematicSource == IMU)
     {
+        tick = yarp::os::Time::now();
+        yDebug() << "Attaching all IMUs.";
         ok = ok && this->attachAllIMUs(p);
         isIMUAttached = true;
+        yDebug() << "Attaching all IMUs took " << yarp::os::Time::now() - tick << "s.";
+
     }
 
+    tick = yarp::os::Time::now();
+    yDebug() << "Calibrating offsets.";
     if (settings.startWithZeroFTSensorOffsets)
     {
         this->setFTSensorOffsetsToZero();
@@ -1749,9 +1821,11 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
     {
         ok = ok && this->setupCalibrationWithExternalWrenchOnOneFrame("base_link",100);
     }
+    yDebug() << "Calibrating took " << yarp::os::Time::now() - tick << "s.";
 
     if( ok )
     {
+        yDebug() << "Starting";
         correctlyConfigured = true;
         this->start();
     }
