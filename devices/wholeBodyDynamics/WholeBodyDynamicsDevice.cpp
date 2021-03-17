@@ -1501,6 +1501,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         yDebug() << "wholeBodyDynamics Statistics: Filtered FT ports opened in " << yarp::os::Time::now() - tick << "s.";
     }
 
+    yDebug() << "wholeBodyDynamics Statistics: Configuration finished. Waiting attachAll to be called.";
+
     return true;
 }
 
@@ -1785,7 +1787,7 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
 
     bool ok = true;
     double tick = yarp::os::Time::now();
-    yDebug() << "wholeBodyDynamics Statistics: Attaching all control board.";
+    yDebug() << "wholeBodyDynamics Statistics: attachAll started. Attaching all control board.";
     ok = ok && this->attachAllControlBoard(p);
     yDebug() << "wholeBodyDynamics Statistics: Attaching all control board took " << yarp::os::Time::now() - tick << "s.";
 
