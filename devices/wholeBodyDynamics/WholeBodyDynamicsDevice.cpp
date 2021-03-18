@@ -1318,8 +1318,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 {
     std::lock_guard<std::mutex> guard(this->deviceMutex);
 
-    double tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Opening estimator.";
+    double tick = yarp::os::Time::now();
 
     bool ok;
     // Create the estimator
@@ -1332,8 +1332,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     yDebug() << "wholeBodyDynamics Statistics: Estimator opened in " << yarp::os::Time::now() - tick << "s.";
 
-    tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Loading settings from configuration files.";
+    tick = yarp::os::Time::now();
 
     // Load settings in the class
     ok = this->loadSettingsFromConfig(config);
@@ -1380,8 +1380,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     yDebug() << "wholeBodyDynamics Statistics: Settings loaded in " << yarp::os::Time::now() - tick << "s.";
 
-    tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Opening RPC port.";
+    tick = yarp::os::Time::now();
 
     // Open rpc port
     ok = this->openRPCPort();
@@ -1393,8 +1393,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     yDebug() << "wholeBodyDynamics Statistics: RPC port opened in " << yarp::os::Time::now() - tick << "s.";
 
-    tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Opening settings port.";
+    tick = yarp::os::Time::now();
 
     // Open settings port
     ok = this->openSettingsPort();
@@ -1406,8 +1406,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     yDebug() << "wholeBodyDynamics Statistics: Settings port opened in " << yarp::os::Time::now() - tick << "s.";
 
-    tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Opening remapper control board.";
+    tick = yarp::os::Time::now();
 
     // Open the controlboard remapper
     ok = this->openRemapperControlBoard(config);
@@ -1419,8 +1419,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     yDebug() << "wholeBodyDynamics Statistics: Remapper control board opened in " << yarp::os::Time::now() - tick << "s.";
 
-    tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Opening remapper virtual sensors.";
+    tick = yarp::os::Time::now();
 
      // Open the virtualsensor remapper
     ok = this->openRemapperVirtualSensors(config);
@@ -1432,8 +1432,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     yDebug() << "wholeBodyDynamics Statistics: Remapper virtual sensors opened in " << yarp::os::Time::now() - tick << "s.";
 
-    tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Opening contact frames.";
+    tick = yarp::os::Time::now();
 
     ok = this->openContactFrames(config);
     if( !ok )
@@ -1447,8 +1447,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
     // Open the skin-related ports
     if (useSkinForContacts)
     {
-        tick = yarp::os::Time::now();
         yDebug() << "wholeBodyDynamics Statistics: Opening skin contact list ports.";
+        tick = yarp::os::Time::now();
 
         ok = this->openSkinContactListPorts(config);
         if( !ok )
@@ -1460,8 +1460,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         yDebug() << "wholeBodyDynamics Statistics: Skin contact list opened in " << yarp::os::Time::now() - tick << "s.";
     }
 
-    tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Opening external wrenches ports.";
+    tick = yarp::os::Time::now();
 
     // Open the ports related to publishing external wrenches
     ok = this->openExternalWrenchesPorts(config);
@@ -1473,8 +1473,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     yDebug() << "wholeBodyDynamics Statistics: External port wrenches opened in " << yarp::os::Time::now() - tick << "s.";
 
-    tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Opening multiple analog sensors remapper.";
+    tick = yarp::os::Time::now();
 
     // Open the multiple analog sensor remapper
     ok = this->openMultipleAnalogSensorRemapper(config);
@@ -1488,8 +1488,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     // Open the ports related to publishing filtered ft wrenches
     if (streamFilteredFT){
-        tick = yarp::os::Time::now();
         yDebug() << "wholeBodyDynamics Statistics: Opening filtered FT ports.";
+        tick = yarp::os::Time::now();
 
         ok = this->openFilteredFTPorts(config);
         if( !ok )
@@ -1786,34 +1786,35 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
     std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     bool ok = true;
-    double tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: attachAll started. Attaching all control board.";
+    double tick = yarp::os::Time::now();
+
     ok = ok && this->attachAllControlBoard(p);
     yDebug() << "wholeBodyDynamics Statistics: Attaching all control board took " << yarp::os::Time::now() - tick << "s.";
 
-    tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Attaching all virtual analog sensors.";
+    tick = yarp::os::Time::now();
     ok = ok && this->attachAllVirtualAnalogSensor(p);
     yDebug() << "wholeBodyDynamics Statistics: Attaching all virtual analog sensors took " << yarp::os::Time::now() - tick << "s.";
 
-    tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Attaching all FTs.";
+    tick = yarp::os::Time::now();
     ok = ok && this->attachAllFTs(p);
     yDebug() << "wholeBodyDynamics Statistics: Attaching all Fts took " << yarp::os::Time::now() - tick << "s.";
 
 
     if (settings.kinematicSource == IMU)
     {
-        tick = yarp::os::Time::now();
         yDebug() << "wholeBodyDynamics Statistics: Attaching all IMUs.";
+        tick = yarp::os::Time::now();
         ok = ok && this->attachAllIMUs(p);
         isIMUAttached = true;
         yDebug() << "wholeBodyDynamics Statistics: Attaching all IMUs took " << yarp::os::Time::now() - tick << "s.";
 
     }
 
-    tick = yarp::os::Time::now();
     yDebug() << "wholeBodyDynamics Statistics: Calibrating offsets.";
+    tick = yarp::os::Time::now();
     if (settings.startWithZeroFTSensorOffsets)
     {
         this->setFTSensorOffsetsToZero();
