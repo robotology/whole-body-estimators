@@ -5,10 +5,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+- Added some debug prints to detect where the wholeBodyDynamics device hangs at startup. (See [!106](https://github.com/robotology/whole-body-estimators/pull/106)).
 
 ## [0.4.0] - 2021-02-11
 ### Added
-- - Add `HW_USE_MAS_IMU` feature in `wholeBodyDynamics` device to enable the use YARP's Multiple Analog Sensor interface based IMU measurements. (See [!99](https://github.com/robotology/whole-body-estimators/pull/99))
+- Add `HW_USE_MAS_IMU` feature in `wholeBodyDynamics` device to enable the use YARP's Multiple Analog Sensor interface based IMU measurements. (See [!99](https://github.com/robotology/whole-body-estimators/pull/99))
 
 ### Fixed
 - Fixed bug in opening the `wholeBodyDynamics` device while using the `assume_fixed` parameter in the configuration instead of `imuFrameName`. (See [!93](https://github.com/robotology/whole-body-estimators/pull/93)).
