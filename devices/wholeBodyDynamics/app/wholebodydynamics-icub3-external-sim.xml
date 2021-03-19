@@ -27,11 +27,10 @@
         <group name="WBD_OUTPUT_EXTERNAL_WRENCH_PORTS">
             <param name="/wholeBodyDynamics/left_arm/endEffectorWrench:o">(l_hand,l_hand)</param>
             <param name="/wholeBodyDynamics/right_arm/endEffectorWrench:o">(r_hand,l_hand)</param>
-            <param name="/wholeBodyDynamics/left_foot_front/cartesianEndEffectorWrench:o">(l_foot_front,l_foot_front,l_foot_front)</param>
-            <param name="/wholeBodyDynamics/left_foot_rear/cartesianEndEffectorWrench:o">(l_foot_rear,l_foot_rear,l_foot_rear)</param>
-            <param name="/wholeBodyDynamics/right_foot_front/cartesianEndEffectorWrench:o">(r_foot_front,r_foot_front,r_foot_front)</param>
-            <param name="/wholeBodyDynamics/right_foot_rear/cartesianEndEffectorWrench:o">(r_foot_rear,r_foot_rear,r_foot_rear)</param>
-
+            <param name="/wholeBodyDynamics/left_foot_front/cartesianEndEffectorWrench:o">(l_foot_front,l_sole,l_sole)</param>
+            <param name="/wholeBodyDynamics/left_foot_rear/cartesianEndEffectorWrench:o">(l_foot_rear,l_sole,l_sole)</param>
+            <param name="/wholeBodyDynamics/right_foot_front/cartesianEndEffectorWrench:o">(r_foot_front,r_sole,r_sole)</param>
+            <param name="/wholeBodyDynamics/right_foot_rear/cartesianEndEffectorWrench:o">(r_foot_rear,r_sole,r_sole)</param>
         </group>
 
         <action phase="startup" level="15" type="attach">
@@ -48,8 +47,6 @@
                 <!-- ft -->
                 <elem name="l_arm_ft_sensor">left_upper_arm_strain</elem>
                 <elem name="r_arm_ft_sensor">right_upper_arm_strain</elem>
-                <elem name="l_leg_ft_sensor">left_upper_leg_strain</elem>
-                <elem name="r_leg_ft_sensor">right_upper_leg_strain</elem>
                 <elem name="l_foot_front_ft_sensor">left_lower_leg_front_strain</elem>
                 <elem name="l_foot_rear_ft_sensor">left_lower_leg_rear_strain</elem>
                 <elem name="r_foot_front_ft_sensor">right_lower_leg_front_strain</elem>
