@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 - Added some debug prints to detect where the wholeBodyDynamics device hangs at startup. (See [!106](https://github.com/robotology/whole-body-estimators/pull/106)).
 - Fixed the configuration files to run wholeBodyDynamics with iCubGazeboV3. (See [!107](https://github.com/robotology/whole-body-estimators/pull/107)).
+- Avoid to use getOutputCount before broadcasting data. (See [!108](https://github.com/robotology/whole-body-estimators/pull/108)).
 
 ## [0.4.0] - 2021-02-11
 ### Added
