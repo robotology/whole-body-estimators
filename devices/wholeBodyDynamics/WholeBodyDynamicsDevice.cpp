@@ -2494,11 +2494,8 @@ void WholeBodyDynamicsDevice::resetGravityCompensation()
 
 template <class T> void broadcastData(T& _values, yarp::os::BufferedPort<T>& _port)
 {
-    if (_port.getOutputCount()>0 )
-    {
-        _port.prepare()  = _values ;
-        _port.write();
-    }
+    _port.prepare()  = _values ;
+    _port.write();
 }
 
 void WholeBodyDynamicsDevice::publishTorques()
