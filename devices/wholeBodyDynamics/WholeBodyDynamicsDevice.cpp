@@ -277,7 +277,7 @@ bool WholeBodyDynamicsDevice::openEstimator(os::Searchable& config)
 
     yInfo() << "wholeBodyDynamics : Loading model from " << modelFileFullPath;
 
-    // Add fixed joints l_foot_ft_sensor, r_foot_ft_sensor in case they are omitted by 
+    // Add fixed joints l_foot_ft_sensor, r_foot_ft_sensor in case they are omitted because the corresponding F/T sensors are not included in the model
     std::vector<std::string> additionalConsideredJoints{"l_foot_ft_sensor", "r_foot_ft_sensor"};
     // Append additionalConsideredJoints to estimationJointNames
     estimationJointNames.insert(estimationJointNames.end(), additionalConsideredJoints.begin(), additionalConsideredJoints.end());
