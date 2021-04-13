@@ -148,14 +148,17 @@ void addVectorOfStringToProperty(yarp::os::Property& prop, std::string key, std:
     return;
 }
 
-bool getConfigParamsAsList(os::Searchable& config,std::string propertyName , std::vector<std::string> & list)
+bool getConfigParamsAsList(os::Searchable& config,std::string propertyName , std::vector<std::string> & list, bool isRequired)
 {
     yarp::os::Property prop;
     prop.fromString(config.toString().c_str());
     yarp::os::Bottle *propNames=prop.find(propertyName).asList();
     if(propNames==nullptr)
     {
-        yError() <<"WholeBodyDynamicsDevice: Error parsing parameters: \" "<<propertyName<<" \" should be followed by a list\n";
+        if(isRequired)
+        {
+            yError() <<"WholeBodyDynamicsDevice: Error parsing parameters: \" "<<propertyName<<" \" should be followed by a list\n";
+        }
         return false;
     }
 
@@ -170,12 +173,20 @@ bool getConfigParamsAsList(os::Searchable& config,std::string propertyName , std
 
 bool getUsedDOFsList(os::Searchable& config, std::vector<std::string> & usedDOFs)
 {
-    return getConfigParamsAsList(config,"axesNames",usedDOFs);
+    bool required{true};
+    return getConfigParamsAsList(config,"axesNames",usedDOFs, required);
+}
+
+bool getAdditionalConsideredFixedJointsList(os::Searchable& config, std::vector<std::string> & additionalFixedJoints)
+{
+    bool notRequired{false};
+    return getConfigParamsAsList(config,"additionalConsideredFixedJoints",additionalFixedJoints, notRequired);
 }
 
 bool getGravityCompensationDOFsList(os::Searchable& config, std::vector<std::string> & gravityCompensationDOFs)
 {
-    return getConfigParamsAsList(config,"gravityCompensationAxesNames",gravityCompensationDOFs);
+    bool required{true};
+    return getConfigParamsAsList(config,"gravityCompensationAxesNames",gravityCompensationDOFs, required);
 }
 
 
@@ -276,6 +287,16 @@ bool WholeBodyDynamicsDevice::openEstimator(os::Searchable& config)
     std::string modelFileFullPath = rf.findFileByName(modelFileName);
 
     yInfo() << "wholeBodyDynamics : Loading model from " << modelFileFullPath;
+
+    // Add additional fixed joints listed with the parameter `additionalConsideredFixedJoints`
+    std::vector<std::string> additionalConsideredJoints;
+    bool additionalFixedJointsExist = getAdditionalConsideredFixedJointsList(config,additionalConsideredJoints);
+    if(additionalFixedJointsExist)
+    {
+        yInfo() << "wholeBodyDynamics: Loading additional fixed joints from the config file: " << additionalConsideredJoints;
+        // Append additionalConsideredJoints to estimationJointNames
+        estimationJointNames.insert(estimationJointNames.end(), additionalConsideredJoints.begin(), additionalConsideredJoints.end());
+    }
 
     ok = estimator.loadModelAndSensorsFromFileWithSpecifiedDOFs(modelFileFullPath,estimationJointNames);
     if( !ok )

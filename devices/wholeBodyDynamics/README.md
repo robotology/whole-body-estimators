@@ -13,6 +13,7 @@ For an overview on `wholeBodyDynamics` and to understand how to run the device, 
 | Parameter name | SubParameter   | Type              | Units | Default Value | Required |   Description                                                     | Notes |
 |:--------------:|:--------------:|:-----------------:|:-----:|:-------------:|:--------:|:-----------------------------------------------------------------:|:-----:|
 | axesNames      |      -         | vector of strings |   -   |   -           | Yes      | Ordered list of the axes that are part of the remapped device.    |       |
+| additionalConsideredFixedJoints      |      -         | vector of strings |   -   |   -           | No      | Optional list of fixed joints being omitted by the URDF model parser but are needed to be considered in the joint list.    |       |
 | modelFile      |      -         | path to file      |   -   | model.urdf    | No       | Path to the URDF file used for the kinematic and dynamic model.   |       |
 | assume_fixed    |                | frame name        |   -   |     -         | No       | If it is present, the initial kinematic source used for estimation will be that specified frame is fixed, and its gravity is specified by fixedFrameGravity. The IMU related parameters from the configuration are not used if this parameter exists. Otherwise, the default IMU will be used. | |
 | fixedFrameGravity  |      -     | vector of doubles | m/s^2 | -             | Yes      | Gravity of the frame that is assumed to be fixed, if the kinematic source used is the fixed frame. | |
