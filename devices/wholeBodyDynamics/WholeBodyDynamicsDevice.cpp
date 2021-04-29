@@ -119,6 +119,9 @@ bool WholeBodyDynamicsDevice::closeExternalWrenchesPorts()
             outputWrenchPorts[i].output_port = 0;
         }
     }
+
+    netExternalWrenchesPort.close();
+
     return true;
 }
 
@@ -696,6 +699,16 @@ bool WholeBodyDynamicsDevice::openExternalWrenchesPorts(os::Searchable& config)
         m_outputWrenchPortInfoType = netWrench;
     }
 
+    enablePublishNetExternalWrenches = config.check("publishNetExternalWrenches", yarp::os::Value(false)).asBool();
+    if (enablePublishNetExternalWrenches)
+    {
+        if (!netExternalWrenchesPort.open(portPrefix +"/netExternalWrenches:o"))
+        {
+            yError() << "wholeBodyDynamics impossible to open port for publishing net external wrenches";
+            return false;
+        }
+    }
+
     return ok;
 }
 
@@ -824,6 +837,20 @@ void WholeBodyDynamicsDevice::resizeBuffers()
     if( !ok )
     {
         yError() << "wholeBodyDynamics : error in opening KinDynComputation class";
+    }
+
+    for (iDynTree::LinkIndex link = 0;
+         link < static_cast<iDynTree::LinkIndex>(netExternalWrenchesExertedByTheEnviroment.getNrOfLinks());
+         ++link)
+    {
+        yarp::os::Bottle& wrenchBottle = netExternalWrenchesBottle.addList();
+        wrenchBottle.addString(estimator.model().getLinkName(link));
+        yarp::os::Bottle& wrenchValues = wrenchBottle.addList();
+
+        for (size_t i = 0; i < 6; ++i)
+        {
+            wrenchValues.addDouble(0.0);
+        }
     }
 }
 
@@ -2531,7 +2558,10 @@ void WholeBodyDynamicsDevice::publishExternalWrenches()
         iDynTree::Vector3 dummyGravity;
         dummyGravity.zero();
         this->kinDynComp.setRobotState(this->jointPos,this->jointVel,dummyGravity);
+    }
 
+    if (enablePublishNetExternalWrenches || this->outputWrenchPorts.size() > 0)
+    {
         // Compute net wrenches for each link
         estimateExternalContactWrenches.computeNetWrenches(netExternalWrenchesExertedByTheEnviroment);
     }
@@ -2578,6 +2608,24 @@ void WholeBodyDynamicsDevice::publishExternalWrenches()
         broadcastData<yarp::sig::Vector>(outputWrenchPorts[i].output_vector,
                                         *(outputWrenchPorts[i].output_port));
     }
+
+    if (enablePublishNetExternalWrenches)
+    {
+        //Publish net wrenches
+        for (iDynTree::LinkIndex link = 0;
+             link < static_cast<iDynTree::LinkIndex>(netExternalWrenchesExertedByTheEnviroment.getNrOfLinks());
+             ++link)
+        {
+            yarp::os::Bottle* wrenchPair = netExternalWrenchesBottle.get(link).asList();
+            yarp::os::Bottle* linkWrenchBottle = wrenchPair->get(1).asList(); //The first value is the name, the second the wrench
+            for (size_t i = 0; i < 6; ++i)
+            {
+                linkWrenchBottle->get(i) = yarp::os::Value(netExternalWrenchesExertedByTheEnviroment(link)(i));
+            }
+        }
+        broadcastData<yarp::os::Bottle>(netExternalWrenchesBottle, netExternalWrenchesPort);
+    }
+
 }
 
 void WholeBodyDynamicsDevice::publishFilteredFTWithoutOffset()

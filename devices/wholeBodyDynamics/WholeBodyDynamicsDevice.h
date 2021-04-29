@@ -183,7 +183,7 @@ private:
      * Flag to use tactil skin data to update contact points and related data
      */
     bool useSkinForContacts;
-    
+
     /**
      * Flag to check if IMU was attached during startup
      */
@@ -229,7 +229,7 @@ private:
 
     /** IMU interface */
     yarp::dev::IGenericSensor * imuInterface;
-    
+
     yarp::dev::IThreeAxisLinearAccelerometers* masAccInterface;
     yarp::dev::IThreeAxisGyroscopes* masGyroInterface;
     bool useMasIMU{true};
@@ -685,6 +685,24 @@ private:
      * expressed with the origin of link i and the orientation of link i.
      */
     iDynTree::LinkNetExternalWrenches netExternalWrenchesExertedByTheEnviroment;
+
+    /**
+     * The bottle to be sent containing the net external wrenches
+     * applied on each link. The wrench applied to a link i is expressed
+     * in the link frame. The bottle is a list of pairs. The first element is
+     * the link name, the second is the wrench.
+     */
+    yarp::os::Bottle netExternalWrenchesBottle;
+
+    /**
+     * Port for streaming the netWrenchesBottle;
+     */
+    yarp::os::BufferedPort<yarp::os::Bottle> netExternalWrenchesPort;
+
+    /**
+     * Flag to publish the next external wrenches on each link.
+     */
+    bool enablePublishNetExternalWrenches{false};
 
     // Class for computing relative transforms (useful for net external wrench frame computations and gravity compensation)
     iDynTree::KinDynComputations kinDynComp;
