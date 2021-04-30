@@ -16,7 +16,7 @@
         <param name="jointAccFilterCutoffInHz">3.0</param> <!-- used if useJointAcceleration is set to true -->
         <param name="startWithZeroFTSensorOffsets">true</param> <!-- bypass using resetOffset of FT sensors in simulation -->
         <param name="useSkinForContacts">false</param>
-
+        <param name="publishNetExternalWrenches">true</param>
 
         <group name="GRAVITY_COMPENSATION">
             <param name="enableGravityCompensation">true</param>
