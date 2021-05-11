@@ -2793,7 +2793,7 @@ void WholeBodyDynamicsDevice::setupCalibrationCommonPart(const int32_t nrOfSampl
 
 bool WholeBodyDynamicsDevice::setupCalibrationWithExternalWrenchesOnTwoFrames(const std::string & frame1Name, const std::string & frame2Name, const int32_t nrOfSamples)
 {
-    // Let's configure the external forces that then are assume to be active on the robot while calibration on two links (assumed to be simmetric)
+    // Let's configure the external forces that then are assume to be active on the robot while calibration on two links (assumed to be symmetric)
 
     // Clear the class
     calibrationBuffers.assumedContactLocationsForCalibration.clear();
@@ -2830,6 +2830,100 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithExternalWrenchesOnTwoFrames(co
     return true;
 }
 
+bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1(const int32_t nrOfSamples)
+{
+    // Let's configure the external forces that then are assume to be active on the robot while calibration on two links (assumed to be symmetric)
+
+    // Clear the class
+    calibrationBuffers.assumedContactLocationsForCalibration.clear();
+
+    // Check if the iRonCub-Mk1 jets frames exist
+    std::string leftArmJetFrame = {"l_arm_jet_turbine"};
+    std::string RightArmJetFrame = {"r_arm_jet_turbine"};
+    std::string leftBackJetFrame = {"chest_l_jet_turbine"};
+    std::string RightBackJetFrame = {"chest_r_jet_turbine"};
+    iDynTree::FrameIndex frameLAIndex = estimator.model().getFrameIndex(leftArmJetFrame);
+    if( frameLAIndex == iDynTree::FRAME_INVALID_INDEX )
+    {
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << leftArmJetFrame << ", Are you using iRonCub-Mk1?";
+        return false;
+    }
+
+    iDynTree::FrameIndex frameRAIndex = estimator.model().getFrameIndex(RightArmJetFrame);
+    if( frameRAIndex == iDynTree::FRAME_INVALID_INDEX )
+    {
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << RightArmJetFrame << ", Are you using iRonCub-Mk1?";
+        return false;
+    }
+
+    iDynTree::FrameIndex frameLBIndex = estimator.model().getFrameIndex(leftBackJetFrame);
+    if( frameLBIndex == iDynTree::FRAME_INVALID_INDEX )
+    {
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << leftBackJetFrame << ", Are you using iRonCub-Mk1?";
+        return false;
+    }
+
+    iDynTree::FrameIndex frameRBIndex = estimator.model().getFrameIndex(RightBackJetFrame);
+    if( frameRBIndex == iDynTree::FRAME_INVALID_INDEX )
+    {
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << RightBackJetFrame << ", Are you using iRonCub-Mk1?";
+        return false;
+    }
+
+    // Check if the soles frames exist
+    std::string LeftSoleFrame = {"l_sole"};
+    std::string RightSoleFrame = {"r_sole"};
+    iDynTree::FrameIndex frameLSIndex = estimator.model().getFrameIndex(LeftSoleFrame);
+    if( frameLSIndex == iDynTree::FRAME_INVALID_INDEX )
+    {
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << LeftSoleFrame;
+        return false;
+    }
+
+    iDynTree::FrameIndex frameRSIndex = estimator.model().getFrameIndex(RightSoleFrame);
+    if( frameRSIndex == iDynTree::FRAME_INVALID_INDEX )
+    {
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << RightSoleFrame;
+        return false;
+    }
+
+    // We assume that all the 6 contacts are Pure Forces with Known Directions (1D) at the origin of each frame
+    iDynTree::Direction zPosAxis = iDynTree::Direction(0,0,1);
+    double p100ThrustN = 2;
+    double p220ThrustN = 9;
+    iDynTree::Force jetArmForce = iDynTree::Force(0,0,p100ThrustN);
+    iDynTree::Torque jetArmTorque = iDynTree::Torque(0,0,0);
+    iDynTree::Wrench jetArmWrench = iDynTree::Wrench(jetArmForce, jetArmTorque);
+
+    iDynTree::Force jetBackForce = iDynTree::Force(0,0,p220ThrustN);
+    iDynTree::Torque jetBackTorque = iDynTree::Torque(0,0,0);
+    iDynTree::Wrench jetBackWrench = iDynTree::Wrench(jetBackForce, jetBackTorque);
+
+    iDynTree::UnknownWrenchContact calibrationAssumedArmJetContact(iDynTree::NO_UNKNOWNS,iDynTree::Position::Zero(),iDynTree::Direction::Default(), jetArmWrench);
+    iDynTree::UnknownWrenchContact calibrationAssumedBackJetContact(iDynTree::NO_UNKNOWNS,iDynTree::Position::Zero(),iDynTree::Direction::Default(), jetBackWrench);
+
+    // Add jets contacts
+    bool ok = calibrationBuffers.assumedContactLocationsForCalibration.addNewContactInFrame(estimator.model(),frameLAIndex,calibrationAssumedArmJetContact);
+    ok = ok && calibrationBuffers.assumedContactLocationsForCalibration.addNewContactInFrame(estimator.model(),frameRAIndex,calibrationAssumedArmJetContact);
+    ok = ok && calibrationBuffers.assumedContactLocationsForCalibration.addNewContactInFrame(estimator.model(),frameLBIndex,calibrationAssumedBackJetContact);
+    ok = ok && calibrationBuffers.assumedContactLocationsForCalibration.addNewContactInFrame(estimator.model(),frameRBIndex,calibrationAssumedBackJetContact);
+
+    // Add feet contacts
+    iDynTree::UnknownWrenchContact calibrationAssumedFeetContact(iDynTree::FULL_WRENCH,iDynTree::Position::Zero());
+    ok = ok && calibrationBuffers.assumedContactLocationsForCalibration.addNewContactInFrame(estimator.model(),frameLSIndex,calibrationAssumedFeetContact);
+    ok = ok && calibrationBuffers.assumedContactLocationsForCalibration.addNewContactInFrame(estimator.model(),frameRSIndex,calibrationAssumedFeetContact);
+
+    if( !ok )
+    {
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 error";
+        return false;
+    }
+
+    setupCalibrationCommonPart(nrOfSamples);
+
+    return true;
+}
+
 bool WholeBodyDynamicsDevice::calib(const std::string& calib_code, const int32_t nr_of_samples)
 {
     std::lock_guard<std::mutex> guard(this->deviceMutex);
@@ -2854,6 +2948,23 @@ bool WholeBodyDynamicsDevice::calibStanding(const std::string& calib_code, const
     yWarning() << "wholeBodyDynamics : calibStanding ignoring calib_code " << calib_code;
 
     bool ok = this->setupCalibrationWithExternalWrenchesOnTwoFrames("r_sole","l_sole",nr_of_samples);
+
+    if( !ok )
+    {
+        return false;
+    }
+
+    return true;
+
+}
+
+bool WholeBodyDynamicsDevice::calibStandingWithJetsiRonCubMk1(const std::string& calib_code, const int32_t nr_of_samples)
+{
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
+
+    yWarning() << "wholeBodyDynamics : calibStandingWithJetsiRonCubMk1 ignoring calib_code " << calib_code;
+
+    bool ok = this->setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1(nr_of_samples);
 
     if( !ok )
     {

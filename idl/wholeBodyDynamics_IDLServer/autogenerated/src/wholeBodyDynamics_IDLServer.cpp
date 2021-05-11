@@ -123,6 +123,60 @@ bool wholeBodyDynamics_IDLServer_calibStanding_helper::read(yarp::os::Connection
     return true;
 }
 
+class wholeBodyDynamics_IDLServer_calibStandingWithJetsiRonCubMk1_helper :
+        public yarp::os::Portable
+{
+public:
+    explicit wholeBodyDynamics_IDLServer_calibStandingWithJetsiRonCubMk1_helper(const std::string& calib_code, const std::int32_t nr_of_samples);
+    bool write(yarp::os::ConnectionWriter& connection) const override;
+    bool read(yarp::os::ConnectionReader& connection) override;
+
+    std::string m_calib_code;
+    std::int32_t m_nr_of_samples;
+
+    thread_local static bool s_return_helper;
+};
+
+thread_local bool wholeBodyDynamics_IDLServer_calibStandingWithJetsiRonCubMk1_helper::s_return_helper = {};
+
+wholeBodyDynamics_IDLServer_calibStandingWithJetsiRonCubMk1_helper::wholeBodyDynamics_IDLServer_calibStandingWithJetsiRonCubMk1_helper(const std::string& calib_code, const std::int32_t nr_of_samples) :
+        m_calib_code{calib_code},
+        m_nr_of_samples{nr_of_samples}
+{
+    s_return_helper = {};
+}
+
+bool wholeBodyDynamics_IDLServer_calibStandingWithJetsiRonCubMk1_helper::write(yarp::os::ConnectionWriter& connection) const
+{
+    yarp::os::idl::WireWriter writer(connection);
+    if (!writer.writeListHeader(3)) {
+        return false;
+    }
+    if (!writer.writeTag("calibStandingWithJetsiRonCubMk1", 1, 1)) {
+        return false;
+    }
+    if (!writer.writeString(m_calib_code)) {
+        return false;
+    }
+    if (!writer.writeI32(m_nr_of_samples)) {
+        return false;
+    }
+    return true;
+}
+
+bool wholeBodyDynamics_IDLServer_calibStandingWithJetsiRonCubMk1_helper::read(yarp::os::ConnectionReader& connection)
+{
+    yarp::os::idl::WireReader reader(connection);
+    if (!reader.readListReturn()) {
+        return false;
+    }
+    if (!reader.readBool(s_return_helper)) {
+        reader.fail();
+        return false;
+    }
+    return true;
+}
+
 class wholeBodyDynamics_IDLServer_calibStandingLeftFoot_helper :
         public yarp::os::Portable
 {
@@ -1209,6 +1263,16 @@ bool wholeBodyDynamics_IDLServer::calibStanding(const std::string& calib_code, c
     return ok ? wholeBodyDynamics_IDLServer_calibStanding_helper::s_return_helper : bool{};
 }
 
+bool wholeBodyDynamics_IDLServer::calibStandingWithJetsiRonCubMk1(const std::string& calib_code, const std::int32_t nr_of_samples)
+{
+    wholeBodyDynamics_IDLServer_calibStandingWithJetsiRonCubMk1_helper helper{calib_code, nr_of_samples};
+    if (!yarp().canWrite()) {
+        yError("Missing server method '%s'?", "bool wholeBodyDynamics_IDLServer::calibStandingWithJetsiRonCubMk1(const std::string& calib_code, const std::int32_t nr_of_samples)");
+    }
+    bool ok = yarp().write(helper, helper);
+    return ok ? wholeBodyDynamics_IDLServer_calibStandingWithJetsiRonCubMk1_helper::s_return_helper : bool{};
+}
+
 bool wholeBodyDynamics_IDLServer::calibStandingLeftFoot(const std::string& calib_code, const std::int32_t nr_of_samples)
 {
     wholeBodyDynamics_IDLServer_calibStandingLeftFoot_helper helper{calib_code, nr_of_samples};
@@ -1438,6 +1502,7 @@ std::vector<std::string> wholeBodyDynamics_IDLServer::help(const std::string& fu
         helpString.emplace_back("*** Available commands:");
         helpString.emplace_back("calib");
         helpString.emplace_back("calibStanding");
+        helpString.emplace_back("calibStandingWithJetsiRonCubMk1");
         helpString.emplace_back("calibStandingLeftFoot");
         helpString.emplace_back("calibStandingRightFoot");
         helpString.emplace_back("calibStandingOnOneLink");
@@ -1474,7 +1539,18 @@ std::vector<std::string> wholeBodyDynamics_IDLServer::help(const std::string& fu
             helpString.emplace_back("bool calibStanding(const std::string& calib_code, const std::int32_t nr_of_samples = 100) ");
             helpString.emplace_back("Calibrate the force/torque sensors when on double support ");
             helpString.emplace_back("(WARNING: calibrate the sensors when the only external forces acting on the robot are on the sole). ");
-            helpString.emplace_back("For this calibration the strong assumption of simmetry of the robot and its pose is done. ");
+            helpString.emplace_back("For this calibration the strong assumption of symmetry of the robot and its pose is done. ");
+            helpString.emplace_back("@param calib_code argument to specify the sensors to calibrate (all,arms,legs,feet) ");
+            helpString.emplace_back("@param nr_of_samples number of samples ");
+            helpString.emplace_back("@return true/false on success/failure ");
+        }
+        if (functionName == "calibStandingWithJetsiRonCubMk1") {
+            helpString.emplace_back("bool calibStandingWithJetsiRonCubMk1(const std::string& calib_code, const std::int32_t nr_of_samples = 100) ");
+            helpString.emplace_back("Calibrate the force/torque sensors when on double support and with jet engines turned ON and on idle thrust ");
+            helpString.emplace_back("(WARNING: works only with iRonCub-Mk1). ");
+            helpString.emplace_back("(WARNING: calibrate the sensors when the only external forces acting on the robot are on the sole). ");
+            helpString.emplace_back("For this calibration the strong assumption of symmetry of the robot and its pose is done. Also, only pure forces are ");
+            helpString.emplace_back("assumed to be acting on the soles ");
             helpString.emplace_back("@param calib_code argument to specify the sensors to calibrate (all,arms,legs,feet) ");
             helpString.emplace_back("@param nr_of_samples number of samples ");
             helpString.emplace_back("@return true/false on success/failure ");
@@ -1685,6 +1761,29 @@ bool wholeBodyDynamics_IDLServer::read(yarp::os::ConnectionReader& connection)
                     return false;
                 }
                 if (!writer.writeBool(wholeBodyDynamics_IDLServer_calibStanding_helper::s_return_helper)) {
+                    return false;
+                }
+            }
+            reader.accept();
+            return true;
+        }
+        if (tag == "calibStandingWithJetsiRonCubMk1") {
+            std::string calib_code;
+            std::int32_t nr_of_samples;
+            if (!reader.readString(calib_code)) {
+                reader.fail();
+                return false;
+            }
+            if (!reader.readI32(nr_of_samples)) {
+                nr_of_samples = 100;
+            }
+            wholeBodyDynamics_IDLServer_calibStandingWithJetsiRonCubMk1_helper::s_return_helper = calibStandingWithJetsiRonCubMk1(calib_code, nr_of_samples);
+            yarp::os::idl::WireWriter writer(reader);
+            if (!writer.isNull()) {
+                if (!writer.writeListHeader(1)) {
+                    return false;
+                }
+                if (!writer.writeBool(wholeBodyDynamics_IDLServer_calibStandingWithJetsiRonCubMk1_helper::s_return_helper)) {
                     return false;
                 }
             }
