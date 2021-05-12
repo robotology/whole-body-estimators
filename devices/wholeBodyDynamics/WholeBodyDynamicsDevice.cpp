@@ -2889,8 +2889,9 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJets
 
     // We assume that all the 6 contacts are Pure Forces with Known Directions (1D) at the origin of each frame
     iDynTree::Direction zPosAxis = iDynTree::Direction(0,0,1);
-    double p100ThrustN = 2;
-    double p220ThrustN = 9;
+    iDynTree::Direction zNegAxis = iDynTree::Direction(0,0,-1);
+    double p100ThrustN = -2;
+    double p220ThrustN = -9;
     iDynTree::Force jetArmForce = iDynTree::Force(0,0,p100ThrustN);
     iDynTree::Torque jetArmTorque = iDynTree::Torque(0,0,0);
     iDynTree::Wrench jetArmWrench = iDynTree::Wrench(jetArmForce, jetArmTorque);
@@ -2899,8 +2900,8 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJets
     iDynTree::Torque jetBackTorque = iDynTree::Torque(0,0,0);
     iDynTree::Wrench jetBackWrench = iDynTree::Wrench(jetBackForce, jetBackTorque);
 
-    iDynTree::UnknownWrenchContact calibrationAssumedArmJetContact(iDynTree::NO_UNKNOWNS,iDynTree::Position::Zero(),iDynTree::Direction::Default(), jetArmWrench);
-    iDynTree::UnknownWrenchContact calibrationAssumedBackJetContact(iDynTree::NO_UNKNOWNS,iDynTree::Position::Zero(),iDynTree::Direction::Default(), jetBackWrench);
+    iDynTree::UnknownWrenchContact calibrationAssumedArmJetContact(iDynTree::NO_UNKNOWNS,iDynTree::Position::Zero(),zPosAxis, jetArmWrench);
+    iDynTree::UnknownWrenchContact calibrationAssumedBackJetContact(iDynTree::NO_UNKNOWNS,iDynTree::Position::Zero(),zPosAxis, jetBackWrench);
 
     // Add jets contacts
     bool ok = calibrationBuffers.assumedContactLocationsForCalibration.addNewContactInFrame(estimator.model(),frameLAIndex,calibrationAssumedArmJetContact);
