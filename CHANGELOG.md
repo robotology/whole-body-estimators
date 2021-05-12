@@ -5,7 +5,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-- Added a `yarp rpc` comand `alibStandingWithJetsiRonCubMk1` that performs `calibStanding` for `iRonCub-Mk1` model/robot when the jets are ON and on `idle` thrust. (See [!113](https://github.com/robotology/whole-body-estimators/pull/113)).
+- Added a `yarp rpc` comand `calibStandingWithJetsiRonCubMk1` that performs `calibStanding` for `iRonCub-Mk1` model/robot when the jets are ON and on `idle` thrust. (See [!113](https://github.com/robotology/whole-body-estimators/pull/113)).
 - Added an optional config parameter list of fixed joints `additionalConsideredFixedJoints` being omitted by the URDF model parser but are needed to be considered in the joint list. (See [!109](https://github.com/robotology/whole-body-estimators/pull/109)).
 - Added some debug prints to detect where the wholeBodyDynamics device hangs at startup. (See [!106](https://github.com/robotology/whole-body-estimators/pull/106)).
 - Fixed the configuration files to run wholeBodyDynamics with iCubGazeboV3. (See [!107](https://github.com/robotology/whole-body-estimators/pull/107)).

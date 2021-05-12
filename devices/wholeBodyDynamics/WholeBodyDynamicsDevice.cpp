@@ -2890,13 +2890,17 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJets
     // We assume that all the 6 contacts are Pure Forces with Known Directions (1D) at the origin of each frame
     iDynTree::Direction zPosAxis = iDynTree::Direction(0,0,1);
     iDynTree::Direction zNegAxis = iDynTree::Direction(0,0,-1);
-    double p100ThrustN = -2;
-    double p220ThrustN = -9;
-    iDynTree::Force jetArmForce = iDynTree::Force(0,0,p100ThrustN);
+    // Nominal Idle thrust values for JetCat P100 jet models = 2N
+    // The negative sign is for the force direction represented in the Arm Jet frame
+    double p100IdleThrustN = -2;
+    // Nominal Idle thrust values for JetCat P220 jet models = 9N
+    // The negative sign is for the force direction represented in the Back Jet frame
+    double p220IdleThrustN = -9;
+    iDynTree::Force jetArmForce = iDynTree::Force(0,0,p100IdleThrustN);
     iDynTree::Torque jetArmTorque = iDynTree::Torque(0,0,0);
     iDynTree::Wrench jetArmWrench = iDynTree::Wrench(jetArmForce, jetArmTorque);
 
-    iDynTree::Force jetBackForce = iDynTree::Force(0,0,p220ThrustN);
+    iDynTree::Force jetBackForce = iDynTree::Force(0,0,p220IdleThrustN);
     iDynTree::Torque jetBackTorque = iDynTree::Torque(0,0,0);
     iDynTree::Wrench jetBackWrench = iDynTree::Wrench(jetBackForce, jetBackTorque);
 
