@@ -20,12 +20,24 @@ service wholeBodyDynamics_IDLServer
   /**
   * Calibrate the force/torque sensors when on double support
   * (WARNING: calibrate the sensors when the only external forces acting on the robot are on the sole).
-  * For this calibration the strong assumption of simmetry of the robot and its pose is done.
+  * For this calibration the strong assumption of symmetry of the robot and its pose is done.
   * @param calib_code argument to specify the sensors to calibrate (all,arms,legs,feet)
   * @param nr_of_samples number of samples
   * @return true/false on success/failure
   */
   bool calibStanding(1:string calib_code, 2:i32 nr_of_samples=100)
+
+  /**
+  * Calibrate the force/torque sensors when on double support and with jet engines turned ON and on idle thrust
+  * (WARNING: works only with iRonCub-Mk1).
+  * (WARNING: calibrate the sensors when the only external forces acting on the robot are on the sole).
+  * For this calibration the strong assumption of symmetry of the robot and its pose is done. Also, only pure forces are
+  * assumed to be acting on the soles
+  * @param calib_code argument to specify the sensors to calibrate (all,arms,legs,feet)
+  * @param nr_of_samples number of samples
+  * @return true/false on success/failure
+  */
+  bool calibStandingWithJetsiRonCubMk1(1:string calib_code, 2:i32 nr_of_samples=100)
 
  /**
   * Calibrate the force/torque sensors when on single support on left foot
