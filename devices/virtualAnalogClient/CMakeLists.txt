@@ -8,7 +8,7 @@ find_package(YARP REQUIRED)
 yarp_prepare_plugin(virtualAnalogClient CATEGORY device
                                         TYPE yarp::dev::VirtualAnalogClient
                                         INCLUDE "VirtualAnalogClient.h"
-                                        DEFAULT ON
+                                        INTERNAL
                                         ADVANCED)
 
 if(ENABLE_virtualAnalogClient)
