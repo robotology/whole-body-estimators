@@ -7,7 +7,7 @@ find_package(YARP REQUIRED)
 yarp_prepare_plugin(genericSensorClient CATEGORY device
                                         TYPE yarp::dev::GenericSensorClient
                                         INCLUDE "GenericSensorClient.h"
-                                        DEFAULT ON
+                                        INTERNAL
                                         ADVANCED)
 
 if(ENABLE_genericSensorClient)
