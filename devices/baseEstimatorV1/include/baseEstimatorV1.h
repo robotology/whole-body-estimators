@@ -621,7 +621,7 @@ namespace yarp {
         yarp::sig::Vector m_world_velocity_base_from_imu;
 
         std::string m_left_foot_ft_sensor{"l_foot_ft_sensor"};
-        unsigned int m_left_foot_ft_sensor_index, m_right_foot_ft_sensor_index;
+        std::ptrdiff_t m_left_foot_ft_sensor_index, m_right_foot_ft_sensor_index;
         std::string m_right_foot_ft_sensor{"r_foot_ft_sensor"};
         std::string m_right_sole{"r_sole"};
         std::string m_left_sole{"l_sole"};

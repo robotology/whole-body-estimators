@@ -8,6 +8,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Always enable compilation of devices (See [!115](https://github.com/robotology/whole-body-estimators/pull/115))
 
+
+## [0.5.1] - 2021-07-12
+### Fixed
+- Fixed compilation with iDynTree 4 (https://github.com/robotology/whole-body-estimators/pull/116).
+
 ## [0.5.0] - 2021-05-14
 ### Added
 - Added a `yarp rpc` command `calibStandingWithJetsiRonCubMk1` that performs `calibStanding` for `iRonCub-Mk1` model/robot when the jets are ON and on `idle` thrust. (See [!113](https://github.com/robotology/whole-body-estimators/pull/113)).
