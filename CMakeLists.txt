@@ -4,7 +4,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 project(whole-body-estimators LANGUAGES CXX
-                              VERSION 0.2)
+                              VERSION 0.5.1)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
