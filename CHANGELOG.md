@@ -10,8 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 ## [0.5.1] - 2021-07-12
+### Added
+- Added Conda-based Continuous Integration job (See [!117](https://github.com/robotology/whole-body-estimators/pull/117) and [!118](https://github.com/robotology/whole-body-estimators/pull/118)).
+
 ### Fixed
-- Fixed compilation with iDynTree 4 (https://github.com/robotology/whole-body-estimators/pull/116).
+- Fixed compilation with iDynTree 4 (See [!116](https://github.com/robotology/whole-body-estimators/pull/116)).
 
 ## [0.5.0] - 2021-05-14
 ### Added
