@@ -2925,7 +2925,7 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJets
     iDynTree::Direction zNegAxis = iDynTree::Direction(0,0,-1);
     // Nominal Idle thrust values for JetCat P100 jet models = 2N
     // The negative sign is for the force direction represented in the Arm Jet frame
-    double p100IdleThrustN = -2;
+    double p100IdleThrustN = -7;
     // Nominal Idle thrust values for JetCat P220 jet models = 9N
     // The negative sign is for the force direction represented in the Back Jet frame
     double p220IdleThrustN = -9;
