@@ -2137,7 +2137,7 @@ void WholeBodyDynamicsDevice::filterSensorsAndRemoveSensorOffsets()
 
         const yarp::sig::Vector & outputJointAcc = filters.jntAccFilter->filt(filters.bufferYarpDofs);
 
-        iDynTree::toiDynTree(outputJointAcc,jointVel);
+        iDynTree::toiDynTree(outputJointAcc,jointAcc);
     }
 
     // Filter IMU Sensor
