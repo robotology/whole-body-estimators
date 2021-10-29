@@ -7,7 +7,7 @@ find_package(YARP REQUIRED)
 yarp_prepare_plugin(virtualAnalogRemapper CATEGORY device
                                           TYPE yarp::dev::VirtualAnalogRemapper
                                           INCLUDE "VirtualAnalogRemapper.h"
-                                          DEFAULT ON
+                                          INTERNAL
                                           ADVANCED)
 
 if(ENABLE_virtualAnalogRemapper)

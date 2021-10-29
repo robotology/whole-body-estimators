@@ -28,7 +28,7 @@ set(FBE_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/baseEstimatorV1.cpp
 yarp_prepare_plugin(baseEstimatorV1 CATEGORY device
                     TYPE yarp::dev::baseEstimatorV1
                     INCLUDE ${FBE_HEADERS}
-                    DEFAULT ON)
+                    INTERNAL)
 
 yarp_add_idl(THRIFT "${CMAKE_CURRENT_SOURCE_DIR}/thrifts/floatingBaseEstimationRPC.thrift")
 add_library(floatingBaseEstimationRPC-service STATIC ${THRIFT})

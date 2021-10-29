@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Fixed joint acceleration filtering (See [!124](https://github.com/robotology/whole-body-estimators/pull/124)).
 
+### Changed
+- Always enable compilation of devices (See [!115](https://github.com/robotology/whole-body-estimators/pull/115))
+
 ## [0.5.1] - 2021-07-12
 ### Added
 - Added Conda-based Continuous Integration job (See [!117](https://github.com/robotology/whole-body-estimators/pull/117) and [!118](https://github.com/robotology/whole-body-estimators/pull/118)).
@@ -57,7 +60,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.2.0] - 2020-03-11
 
-- Adding the following YARP devices: 
+- Adding the following YARP devices:
 * `genericSensorClient`
 * `virtualAnalogClient`
 * `virtualAnalogRemapper`
@@ -65,5 +68,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.1.0] - 2020-03-11
 
-Initial release of whole-body-estimators, containing the following YARP devices: 
+Initial release of whole-body-estimators, containing the following YARP devices:
 * `baseEstimatorV1`
