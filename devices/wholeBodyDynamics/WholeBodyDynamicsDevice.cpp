@@ -5,6 +5,7 @@
 #include <yarp/os/Property.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Time.h>
+#include <yarp/os/PeriodicThread.h>
 
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/GenericSensorInterfaces.h>
@@ -23,8 +24,9 @@ namespace dev
 const size_t wholeBodyDynamics_nrOfChannelsOfYARPFTSensor = 6;
 const size_t wholeBodyDynamics_nrOfChannelsOfAYARPIMUSensor = 12;
 const double wholeBodyDynamics_sensorTimeoutInSeconds = 2.0;
+constexpr double defaultWholeBodyDynamicsPeriod = 0.01;
 
-WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): RateThread(10),
+WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): yarp::os::PeriodicThread(defaultWholeBodyDynamicsPeriod),
                                                     portPrefix("/wholeBodyDynamics"),
                                                     correctlyConfigured(false),
                                                     sensorReadCorrectly(false),
@@ -849,7 +851,7 @@ void WholeBodyDynamicsDevice::resizeBuffers()
                  estimator.model().getNrOfDOFs(),
                  settings.jointVelFilterCutoffInHz,
                  settings.jointAccFilterCutoffInHz,
-                 getRate()/1000.0);
+                 getPeriod());
 
     // Resize external wrenches publishing software
     this->netExternalWrenchesExertedByTheEnviroment.resize(estimator.model());
