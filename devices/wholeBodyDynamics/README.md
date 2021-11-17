@@ -23,6 +23,7 @@ For an overview on `wholeBodyDynamics` and to understand how to run the device, 
 | jointVelFilterCutoffInHz    | - | double            | Hz    |      -        | Yes      | Cutoff frequency of the filter used to filter joint velocities measures. | The used filter is a simple first order filter. |
 | jointAccFilterCutoffInHz    | - | double            | Hz    |      -        | Yes      | Cutoff frequency of the filter used to filter joint accelerations measures. | The used filter is a simple first order filter. |
 | startWithZeroFTSensorOffsets    | - | bool            | -    |      False       | No      | Use zero FT sensor offsets at startup. If this flag is set to false, the device estimates the offsets of FT sensors at startup||
+| disableSensorReadCheckAtStartup | - | bool            | -    |      False       | No      | If this flag is set to true, the read from the sensors is skipped at startup ||
 | defaultContactFrames      | -   | vector of strings (name of frames ) |-| - |  Yes     | Vector of default contact frames. If no external force read from the skin is found on a given submodel, the defaultContactFrames list is scanned and the first frame found on the submodel is the one at which origin the unknown contact force is assumed to be. | - |
 | alwaysUpdateAllVirtualTorqueSensors | -     |  bool |  -    |      -        |  Yes     | Enforce that a virtual sensor for each estimated axes is available. | Tipically this is set to false when the device is running in the robot, while to true if it is running outside the robot. |
 | defaultContactFrames |      -   | vector of strings |  -    |    -          | Yes      | If not data is read from the skin, specify the location of the default contacts | For each submodel induced by the FT sensor, the first not used frame that belongs to that submodel is selected from the list. An error is raised if not suitable frame is found for a submodel. |
@@ -56,7 +57,7 @@ For an overview on `wholeBodyDynamics` and to understand how to run the device, 
   Furthermore are also used to match the yarp axes to the joint names found in the passed URDF file.
 
 #### Gravity Compensation
-  This device also provides gravity compensation torques (using the `IImpedanceControl::setImpedanceOffset` method) for axis that are in compliant interaction mode and in position/position direct/velocity control mode. 
+  This device also provides gravity compensation torques (using the `IImpedanceControl::setImpedanceOffset` method) for axis that are in compliant interaction mode and in position/position direct/velocity control mode.
 
 This estimates are obtained just with the model, assuming that there is a link (the `gravityCompensationRootLink`) at which all external forces are exerted.
 
@@ -188,12 +189,12 @@ For a detailed explanation on their usage, please see the document [Using temper
               <param name="r_ankle_1">(r_ankle_1,6,4)</param>
               <param name="r_foot">(r_foot_dh_frame,6,5)</param>
           </group>
- 
+
           <group name="WBD_OUTPUT_EXTERNAL_WRENCH_PORTS">
               <param name="/wholeBodyDynamics/left_leg/cartesianEndEffectorWrench:o">(l_foot,l_sole,root_link)</param>
               <param name="/wholeBodyDynamics/right_leg/cartesianEndEffectorWrench:o">(r_foot,r_sole,root_link)</param>
           </group>
- 
+
           <action phase="startup" level="15" type="attach">
               <paramlist name="networks">
                   <!-- motorcontrol and virtual torque sensors -->
@@ -218,9 +219,9 @@ For a detailed explanation on their usage, please see the document [Using temper
                   <elem name="r_foot_ft_sensor">right_lower_leg_strain</elem>
               </paramlist>
           </action>
- 
+
           <action phase="shutdown" level="2" type="detach" />
- 
+
       </device>
   </devices>
   ```
