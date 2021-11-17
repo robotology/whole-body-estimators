@@ -886,6 +886,21 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     yarp::os::Property prop;
     prop.fromString(config.toString().c_str());
 
+    if (prop.check("devicePeriodInSeconds"))
+    {
+	if(!prop.find("devicePeriodInSeconds").isDouble())
+	{
+	    yError() << "wholeBodyDynamics : The devicePeriodInSeconds must be a double";
+	    return false;
+	}
+        this->setPeriod(prop.find("devicePeriodInSeconds").asDouble());
+    }
+    else
+    {
+	yError() << "wholeBodyDynamics : The devicePeriodInSeconds parameter is not found the default one is used. Period: " << this->getPeriod() << " seconds.";
+    }
+
+
     // Check the assumeFixed parameter
     if( prop.check("assume_fixed") )
     {
