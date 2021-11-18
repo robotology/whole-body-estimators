@@ -897,7 +897,7 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     }
     else
     {
-	yError() << "wholeBodyDynamics : The devicePeriodInSeconds parameter is not found the default one is used. Period: " << this->getPeriod() << " seconds.";
+        yWarning() << "wholeBodyDynamics : The devicePeriodInSeconds parameter is not found the default one is used. Period: " << this->getPeriod() << " seconds.";
     }
 
 
