@@ -8,7 +8,7 @@
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
 #include <yarp/dev/Wrapper.h>
-#include <yarp/os/RateThread.h>
+#include <yarp/os/PeriodicThread.h>
 #include <yarp/os/RpcServer.h>
 #include <yarp/dev/IVirtualAnalogSensor.h>
 #include <yarp/dev/IAnalogSensor.h>
@@ -121,7 +121,7 @@ class wholeBodyDynamicsDeviceFilters
  */
 class WholeBodyDynamicsDevice :  public yarp::dev::DeviceDriver,
                                  public yarp::dev::IMultipleWrapper,
-                                 public yarp::os::RateThread,
+                                 public yarp::os::PeriodicThread,
                                  public wholeBodyDynamics_IDLServer
 {
     struct imuMeasurements

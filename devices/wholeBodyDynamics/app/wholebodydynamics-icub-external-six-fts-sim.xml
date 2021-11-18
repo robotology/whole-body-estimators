@@ -17,6 +17,7 @@
         <param name="startWithZeroFTSensorOffsets">true</param> <!-- bypass using resetOffset of FT sensors in simulation -->
         <param name="useSkinForContacts">true</param> <!-- bypass handling skinDynLib for robots without skin -->
         <param name="publishNetExternalWrenches">true</param>
+        <param name="devicePeriodInSeconds">0.01</param>
 
         <!-- map between iDynTree links (identified by a name)
              and skinDynLib links (identified by their frame name, a BodyPart enum

@@ -5,6 +5,7 @@
 #include <yarp/os/Property.h>
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/Time.h>
+#include <yarp/os/PeriodicThread.h>
 
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/GenericSensorInterfaces.h>
@@ -23,8 +24,9 @@ namespace dev
 const size_t wholeBodyDynamics_nrOfChannelsOfYARPFTSensor = 6;
 const size_t wholeBodyDynamics_nrOfChannelsOfAYARPIMUSensor = 12;
 const double wholeBodyDynamics_sensorTimeoutInSeconds = 2.0;
+constexpr double defaultWholeBodyDynamicsPeriod = 0.01;
 
-WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): RateThread(10),
+WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): yarp::os::PeriodicThread(defaultWholeBodyDynamicsPeriod),
                                                     portPrefix("/wholeBodyDynamics"),
                                                     correctlyConfigured(false),
                                                     sensorReadCorrectly(false),
@@ -849,7 +851,7 @@ void WholeBodyDynamicsDevice::resizeBuffers()
                  estimator.model().getNrOfDOFs(),
                  settings.jointVelFilterCutoffInHz,
                  settings.jointAccFilterCutoffInHz,
-                 getRate()/1000.0);
+                 getPeriod());
 
     // Resize external wrenches publishing software
     this->netExternalWrenchesExertedByTheEnviroment.resize(estimator.model());
@@ -883,6 +885,21 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
 
     yarp::os::Property prop;
     prop.fromString(config.toString().c_str());
+
+    if (prop.check("devicePeriodInSeconds"))
+    {
+        if(!prop.find("devicePeriodInSeconds").isDouble())
+        {
+            yError() << "wholeBodyDynamics : The devicePeriodInSeconds must be a double";
+            return false;
+        }
+        this->setPeriod(prop.find("devicePeriodInSeconds").asDouble());
+    }
+    else
+    {
+        yWarning() << "wholeBodyDynamics : The devicePeriodInSeconds parameter is not found. The default one is used. Period:" << this->getPeriod() << "seconds.";
+    }
+
 
     // Check the assumeFixed parameter
     if( prop.check("assume_fixed") )
