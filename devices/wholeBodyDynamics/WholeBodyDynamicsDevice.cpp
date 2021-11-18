@@ -888,11 +888,11 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
 
     if (prop.check("devicePeriodInSeconds"))
     {
-	if(!prop.find("devicePeriodInSeconds").isDouble())
-	{
-	    yError() << "wholeBodyDynamics : The devicePeriodInSeconds must be a double";
-	    return false;
-	}
+        if(!prop.find("devicePeriodInSeconds").isDouble())
+        {
+            yError() << "wholeBodyDynamics : The devicePeriodInSeconds must be a double";
+            return false;
+        }
         this->setPeriod(prop.find("devicePeriodInSeconds").asDouble());
     }
     else
