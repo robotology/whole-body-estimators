@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed joint acceleration filtering (See [!124](https://github.com/robotology/whole-body-estimators/pull/124)).
-
+- Fixed `wholeBodyDynamics` device when loaded by the `gazebo_yarp_robotinterface` Gazebo plugin [!126](https://github.com/robotology/whole-body-estimators/issues/126)
 ### Changed
 - Always enable compilation of devices (See [!115](https://github.com/robotology/whole-body-estimators/pull/115))
 - Migrate from `RateThread` to `PeriodicThread` in WholeBodyDynamics device (See [!130](https://github.com/robotology/whole-body-estimators/pull/130)).

@@ -1063,6 +1063,16 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
         }
     }
 
+    std::string disableSensorReadCheckAtStartupOptionName = "disableSensorReadCheckAtStartup";
+    if( !(prop.check(disableSensorReadCheckAtStartupOptionName) && prop.find(disableSensorReadCheckAtStartupOptionName).isBool()) )
+    {
+        settings.disableSensorReadCheckAtStartup = false;
+    }
+    else
+    {
+        settings.disableSensorReadCheckAtStartup = prop.find(disableSensorReadCheckAtStartupOptionName).asBool();
+    }
+
     if( !prop.check("HW_USE_MAS_IMU") )
     {
         useMasIMU = false;
@@ -1732,24 +1742,27 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         ftSensors[IDTsensIdx] = ftList[deviceThatHasTheSameNameOfTheSensor];
     }
 
-    // We try to read for a brief moment the sensors for two reasons:
-    // so we can make sure that they actually work, and to make sure that the buffers are correctly initialized
-    bool verbose = false;
-    double tic = yarp::os::Time::now();
-    bool timeSpentTryngToReadSensors = 0.0;
-    bool readSuccessfull = false;
-    while( (timeSpentTryngToReadSensors < wholeBodyDynamics_sensorTimeoutInSeconds) && !readSuccessfull )
-    {
-        readSuccessfull = readFTSensors(verbose);
-        timeSpentTryngToReadSensors = (yarp::os::Time::now() - tic);
+    if (!settings.disableSensorReadCheckAtStartup) {
+        // We try to read for a brief moment the sensors for two reasons:
+        // so we can make sure that they actually work, and to make sure that the buffers are correctly initialized
+        bool verbose = false;
+        double tic = yarp::os::Time::now();
+        bool timeSpentTryngToReadSensors = 0.0;
+        bool readSuccessfull = false;
+        while( (timeSpentTryngToReadSensors < wholeBodyDynamics_sensorTimeoutInSeconds) && !readSuccessfull )
+        {
+            readSuccessfull = readFTSensors(verbose);
+            timeSpentTryngToReadSensors = (yarp::os::Time::now() - tic);
+        }
+
+        if( !readSuccessfull )
+        {
+            yError() << "WholeBodyDynamicsDevice was unable to correctly read from the FT sensors";
+            return false;
+        }
     }
 
-    if( !readSuccessfull )
-    {
-       yError() << "WholeBodyDynamicsDevice was unable to correctly read from the FT sensors";
-    }
-
-    return readSuccessfull;
+    return true;
 }
 
 
@@ -1826,24 +1839,27 @@ bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
             }
         }
     }
-    // We try to read for a brief moment the sensors for two reasons:
-    // so we can make sure that they actually work, and to make sure that the buffers are correctly initialized
-    bool verbose = false;
-    double tic = yarp::os::Time::now();
-    bool timeSpentTryngToReadSensors = 0.0;
-    bool readSuccessfull = false;
-    while( (timeSpentTryngToReadSensors < wholeBodyDynamics_sensorTimeoutInSeconds) && !readSuccessfull )
-    {
-        readSuccessfull = readIMUSensors(verbose);
-        timeSpentTryngToReadSensors = (yarp::os::Time::now() - tic);
+    if (!settings.disableSensorReadCheckAtStartup) {
+        // We try to read for a brief moment the sensors for two reasons:
+        // so we can make sure that they actually work, and to make sure that the buffers are correctly initialized
+        bool verbose = false;
+        double tic = yarp::os::Time::now();
+        bool timeSpentTryngToReadSensors = 0.0;
+        bool readSuccessfull = false;
+        while( (timeSpentTryngToReadSensors < wholeBodyDynamics_sensorTimeoutInSeconds) && !readSuccessfull )
+        {
+            readSuccessfull = readIMUSensors(verbose);
+            timeSpentTryngToReadSensors = (yarp::os::Time::now() - tic);
+        }
+
+        if( !readSuccessfull )
+        {
+            yError() << "WholeBodyDynamicsDevice was unable to correctly read from the IMU for " << wholeBodyDynamics_sensorTimeoutInSeconds << " seconds, exiting.";
+            return false;
+        }
     }
 
-    if( !readSuccessfull )
-    {
-       yError() << "WholeBodyDynamicsDevice was unable to correctly read from the IMU for " << wholeBodyDynamics_sensorTimeoutInSeconds << " seconds, exiting.";
-    }
-
-    return readSuccessfull;
+    return true;
 }
 
 bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
