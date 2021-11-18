@@ -11,7 +11,7 @@ find_package(iDynTree REQUIRED)
 yarp_prepare_plugin(wholebodydynamics CATEGORY device
                                       TYPE yarp::dev::WholeBodyDynamicsDevice
                                       INCLUDE "WholeBodyDynamicsDevice.h"
-                                      DEFAULT ON
+                                      INTERNAL
                                       ADVANCED)
 
 if(ENABLE_wholebodydynamics)
