@@ -1,8 +1,0 @@
-include/KinematicSourceType.h
-src/KinematicSourceType.cpp
-include/Gravity.h
-src/Gravity.cpp
-include/ContactPoint.h
-src/ContactPoint.cpp
-include/wholeBodyDynamicsSettings.h
-src/wholeBodyDynamicsSettings.cpp

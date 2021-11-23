@@ -1,2 +1,0 @@
-include/wholeBodyDynamics_IDLServer.h
-src/wholeBodyDynamics_IDLServer.cpp
