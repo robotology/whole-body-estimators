@@ -1,4 +1,0 @@
-include/codyco/HomTransform.h
-src/HomTransform.cpp
-include/codyco/floatingBaseEstimatorRPC.h
-src/floatingBaseEstimatorRPC.cpp
