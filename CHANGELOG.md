@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [0.6.0] - 2021-12-03
 ### Added
 - Add a parameter to set the periodicity of the WholeBodyDynamics thread (See [!130](https://github.com/robotology/whole-body-estimators/pull/130)).
 
@@ -16,7 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Always enable compilation of devices (See [!115](https://github.com/robotology/whole-body-estimators/pull/115))
 - Migrate from `RateThread` to `PeriodicThread` in WholeBodyDynamics device (See [!130](https://github.com/robotology/whole-body-estimators/pull/130)).
-
 
 ## [0.5.1] - 2021-07-12
 ### Added
