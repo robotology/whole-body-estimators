@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## [0.6.1] - 2021-12-24
+
+### Fixed
+- Fixed compilation against YARP 3.6 (https://github.com/robotology/whole-body-estimators/pull/135).
+
 ## [0.6.0] - 2021-12-03
 ### Added
 - Add a parameter to set the periodicity of the WholeBodyDynamics thread (See [!130](https://github.com/robotology/whole-body-estimators/pull/130)).
