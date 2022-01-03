@@ -29,4 +29,6 @@ struct wholeBodyDynamicsSettings {
     11: bool startWithZeroFTSensorOffsets   /** Use zero FT sensor offsets at startup. If this flag is set to false, the device estimates the offsets of FT sensors at startup. Note that this option allows to enable/disable skipping the manual calling of resetOffsets to reset the offsets for FT sensors, most specially during simulations*/
     /** If this flag is set to true, the read from the sensors is skipped at startup */
     12: bool disableSensorReadCheckAtStartup
-}
+} (
+    yarp.editor = "true"
+)
