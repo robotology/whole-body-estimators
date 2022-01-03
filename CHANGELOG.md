@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## [0.6.1] - 2021-12-24
+## [0.6.1] - 2021-01-03
 
 ### Fixed
 - Fixed compilation against YARP 3.6 (https://github.com/robotology/whole-body-estimators/pull/135).
