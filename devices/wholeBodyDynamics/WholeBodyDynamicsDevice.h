@@ -461,7 +461,7 @@ private:
 
      /**
       * Calibrate the force/torque sensors when on double support and with jet engines turned ON and on idle thrust
-      * (WARNING: works only with iRonCub-Mk1).
+      * (WARNING: works only with iRonCub-Mk1_1).
       * (WARNING: calibrate the sensors when the only external forces acting on the robot are on the sole).
       * For this calibration the strong assumption of simmetry of the robot and its pose is done. Also, only pure forces are
       * assumed to be acting on the soles
@@ -469,7 +469,7 @@ private:
       * @param nr_of_samples number of samples
       * @return true/false on success/failure
       */
-     virtual bool calibStandingWithJetsiRonCubMk1(const std::string& calib_code, const int32_t nr_of_samples = 100);
+     virtual bool calibStandingWithJetsiRonCubMk1_1(const std::string& calib_code, const int32_t nr_of_samples = 100);
 
      /**
       * Calibrate the force/torque sensors when on single support on left foot
@@ -602,7 +602,7 @@ private:
     void setupCalibrationCommonPart(const int32_t nrOfSamples);
     bool setupCalibrationWithExternalWrenchOnOneFrame(const std::string & frameName, const int32_t nrOfSamples);
     bool setupCalibrationWithExternalWrenchesOnTwoFrames(const std::string & frame1Name, const std::string & frame2Name, const int32_t nrOfSamples);
-    bool setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1(const int32_t nrOfSamples);
+    bool setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1_1(const int32_t nrOfSamples);
 
      /**
       * RPC Calibration related attributes
