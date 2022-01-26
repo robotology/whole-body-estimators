@@ -2863,14 +2863,42 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithExternalWrenchesOnTwoFrames(co
     return true;
 }
 
-bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1(const int32_t nrOfSamples)
+bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub(const std::string& ironcub_model, const int32_t nrOfSamples)
 {
     // Let's configure the external forces that then are assume to be active on the robot while calibration on two links (assumed to be symmetric)
 
     // Clear the class
     calibrationBuffers.assumedContactLocationsForCalibration.clear();
 
-    // Check if the iRonCub-Mk1 jets frames exist
+    double ArmsIdleThrustN = 0;
+    double BackIdleThrustN = 0;
+    // Check if `ironcub_model` is correct and configure the idle thrust
+    // Model iRonCub-Mk1
+    if(ironcub_model.compare("mk1") == 0)
+    {
+        // Nominal Idle thrust values for JetCat P100 jet models = 2N
+        // Nominal Idle thrust values for JetCat P220 jet models = 9N
+        // The negative sign is for the force direction represented in the Back Jet frame
+        ArmsIdleThrustN = -2;
+        BackIdleThrustN = -9;
+    }
+    // Model iRonCub-Mk1_1
+    else if(ironcub_model.compare("mk1.1") == 0)
+    {
+        // Nominal Idle thrust values for JetCat P160 jet models = 7N
+        // Nominal Idle thrust values for JetCat P220 jet models = 9N
+        // The negative sign is for the force direction represented in the Back Jet frame
+        ArmsIdleThrustN = -7;
+        BackIdleThrustN = -9;
+    }
+    // Model name is incorrect
+    else
+    {
+        yError() << "Model name is invalid, choose either mk1 or mk1.1" ;
+        return false;
+    } 
+
+    // Check if the iRonCub-XX jets frames exist
     std::string leftArmJetFrame = {"l_arm_jet_turbine"};
     std::string RightArmJetFrame = {"r_arm_jet_turbine"};
     std::string leftBackJetFrame = {"chest_l_jet_turbine"};
@@ -2878,28 +2906,28 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJets
     iDynTree::FrameIndex frameLAIndex = estimator.model().getFrameIndex(leftArmJetFrame);
     if( frameLAIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << leftArmJetFrame << ", Are you using iRonCub-Mk1?";
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << leftArmJetFrame << ", Are you using iRonCub-" << ironcub_model <<"?";
         return false;
     }
 
     iDynTree::FrameIndex frameRAIndex = estimator.model().getFrameIndex(RightArmJetFrame);
     if( frameRAIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << RightArmJetFrame << ", Are you using iRonCub-Mk1?";
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << RightArmJetFrame << ", Are you using iRonCub-" << ironcub_model <<"?";
         return false;
     }
 
     iDynTree::FrameIndex frameLBIndex = estimator.model().getFrameIndex(leftBackJetFrame);
     if( frameLBIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << leftBackJetFrame << ", Are you using iRonCub-Mk1?";
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << leftBackJetFrame << ", Are you using iRonCub-" << ironcub_model <<"?";
         return false;
     }
 
     iDynTree::FrameIndex frameRBIndex = estimator.model().getFrameIndex(RightBackJetFrame);
     if( frameRBIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << RightBackJetFrame << ", Are you using iRonCub-Mk1?";
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << RightBackJetFrame << ", Are you using iRonCub-" << ironcub_model <<"?";
         return false;
     }
 
@@ -2909,31 +2937,26 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJets
     iDynTree::FrameIndex frameLSIndex = estimator.model().getFrameIndex(LeftSoleFrame);
     if( frameLSIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << LeftSoleFrame;
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << LeftSoleFrame;
         return false;
     }
 
     iDynTree::FrameIndex frameRSIndex = estimator.model().getFrameIndex(RightSoleFrame);
     if( frameRSIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << RightSoleFrame;
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << RightSoleFrame;
         return false;
     }
 
     // We assume that all the 6 contacts are Pure Forces with Known Directions (1D) at the origin of each frame
     iDynTree::Direction zPosAxis = iDynTree::Direction(0,0,1);
     iDynTree::Direction zNegAxis = iDynTree::Direction(0,0,-1);
-    // Nominal Idle thrust values for JetCat P100 jet models = 2N
-    // The negative sign is for the force direction represented in the Arm Jet frame
-    double p100IdleThrustN = -2;
-    // Nominal Idle thrust values for JetCat P220 jet models = 9N
-    // The negative sign is for the force direction represented in the Back Jet frame
-    double p220IdleThrustN = -9;
-    iDynTree::Force jetArmForce = iDynTree::Force(0,0,p100IdleThrustN);
+
+    iDynTree::Force jetArmForce = iDynTree::Force(0,0,ArmsIdleThrustN);
     iDynTree::Torque jetArmTorque = iDynTree::Torque(0,0,0);
     iDynTree::Wrench jetArmWrench = iDynTree::Wrench(jetArmForce, jetArmTorque);
 
-    iDynTree::Force jetBackForce = iDynTree::Force(0,0,p220IdleThrustN);
+    iDynTree::Force jetBackForce = iDynTree::Force(0,0,BackIdleThrustN);
     iDynTree::Torque jetBackTorque = iDynTree::Torque(0,0,0);
     iDynTree::Wrench jetBackWrench = iDynTree::Wrench(jetBackForce, jetBackTorque);
 
@@ -2953,7 +2976,7 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJets
 
     if( !ok )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 error";
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" error";
         return false;
     }
 
@@ -2996,13 +3019,13 @@ bool WholeBodyDynamicsDevice::calibStanding(const std::string& calib_code, const
 
 }
 
-bool WholeBodyDynamicsDevice::calibStandingWithJetsiRonCubMk1(const std::string& calib_code, const int32_t nr_of_samples)
+bool WholeBodyDynamicsDevice::calibStandingWithJetsiRonCub(const std::string& ironcub_model, const std::string& calib_code, const int32_t nr_of_samples)
 {
     std::lock_guard<std::mutex> guard(this->deviceMutex);
 
-    yWarning() << "wholeBodyDynamics : calibStandingWithJetsiRonCubMk1 ignoring calib_code " << calib_code;
+    yWarning() << "wholeBodyDynamics : calibStandingWithJetsiRonCub" << ironcub_model <<" ignoring calib_code " << calib_code;
 
-    bool ok = this->setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1(nr_of_samples);
+    bool ok = this->setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub(ironcub_model, nr_of_samples);
 
     if( !ok )
     {
