@@ -225,3 +225,267 @@ For a detailed explanation on their usage, please see the document [Using temper
       </device>
   </devices>
   ```
+  
+### RPC commands
+#### wholeBodyDynamicsDevice
+You can access the device while running via `YARP RPC`. You can run the following command to access into the RPC mode of the device.
+
+```sh
+yarp rpc <portPrefix>/rpc
+```
+
+
+In particular, you can execute the following commands inside the RPC mode:
+- `calib`: Calibrate the force/torque sensors, assuming only external forces acting on the robot are on the **torso/waist**.
+
+
+```
+calib <code> <noOfSamples>
+```
+
+Where `<code>` is an argument to specify the sensors to calibrate (all,arms,legs,feet) **AT THE MOMENT IT'S IGNORED**, and `<noOfSamples>` is the number of samples (if not set, it will assume a default value of **100**).
+
+- `calibStanding`: Calibrate the force/torque sensors, assuming only external forces acting on the robot are on the **soles**. It assumes the symmetry of the robot around a vertical central line.
+
+```
+calibStanding <code> <noOfSamples>
+```
+
+- `calibStandingWithJetsiRonCub`: Works for iRonCub models only, it calibrates the force/torque sensors when on double support and with jet engines turned ON and on idle thrust. It also assumes robot symmetry.
+
+```
+calibStandingWithJetsiRonCub <ironcub_model> <code> <noOfSamples>
+```
+
+Where `<ironcub_model>` specifies the particular model of iRonCub (mk1, mk1.1).
+
+- `calibStandingLeftFoot`: Calibrate the force/torque sensors when on single support on left foot.
+
+```
+calibStandingLeftFoot <code> <noOfSamples>
+```
+
+- `calibStandingRightFoot`: Calibrate the force/torque sensors when on single support on right foot.
+
+```
+calibStandingRightFoot <code> <noOfSamples>
+```
+
+- `calibStandingOnOneLink`: Calibrate the force/torque sensors offsets when the external forces are acting on only one link. This method is typically used when the robot is standing on only one feet, or when it is attached to a fixture that is acting on a single link (typically the chest or the waist).
+
+```
+calibStandingOnOneLink <standing_frame> <noOfSamples>
+```
+
+Where `standing_frame` Is a frame belonging to the link on which it is assumed that external forces are acting.
+
+- `calibStandingOnTwoLinks`: Calibrate the force/torque sensors offsets when the external forces are acting on only two links.
+
+```
+calibStandingOnTwoLinks <first_standing_frame> <second_standing_frame> <noOfSamples>
+```
+Where `first_standing_frame` and `second_standing_frame` are frames belonging to the two links on which it is assumed that the external forces are acting.
+
+- `resetOffset`: Reset the sensor offset to `0 0 0 0 0 0` (six zeros).
+
+```
+resetOffset <code>
+```
+
+- `usePreEstimatedOffset`: Use the offline estimated offset of the sensor.
+
+```
+usePreEstimatedOffset
+```
+
+- `quit`: Quit the module.
+
+```
+quit
+```
+
+- `resetSimpleLeggedOdometry`: Reset the odometry world to be (initially) a frame specified in the robot model, and specify a link that is assumed to be fixed in the odometry.
+
+```
+resetSimpleLeggedOdometry <initial_world_frame> <initial_fixed_link>
+```
+
+Where `initial_world_frame` is the frame of the robot model that is assume to be initially coincident with the world/inertial frame, and `initial_fixed_link` is the name of the link that should be initially fixed.
+
+- `changeFixedLinkSimpleLeggedOdometry`: Change the link that is considered fixed by the odometry.
+
+```
+changeFixedLinkSimpleLeggedOdometry <new_fixed_link>
+```
+
+Where `new_fixed_link` is the name of the new link that should be considered fixed.
+
+-  `set_imuFilterCutoffInHz`: Set the cutoff frequency (in Hz) for IMU measurements.
+
+```
+set_imuFilterCutoffInHz <newCutoff>
+```
+
+- `get_imuFilterCutoffInHz`: Get the cutoff frequency (in Hz) for IMU measurements.
+
+```
+get_imuFilterCutoffInHz
+```
+
+- `set_forceTorqueFilterCutoffInHz`: Set the cutoff frequency (in Hz) for FT measurements.
+
+```
+set_forceTorqueFilterCutoffInHz <newCutoff>
+```
+
+- `get_forceTorqueFilterCutoffInHz`: Get the cutoff frequency (in Hz) for FT measurements.
+
+```
+get_forceTorqueFilterCutoffInHz
+```
+
+- `set_jointVelFilterCutoffInHz`: Set the cutoff frequency (in Hz) for joint velocities measurements.
+
+```
+set_jointVelFilterCutoffInHz <newCutoff>
+```
+
+- `get_jointVelFilterCutoffInHz`: Get the cutoff frequency (in Hz) for joint velocities measurements.
+
+```
+get_jointVelFilterCutoffInHz
+```
+
+- `set_jointAccFilterCutoffInHz`: Set the cutoff frequency (in Hz) for joint acceleration measurements.
+
+```
+set_jointAccFilterCutoffInHz <newCutoff>
+```
+
+- `get_jointAccFilterCutoffInHz`: Get the cutoff frequency (in Hz) for joint acceleration measurements.
+
+```
+get_jointAccFilterCutoffInHz
+```
+
+- `useIMUAsKinematicSource`: Use the IMU as the kinematic source of information for the acceleration of one link.
+
+```
+useIMUAsKinematicSource
+```
+
+- `useFixedFrameAsKinematicSource`: Use a fixed frame (tipically `root_link`, `l_sole` or `r_sole`) as the source of kinematic information. The assumption is that the specified frame will remain fixed until the kinematic source is changing, and the gravity on this link is specified by the fixedFrameGravity (typically set to (0,0,-9.81) .
+
+```
+useFixedFrameAsKinematicSource <fixedFrame>
+```
+
+- `setUseOfJointVelocities`: Set if to use or not the joint velocities in estimation.
+
+```
+setUseOfJointVelocities <enable>
+```
+
+Where `enable` is a boolean variable, `true` for enable the using of joint velocities, and `false` for disabling it.
+
+- `setUseOfJointAccelerations`: Set if to use or not the joint accelerations in estimation.
+
+```
+setUseOfJointAccelerations <enable>
+```
+
+Where `enable` is a boolean variable, `true` for enable the using of joint accelerations, and `false` for disabling it.
+
+- `getCurrentSettingsString`: Get the current settings in the form of a string. Returns the current settings as a human readable string.
+
+```
+getCurrentSettingsString
+```
+
+#### baseEstimatorV1
+
+- `getEstimationJointsList`:
+
+```
+getEstimationJointsList
+```
+
+- `setMahonyKp`:
+
+```
+setMahonyKp <>
+```
+
+- `setMahonyKi`:
+
+```
+setMahonyKi <>
+```
+
+- `setMahonyTimeStep`:
+
+```
+setMahonyTimeStep <>
+```
+
+- `setContactSchmittThreshold`:
+
+```
+setContactSchmittThreshold <> <> <> <>
+```
+
+- `setPrimaryFoot`:
+
+```
+setPrimaryFoot <>
+```
+
+- `resetIMU`:
+
+```
+resetIMU
+```
+
+- `resetLeggedOdometry`:
+
+```
+resetLeggedOdometry
+```
+
+- `resetLeggedOdometryWithRefFrame`:
+
+```
+resetLeggedOdometryWithRefFrame <> <> <> <> <> <> <> <>
+```
+
+- `getRefFrameForWorld`:
+
+```
+getRefFrameForWorld
+```
+
+- `getRefPose6DForWorld`:
+
+```
+getRefPose6DForWorld
+```
+
+- `useJointVelocityLPF`:
+
+```
+useJointVelocityLPF <flag>
+```
+
+Where `flag` is
+
+- `setJointVelocityLPFCutoffFrequency`:
+
+```
+setJointVelocityLPFCutoffFrequency <freq>
+```
+
+- `startFloatingBaseFilter`:
+
+```
+startFloatingBaseFilter
+```

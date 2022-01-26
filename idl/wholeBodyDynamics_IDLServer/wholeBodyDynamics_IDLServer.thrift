@@ -61,7 +61,7 @@ service wholeBodyDynamics_IDLServer
   /**
     * Calibrate the force/torque sensors offsets when the external forces are acting on only one link.
     *
-    * This method is typically used when the robot is standing on only one feet,
+    * This method is typically used when the robot is standing on only one foot,
     * or when it is attached to a fixture that is acting on a single link (typically the chest or the waist).
     *
     * @note This method calibrates the offsets of all the force-torque sensors.
@@ -75,12 +75,12 @@ service wholeBodyDynamics_IDLServer
     * Calibrate the force/torque sensors offsets when the external forces are acting on only two links.
     *
     * This method is not in general guaranteed to work, and it works in practice only when the robot and its internal
-    * forces are symmetric w.r.t. the two contact links. Note that the value obtaiend from this calibration depend
+    * forces are symmetric w.r.t. the two contact links. Note that the value obtained from this calibration depend
     * on the location of the origin of the specific frames of the contact links used for the calibration.
     *
     * @note This method calibrates the offsets of all the force-torque sensors.
-    * @param first_standing_frame a frame belonging to one of the two links on which it is assumed that tue external forces are acting.
-    * @param second_standing_frame a frame belonging to the other link on which it is assumed that tue external forces are acting.
+    * @param first_standing_frame a frame belonging to one of the two links on which it is assumed that the external forces are acting.
+    * @param second_standing_frame a frame belonging to the other link on which it is assumed that the external forces are acting.
     * @param nr_of_samples number of samples
     * @return true/false on success/failure
     */
@@ -183,7 +183,7 @@ service wholeBodyDynamics_IDLServer
    * as the source of kinematic information. The assumption
    * is that the specified frame will remain fixed until
    * the kinematic source is changing, and the gravity
-   * on this link is specified by the fixedFrameGravity (tipically
+   * on this link is specified by the fixedFrameGravity (typically
    * set to (0,0,-9.81) .
    *
    *
@@ -197,7 +197,7 @@ service wholeBodyDynamics_IDLServer
   bool setUseOfJointVelocities(1:bool enable);
 
   /**
-   * Set if to use or not the joint velocities in estimation.
+   * Set if to use or not the joint accelerations in estimation.
    *
    */
   bool setUseOfJointAccelerations(1:bool enable);
