@@ -227,7 +227,6 @@ For a detailed explanation on their usage, please see the document [Using temper
   ```
   
 ### RPC commands
-#### wholeBodyDynamicsDevice
 You can access the device while running via `YARP RPC`. You can run the following command to access into the RPC mode of the device.
 
 ```sh
@@ -400,92 +399,4 @@ Where `enable` is a boolean variable, `true` for enable the using of joint accel
 
 ```
 getCurrentSettingsString
-```
-
-#### baseEstimatorV1
-
-- `getEstimationJointsList`:
-
-```
-getEstimationJointsList
-```
-
-- `setMahonyKp`:
-
-```
-setMahonyKp <>
-```
-
-- `setMahonyKi`:
-
-```
-setMahonyKi <>
-```
-
-- `setMahonyTimeStep`:
-
-```
-setMahonyTimeStep <>
-```
-
-- `setContactSchmittThreshold`:
-
-```
-setContactSchmittThreshold <> <> <> <>
-```
-
-- `setPrimaryFoot`:
-
-```
-setPrimaryFoot <>
-```
-
-- `resetIMU`:
-
-```
-resetIMU
-```
-
-- `resetLeggedOdometry`:
-
-```
-resetLeggedOdometry
-```
-
-- `resetLeggedOdometryWithRefFrame`:
-
-```
-resetLeggedOdometryWithRefFrame <> <> <> <> <> <> <> <>
-```
-
-- `getRefFrameForWorld`:
-
-```
-getRefFrameForWorld
-```
-
-- `getRefPose6DForWorld`:
-
-```
-getRefPose6DForWorld
-```
-
-- `useJointVelocityLPF`:
-
-```
-useJointVelocityLPF <flag>
-```
-
-Where `flag` is
-
-- `setJointVelocityLPFCutoffFrequency`:
-
-```
-setJointVelocityLPFCutoffFrequency <freq>
-```
-
-- `startFloatingBaseFilter`:
-
-```
-startFloatingBaseFilter
 ```
