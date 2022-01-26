@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 
 ### Changed
-- Updated the `yarp rpc` command `calibStandingWithJetsiRonCubMk1` to be `calibStandingWithJetsiRonCubMk1_1`, in order to perform `calibStanding` for the model `iRonCub-Mk1_1` (See [!136](https://github.com/robotology/whole-body-estimators/pull/136)).
+- Updated the `yarp rpc` command `calibStandingWithJetsiRonCubMk1` to be `calibStandingWithJetsiRonCub`, in order to perform `calibStanding` for the models `iRonCub-Mk1` and `iRonCub-Mk1_1` (See [!136](https://github.com/robotology/whole-body-estimators/pull/136)).
 
 ## [0.6.1] - 2021-01-03
 

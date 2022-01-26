@@ -452,7 +452,7 @@ private:
      /**
       * Calibrate the force/torque sensors when on double support
       * (WARNING: calibrate the sensors when the only external forces acting on the robot are on the sole).
-      * For this calibration the strong assumption of simmetry of the robot and its pose is done.
+      * For this calibration the strong assumption of symmetry of the robot and its pose is done.
       * @param calib_code argument to specify the sensors to calibrate (all,arms,legs,feet)
       * @param nr_of_samples number of samples
       * @return true/false on success/failure
@@ -461,15 +461,16 @@ private:
 
      /**
       * Calibrate the force/torque sensors when on double support and with jet engines turned ON and on idle thrust
-      * (WARNING: works only with iRonCub-Mk1_1).
+      * (WARNING: works only with iRonCub-XX models).
       * (WARNING: calibrate the sensors when the only external forces acting on the robot are on the sole).
-      * For this calibration the strong assumption of simmetry of the robot and its pose is done. Also, only pure forces are
+      * For this calibration the strong assumption of symmetry of the robot and its pose is done. Also, only pure forces are
       * assumed to be acting on the soles
+      * @param ironcub_model argument to specify the particular model of iRonCub (mk1, mk1.1)
       * @param calib_code argument to specify the sensors to calibrate (all,arms,legs,feet)
       * @param nr_of_samples number of samples
       * @return true/false on success/failure
       */
-     virtual bool calibStandingWithJetsiRonCubMk1_1(const std::string& calib_code, const int32_t nr_of_samples = 100);
+     virtual bool calibStandingWithJetsiRonCub(const std::string& ironcub_model, const std::string& calib_code, const int32_t nr_of_samples = 100);
 
      /**
       * Calibrate the force/torque sensors when on single support on left foot
@@ -602,7 +603,7 @@ private:
     void setupCalibrationCommonPart(const int32_t nrOfSamples);
     bool setupCalibrationWithExternalWrenchOnOneFrame(const std::string & frameName, const int32_t nrOfSamples);
     bool setupCalibrationWithExternalWrenchesOnTwoFrames(const std::string & frame1Name, const std::string & frame2Name, const int32_t nrOfSamples);
-    bool setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1_1(const int32_t nrOfSamples);
+    bool setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub(const std::string& ironcub_model, const int32_t nrOfSamples);
 
      /**
       * RPC Calibration related attributes
