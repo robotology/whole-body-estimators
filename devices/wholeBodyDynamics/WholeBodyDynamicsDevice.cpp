@@ -3023,7 +3023,7 @@ bool WholeBodyDynamicsDevice::calibStandingWithJetsiRonCub(const std::string& ir
 {
     std::lock_guard<std::mutex> guard(this->deviceMutex);
 
-    yWarning() << "wholeBodyDynamics : calibStandingWithJetsiRonCubMk1_1 ignoring calib_code " << calib_code;
+    yWarning() << "wholeBodyDynamics : calibStandingWithJetsiRonCub" << ironcub_model <<" ignoring calib_code " << calib_code;
 
     bool ok = this->setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub(ironcub_model, nr_of_samples);
 
