@@ -9,7 +9,7 @@
         <param name="defaultContactFrames">(l_hand,r_hand,root_link,l_foot_front,l_foot_rear,r_foot_front,r_foot_rear,l_upper_leg,r_upper_leg)</param>
         <param name="imuFrameName">imu_frame</param>
         <param name="useJointVelocity">true</param>
-        <param name="useJointAcceleration">true</param>
+        <param name="useJointAcceleration">false</param>
         <param name="imuFilterCutoffInHz">3.0</param>
         <param name="forceTorqueFilterCutoffInHz">3.0</param>
         <param name="jointVelFilterCutoffInHz">3.0</param> <!-- used if useJointVelocity is set to true -->
@@ -18,6 +18,55 @@
         <param name="useSkinForContacts">false</param>
         <param name="publishNetExternalWrenches">true</param>
         <param name="devicePeriodInSeconds">0.01</param>
+        <param name="estimateJointVelocityAcceleration">false</param>  <!-- if true a kf will estimate the joint velocities and accelerations -->
+        <param name="processNoiseCovariance">(1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1)</param>
+        <param name="measurementNoiseCovariance">(1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-1, 1.0e-1, 1.0e-1,
+                                                  1.0e-1, 1.0e-1, 1.0e-1,
+                                                  1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                                  1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                                  1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                                  1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1)</param>
+        <param name="stateCovariance">(5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4,
+                                       1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1)</param>
 
         <group name="GRAVITY_COMPENSATION">
             <param name="enableGravityCompensation">true</param>

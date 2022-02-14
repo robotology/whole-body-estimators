@@ -22,6 +22,7 @@
 #include <iDynTree/Estimation/ExtWrenchesAndJointTorquesEstimator.h>
 #include <iDynTree/skinDynLibConversions.h>
 #include <iDynTree/KinDynComputations.h>
+#include <iDynTree/Estimation/KalmanFilter.h>
 
 // Filters
 #include "ctrlLibRT/filters.h"
@@ -30,6 +31,8 @@
 #include <wholeBodyDynamics_IDLServer.h>
 #include "SixAxisForceTorqueMeasureHelpers.h"
 #include "GravityCompensationHelpers.h"
+
+#include <BipedalLocomotion/YarpUtilities/VectorsCollection.h>
 
 #include <vector>
 #include <mutex>
@@ -59,6 +62,10 @@ struct outputWrenchPortInformation
 
 class wholeBodyDynamicsDeviceFilters
 {
+    private:
+
+    bool initCovarianceMatrix(const yarp::os::Searchable &config, std::string parameterName, iDynTree::MatrixDynSize & matrix);
+
     public:
 
     wholeBodyDynamicsDeviceFilters();
@@ -78,10 +85,13 @@ class wholeBodyDynamicsDeviceFilters
                                double cutOffForIMUInHz,
                                double cutOffForJointVelInHz,
                                double cutOffForJointAccInHz);
+
     /**
      * Deallocate the filters
      */
     void fini();
+
+    bool initKalmanFilter(const yarp::os::Searchable &config, iDynTree::DiscreteKalmanFilterHelper *kf, double periodInSeconds, int nrOfDOFsProcessed);
 
 
     ~wholeBodyDynamicsDeviceFilters();
@@ -100,6 +110,9 @@ class wholeBodyDynamicsDeviceFilters
 
     ///< low pass filter for Joint accelerations
     iCub::ctrl::realTime::FirstOrderLowPassFilter * jntAccFilter;
+
+    ///< KF filter for Joint velocity and accelerations
+    iDynTree::DiscreteKalmanFilterHelper * jntVelAccKFFilter;
 
     ///< Yarp vector buffer of dimension 3
     yarp::sig::Vector bufferYarp3;
@@ -132,6 +145,8 @@ class WholeBodyDynamicsDevice :  public yarp::dev::DeviceDriver,
     };
 
 private:
+    yarp::os::BufferedPort<BipedalLocomotion::YarpUtilities::VectorsCollection> portLog;
+
     /**
      * Port prefix used for all the ports opened by wholeBodyDynamics.
      */
@@ -390,7 +405,10 @@ private:
     yarp::sig::Vector              ftMeasurement;
     yarp::sig::Vector              imuMeasurement;
     yarp::sig::Vector              estimatedJointTorquesYARP;
-    yarp::sig::VectorOf<double>              tempMeasurements;
+    yarp::sig::VectorOf<double>    tempMeasurements;
+    iDynTree::JointDOFsDoubleArray jointPosKF;
+    iDynTree::JointDOFsDoubleArray jointVelKF;
+    iDynTree::JointDOFsDoubleArray jointAccKF;
 
     /***
      * Buffer for raw sensors measurements.
@@ -594,6 +612,10 @@ private:
        * Set if to use or not the joint velocities in estimation.
        */
       virtual bool setUseOfJointAccelerations(const bool enable);
+      /**
+      * Set if to estimate or not the joint velocities and acceleration.
+      */
+      virtual bool setUseOfJointVelocityAccelerationEstimation(const bool enable);
       /**
        * Get the current settings in the form of a string.
        * @return the current settings as a human readable string.

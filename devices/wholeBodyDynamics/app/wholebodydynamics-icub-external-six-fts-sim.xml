@@ -18,6 +18,55 @@
         <param name="useSkinForContacts">true</param> <!-- bypass handling skinDynLib for robots without skin -->
         <param name="publishNetExternalWrenches">true</param>
         <param name="devicePeriodInSeconds">0.01</param>
+        <param name="estimateJointVelocityAcceleration">false</param>  <!-- if true a kf will estimate the joint velocities and accelerations -->
+        <param name="processNoiseCovariance">(1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1)</param>
+        <param name="measurementNoiseCovariance">(1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-1, 1.0e-1, 1.0e-1,
+                                                  1.0e-1, 1.0e-1, 1.0e-1,
+                                                  1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                                  1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                                  1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                                  1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1)</param>
+        <param name="stateCovariance">(5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4,
+                                       1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1)</param>
 
         <!-- map between iDynTree links (identified by a name)
              and skinDynLib links (identified by their frame name, a BodyPart enum
