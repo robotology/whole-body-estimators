@@ -32,8 +32,6 @@
 #include "SixAxisForceTorqueMeasureHelpers.h"
 #include "GravityCompensationHelpers.h"
 
-#include <BipedalLocomotion/YarpUtilities/VectorsCollection.h>
-
 #include <vector>
 #include <mutex>
 
@@ -145,8 +143,6 @@ class WholeBodyDynamicsDevice :  public yarp::dev::DeviceDriver,
     };
 
 private:
-    yarp::os::BufferedPort<BipedalLocomotion::YarpUtilities::VectorsCollection> portLog;
-
     /**
      * Port prefix used for all the ports opened by wholeBodyDynamics.
      */
