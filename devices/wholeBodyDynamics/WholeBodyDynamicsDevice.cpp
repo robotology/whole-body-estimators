@@ -2213,11 +2213,9 @@ void WholeBodyDynamicsDevice::filterSensorsAndRemoveSensorOffsets()
         iDynTree::VectorDynSize kfState;
         kfState.resize(estimator.model().getNrOfDOFs()*3);
 
-        iDynTree::VectorDynSize measurement;
-        measurement.resize(estimator.model().getNrOfDOFs()*2);
+        iDynTree::VectorDynSize measurement(estimator.model().getNrOfDOFs());
 
-        iDynTree::toEigen(measurement).head(estimator.model().getNrOfDOFs()) = iDynTree::toEigen(jointPos);
-        iDynTree::toEigen(measurement).tail(estimator.model().getNrOfDOFs()) = iDynTree::toEigen(jointVel);
+        iDynTree::toEigen(measurement) = iDynTree::toEigen(jointPos);
 
         if (!filters.jntVelAccKFFilter->kfPredict())
         {
@@ -3480,10 +3478,8 @@ bool wholeBodyDynamicsDeviceFilters::initKalmanFilter(const yarp::os::Searchable
     }
 
     // noisy measurement of the truck is made at each step without any feedthrough
-    iDynTree::MatrixDynSize C(2*nrOfDOFsProcessed, 3*nrOfDOFsProcessed);
-    C.zero();
-    iDynTree::toEigen(C).topLeftCorner(nrOfDOFsProcessed,nrOfDOFsProcessed).setIdentity();
-    iDynTree::toEigen(C).block(nrOfDOFsProcessed,nrOfDOFsProcessed,nrOfDOFsProcessed,nrOfDOFsProcessed).setIdentity();
+    iDynTree::MatrixDynSize C(nrOfDOFsProcessed, 3*nrOfDOFsProcessed);
+    iDynTree::toEigen(C).setIdentity();
 
     iDynTree::MatrixDynSize Q(3*nrOfDOFsProcessed,3*nrOfDOFsProcessed);
     if(!this->initCovarianceMatrix(config, "processNoiseCovariance", Q))
@@ -3492,7 +3488,7 @@ bool wholeBodyDynamicsDeviceFilters::initKalmanFilter(const yarp::os::Searchable
         return false;
     }
 
-    iDynTree::MatrixDynSize R(nrOfDOFsProcessed*2,nrOfDOFsProcessed*2);
+    iDynTree::MatrixDynSize R(nrOfDOFsProcessed,nrOfDOFsProcessed);
     if(!this->initCovarianceMatrix(config, "measurementNoiseCovariance", R))
     {
         yError() << " wholeBodyDynamics : failed to set measurement noise covariance matrix. ";
