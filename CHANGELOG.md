@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+### Added
+- Add a steady-state Kalman filter with a null jerk model for the joint velocity and acceleration estimation in `WholeBodyDynamics`. (See [!139](https://github.com/robotology/whole-body-estimators/pull/139)).
 
 ### Changed
 - Updated the `yarp rpc` command `calibStandingWithJetsiRonCubMk1` to be `calibStandingWithJetsiRonCub`, in order to perform `calibStanding` for the models `iRonCub-Mk1` and `iRonCub-Mk1_1` (See [!136](https://github.com/robotology/whole-body-estimators/pull/136)).
