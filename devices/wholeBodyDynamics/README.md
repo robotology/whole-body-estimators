@@ -36,6 +36,10 @@ For an overview on `wholeBodyDynamics` and to understand how to run the device, 
 | streamFilteredFT     |        - | bool              |  -    |      false    |  No      | Select if the filtered and offset removed forces will be streamed or not. The name of the ports have the following syntax:  portname=(portPrefix+"/filteredFT/"+sensorName). Example: "myPrefix/filteredFT/l_leg_ft_sensor" | The value streamed by this ports is affected by the secondary calibration matrix, the estimated offset and temperature coefficients ( if any ). |
 | publishNetExternalWrenches |        - | bool          |  -    |      false   |  No      | Flag to stream the net external wrenches acting on each link on the port portPrefix+"/netExternalWrenches:o". The content is a bottle of n pairs, where n is the number of links. The first element of each pair is the name of the link. The second element is yet another list of 6 elements containing the value of the net external wrench, defined in the link frame. The first three elements are the linear part, while the other three are the angular part.| |
 | useSkinForContacts     |        - | bool              |  -    |      true    |  No      | Flag to skip using tactile skin sensors for updating contact points and external force (pressure) information | |
+| estimateJointVelocityAcceleration     |        - | bool              |  -    |      false    |  No      | Flag to estimate the joint velocities and accelerations usign a kalman filter. If true, the same measurements from the low level are ignored. | |
+| processNoiseCovariance |      -   | vector of doubles |  -    |    -          | Yes if 'estimateJointVelocityAcceleration' is true      | It should contain 3 values per each joint, in total number_of_joints*3 values.  |     |
+| measurementNoiseCovariance |      -   | vector of doubles |  -    |    -          | Yes if 'estimateJointVelocityAcceleration' is true      | It should contain number_of_joints values.  |     |
+| stateCovariance |      -   | vector of doubles |  -    |    -          | Yes if 'estimateJointVelocityAcceleration' is true      | It should contain 3 values per each joint, in total number_of_joints*3 values. |     |
 | IDYNTREE_SKINDYNLIB_LINKS |  -  | group             | -     | -             | Yes      |  Group describing the mapping between link names and skinDynLib identifiers. | |
 |                |   linkName_1   | string (name of a link in the model) | - | - | Yes   | Bottle of three elements describing how the link with linkName is described in skinDynLib: the first element is the name of the frame in which the contact info is expressed in skinDynLib (tipically DH frames), the second a integer describing the skinDynLib BodyPart , and the third a integer describing the skinDynLib LinkIndex  | |
 |                |   ...   | string (name of a link in the model) | - | -     | Yes      | Bottle of three elements describing how the link with linkName is described in skinDynLib: the first element is the name of the frame in which the contact info is expressed in skinDynLib (tipically DH frames), the second a integer describing the skinDynLib BodyPart , and the third a integer describing the skinDynLib LinkIndex  | |
@@ -225,7 +229,7 @@ For a detailed explanation on their usage, please see the document [Using temper
       </device>
   </devices>
   ```
-  
+
 ### RPC commands
 You can access the device while running via `YARP RPC`. You can run the following command to access into the RPC mode of the device.
 
