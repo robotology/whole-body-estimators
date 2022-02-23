@@ -2232,6 +2232,10 @@ void WholeBodyDynamicsDevice::filterSensorsAndRemoveSensorOffsets()
             yError() << " wholeBodyDynamics : kf update step failed ";
         }
 
+        // The first estimator.model().getNrOfDOFs() values of the state are the joint positions
+        // the following estimator.model().getNrOfDOFs() values are the joint velocities
+        // the last estimator.model().getNrOfDOFs() values are the joint accelerations
+
         filters.jntVelAccKFFilter->kfGetStates(kfState);
 
         iDynTree::toEigen(jointPosKF) = iDynTree::toEigen(kfState).head(estimator.model().getNrOfDOFs());
@@ -3455,11 +3459,17 @@ bool wholeBodyDynamicsDeviceFilters::initCovarianceMatrix(const yarp::os::Search
     return true;
 }
 
-bool wholeBodyDynamicsDeviceFilters::initKalmanFilter(const yarp::os::Searchable &config, iDynTree::DiscreteKalmanFilterHelper *kf, double periodInSeconds, int nrOfDOFsProcessed)
+bool wholeBodyDynamicsDeviceFilters::initKalmanFilter(const yarp::os::Searchable &config, std::unique_ptr<iDynTree::DiscreteKalmanFilterHelper> &kf, double periodInSeconds, int nrOfDOFsProcessed)
 {
-    // Pure kinematic kalman filter
-    // state space is joint positions, velocitues and accelerations.
+    // Steady-state Kalman Filter with a null jerk model.
+    //
+    // The state vector contains the joint positions, velocities and accelerations.
+    // x = [q0,...,qn,dq0,...,dqn,ddq0,...,ddqn]
+    //
     // There is no input. The measures are the joint positions.
+    // y = [q0,...,qn]
+    //
+    // State space model:
     // x{k+1} = A x{k}
     // y{k}   = C x{k}
 
@@ -3477,7 +3487,6 @@ bool wholeBodyDynamicsDeviceFilters::initKalmanFilter(const yarp::os::Searchable
         A(i+2*nrOfDOFsProcessed, i+2*nrOfDOFsProcessed) = 1;
     }
 
-    // noisy measurement of the truck is made at each step without any feedthrough
     iDynTree::MatrixDynSize C(nrOfDOFsProcessed, 3*nrOfDOFsProcessed);
     iDynTree::toEigen(C).setIdentity();
 
