@@ -1469,7 +1469,7 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
     // initialize kalman filter
     if(settings.estimateJointVelocityAcceleration)
     {
-        filters.jntVelAccKFFilter = new iDynTree::DiscreteKalmanFilterHelper();
+        filters.jntVelAccKFFilter = std::make_unique<iDynTree::DiscreteKalmanFilterHelper>();
 
         if( !filters.initKalmanFilter(config, filters.jntVelAccKFFilter, getPeriod(), estimator.model().getNrOfDOFs()))
         {
@@ -3426,7 +3426,7 @@ wholeBodyDynamicsDeviceFilters::wholeBodyDynamicsDeviceFilters(): imuLinearAccel
                                                                   forcetorqueFilters(0),
                                                                   jntVelFilter(0),
                                                                   jntAccFilter(0),
-                                                                  jntVelAccKFFilter(0),
+                                                                  jntVelAccKFFilter(nullptr),
                                                                   bufferYarp3(0),
                                                                   bufferYarp6(0),
                                                                   bufferYarpDofs(0)
@@ -3618,8 +3618,7 @@ void wholeBodyDynamicsDeviceFilters::fini()
 
     if( jntVelAccKFFilter )
     {
-        delete jntVelAccKFFilter;
-        jntVelAccKFFilter = 0;
+        jntVelAccKFFilter.reset(nullptr);
     }
 }
 

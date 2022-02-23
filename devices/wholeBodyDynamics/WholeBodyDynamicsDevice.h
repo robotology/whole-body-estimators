@@ -89,7 +89,7 @@ class wholeBodyDynamicsDeviceFilters
      */
     void fini();
 
-    bool initKalmanFilter(const yarp::os::Searchable &config, iDynTree::DiscreteKalmanFilterHelper *kf, double periodInSeconds, int nrOfDOFsProcessed);
+    bool initKalmanFilter(const yarp::os::Searchable &config, std::unique_ptr<iDynTree::DiscreteKalmanFilterHelper> &kf, double periodInSeconds, int nrOfDOFsProcessed);
 
 
     ~wholeBodyDynamicsDeviceFilters();
@@ -110,7 +110,7 @@ class wholeBodyDynamicsDeviceFilters
     iCub::ctrl::realTime::FirstOrderLowPassFilter * jntAccFilter;
 
     ///< KF filter for Joint velocity and accelerations
-    iDynTree::DiscreteKalmanFilterHelper * jntVelAccKFFilter;
+    std::unique_ptr<iDynTree::DiscreteKalmanFilterHelper> jntVelAccKFFilter;
 
     ///< Yarp vector buffer of dimension 3
     yarp::sig::Vector bufferYarp3;
