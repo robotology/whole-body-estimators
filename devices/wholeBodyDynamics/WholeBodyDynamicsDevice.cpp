@@ -1048,7 +1048,7 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     {
         yWarning() << "wholeBodyDynamics: estimateVelocityAccelerationOptionName bool parameter missing, please specify it.";
         yWarning() << "wholeBodyDynamics: setting estimateVelocityAccelerationOptionName to the default value of true, but this is a deprecated behaviour that will be removed in the future.";
-        settings.estimateJointVelocityAcceleration = true;
+        settings.estimateJointVelocityAcceleration = false;
     }
     else
     {
