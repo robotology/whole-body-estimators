@@ -3,13 +3,18 @@
 
 <devices robot="@WBD_YARP_ROBOT_NAME@" build="1">
     <device name="wholebodydynamics" type="wholebodydynamics">
-        <param name="axesNames">(torso_pitch,torso_roll,torso_yaw,neck_pitch, neck_roll,neck_yaw,l_shoulder_pitch,l_shoulder_roll,l_shoulder_yaw,l_elbow,l_wrist_prosup,l_wrist_pitch,l_wrist_yaw,r_shoulder_pitch,r_shoulder_roll,r_shoulder_yaw,r_elbow,r_wrist_prosup,r_wrist_pitch,r_wrist_yaw,l_hip_pitch,l_hip_roll,l_hip_yaw,l_knee,l_ankle_pitch,l_ankle_roll,r_hip_pitch,r_hip_roll,r_hip_yaw,r_knee,r_ankle_pitch,r_ankle_roll)</param>
+        <param name="axesNames">(torso_pitch,torso_roll,torso_yaw,
+                                 neck_pitch, neck_roll,neck_yaw,
+                                 l_shoulder_pitch,l_shoulder_roll,l_shoulder_yaw,l_elbow,l_wrist_prosup,l_wrist_pitch,l_wrist_yaw,
+                                 r_shoulder_pitch,r_shoulder_roll,r_shoulder_yaw,r_elbow,r_wrist_prosup,r_wrist_pitch,r_wrist_yaw,
+                                 l_hip_pitch,l_hip_roll,l_hip_yaw,l_knee,l_ankle_pitch,l_ankle_roll,
+                                 r_hip_pitch,r_hip_roll,r_hip_yaw,r_knee,r_ankle_pitch,r_ankle_roll)</param>
         <param name="modelFile">model.urdf</param>
         <param name="fixedFrameGravity">(0,0,-9.81)</param>
         <param name="defaultContactFrames">(l_hand,r_hand,root_link,l_foot_front,l_foot_rear,r_foot_front,r_foot_rear,l_upper_leg,r_upper_leg)</param>
         <param name="imuFrameName">imu_frame</param>
         <param name="useJointVelocity">true</param>
-        <param name="useJointAcceleration">false</param>
+        <param name="useJointAcceleration">true</param>
         <param name="imuFilterCutoffInHz">3.0</param>
         <param name="forceTorqueFilterCutoffInHz">3.0</param>
         <param name="jointVelFilterCutoffInHz">3.0</param> <!-- used if useJointVelocity is set to true -->
@@ -18,7 +23,7 @@
         <param name="useSkinForContacts">false</param>
         <param name="publishNetExternalWrenches">true</param>
         <param name="devicePeriodInSeconds">0.01</param>
-        <param name="estimateJointVelocityAcceleration">false</param>  <!-- if true a kf will estimate the joint velocities and accelerations -->
+        <param name="estimateJointVelocityAcceleration">true</param>  <!-- if true a kf will estimate the joint velocities and accelerations -->
         <param name="processNoiseCovariance">(1.0e-3, 1.0e-3, 1.0e-3,
                                               1.0e-3, 1.0e-3, 1.0e-3,
                                               1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
