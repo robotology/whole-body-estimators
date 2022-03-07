@@ -21,8 +21,8 @@ public:
         unsigned int deadlineMiss{0}; /**< Number of deadline miss */
         std::string name{"Timer"}; /**< Name associated to the timer */
         bool dealineMissDetected{false};
-        std::chrono::duration<double> latestDeadlineMissDuration; /**< Average duration. */
-        std::chrono::duration<double> duration; /**< Latest duration. */
+      std::chrono::duration<double> latestDeadlineMissDuration{0}; /**< Average duration. */
+      std::chrono::duration<double> duration{0}; /**< Latest duration. */
     };
 
     Timer(const std::string& name, const std::chrono::duration<double>& expectedDuration);

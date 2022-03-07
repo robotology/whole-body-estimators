@@ -14,6 +14,7 @@
 #include <numeric>
 #include <iomanip>
 
+#include <yarp/os/LogStream.h>
 
 #include "TimeProfiler.h"
 
@@ -28,7 +29,7 @@ std::string printTimerDescription(const std::string& name, const TimerHandler::T
        << "|" << std::setw(15) << std::setprecision(13) << description.averageDuration.count()
        << "|" << std::setw(10) << std::setprecision(8) << description.timer.getInfo().deadlineMiss
        << "|" << std::setw(15) << std::setprecision(13) << description.timer.getInfo().latestDeadlineMissDuration.count()
-       << "|";
+       << "|" << std::endl;
 
     return ss.str();
 };
@@ -64,6 +65,11 @@ void Timer::setName(const std::string& name)
 void Timer::setExpectedDuration(const std::chrono::duration<double>& expectedDuration)
 {
     m_exprectedDuration = expectedDuration;
+}
+
+const Timer::Info& Timer::getInfo() const
+{
+    return m_info;
 }
 
 void TimerHandler::setHorizon(unsigned int horizon)
@@ -119,41 +125,41 @@ void TimerHandler::profiling()
         queue.push_back(duration);
 
         // keep the queue size equal to horizon
-        if (queue.size() >= m_horizon)
+        if (queue.size() > m_horizon)
         {
             queue.pop_front();
         }
 
         // this should never happen
-        assert(queue.size() == m_horizon);
+        assert(queue.size() <= m_horizon);
 
         timerDescription.averageDuration
-            = std::accumulate(std::next(queue.begin()), queue.end(), queue.front());
+	  = std::accumulate(std::next(queue.begin()), queue.end(), queue.front()) / double(queue.size());
     }
 
     if(m_verbosity)
     {
+      std::stringstream ss;
+      std::string output;
         if(m_verbosityCounter == 0)
         {
-            std::cout << "|" << std::setw(30) << "name            |"
+	    ss << "|" << std::setw(30) << "name            |"
                       << std::setw(15) << "tavarg (s)  |"
                       << std::setw(10) <<  "dm    |"
-                      << std::setw(15) << "tdm (s)   |" << std::endl;
-            std::cout << std::setfill('-') << "|" << std::setw(15) << "|"
+                      << std::setw(15) << "tdm (s)   |" << std::endl
+	       << "        " << std::setfill('-') << "|" << std::setw(30) << "|"
                       << std::setw(15) << "|"
                       << std::setw(10) <<  "|"
                       << std::setw(15) << "|" << std::endl;
 
+	    output = ss.str();
 
             for (const auto& [name, timerDescription] : m_timers)
             {
-                std::cout << printTimerDescription(name, timerDescription) << std::endl;
+                output += "        " + printTimerDescription(name, timerDescription);
             }
 
-            std::cout << std::setfill('-') << "|" << std::setw(30) << "|"
-                      << std::setw(15) << "|"
-                      << std::setw(10) <<  "|"
-                      << std::setw(15) << "|" << std::endl;
+	    yDebug() << output;
         }
 
         m_verbosityCounter++ ;

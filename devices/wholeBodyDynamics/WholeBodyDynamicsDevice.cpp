@@ -1639,7 +1639,7 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
     m_timerHandler.addTimer("all",
                             WholeBodyDynamics::Timer("all",
                                                      std::chrono::duration<double>(getPeriod())));
-
+    m_timerHandler.setVerbosity(true);
     yDebug() << "wholeBodyDynamics Statistics: Configuration finished. Waiting attachAll to be called.";
 
     return true;
