@@ -2203,7 +2203,7 @@ void WholeBodyDynamicsDevice::filterSensorsAndRemoveSensorOffsets()
 
         // Run the filter
         Eigen::Ref<const Eigen::VectorXd> outputFt = filters.forcetorqueFilters[ft]->filt(filters.bufferEigen6);
-        iDynTree::toEigen(filteredFTMeasure.getLinearVec3()) = outputFt.tail<3>();
+        iDynTree::toEigen(filteredFTMeasure.getLinearVec3()) = outputFt.head<3>();
         iDynTree::toEigen(filteredFTMeasure.getAngularVec3()) = outputFt.tail<3>();
 
         filteredSensorMeasurements.setMeasurement(iDynTree::SIX_AXIS_FORCE_TORQUE,ft,filteredFTMeasure);
