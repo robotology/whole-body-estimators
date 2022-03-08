@@ -112,7 +112,7 @@ class wholeBodyDynamicsDeviceFilters
     ///< KF filter for Joint velocity and accelerations
     std::unique_ptr<iDynTree::DiscreteKalmanFilterHelper> jntVelAccKFFilter;
 
-    ///< Eigen vector buffer of dimension 6
+    ///< Temporary Eigen vector buffer of dimension 6
     Eigen::Matrix<double, 6, 1> bufferEigen6;
 };
 
