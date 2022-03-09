@@ -1634,8 +1634,8 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         yDebug() << "wholeBodyDynamics Statistics: Filtered FT ports opened in " << yarp::os::Time::now() - tick << "s.";
     }
 
-    // print the clock once every 1.0 seconds
-    m_timerHandler.setHorizon(1.0/getPeriod());
+    // print the clock once every 5 minutes
+    m_timerHandler.setHorizon(5.0 * 60 /getPeriod());
     m_timerHandler.addTimer("all",
                             WholeBodyDynamics::Timer("all",
                                                      std::chrono::duration<double>(getPeriod())));
