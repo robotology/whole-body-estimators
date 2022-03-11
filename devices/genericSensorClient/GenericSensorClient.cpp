@@ -132,7 +132,7 @@ int GSInputPortProcessor::getChannels()
 
 bool yarp::dev::GenericSensorClient::open(yarp::os::Searchable &config)
 {
-    std::string carrier = config.check("carrier", Value("udp"), "default carrier for streaming robot state").asString().c_str();
+    std::string carrier = config.check("carrier", Value("fast_tcp"), "default carrier for streaming robot state").asString().c_str();
 
     local.clear();
     remote.clear();
