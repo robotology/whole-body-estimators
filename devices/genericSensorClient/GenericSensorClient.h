@@ -76,7 +76,7 @@ namespace dev {
 * |:--------------:|:------:|:-----:|:-------------:|:--------: |:-------------:|:-----:|
 * | local          | string |       |               | Yes       | full name if the port opened by the device  | must start with a '/' character |
 * | remote         | string |       |               | Yes       | full name of the port the device need to connect to | must start with a '/' character |
-* | carrier        | string |       | udp           | No        | type of carrier to use, like tcp, udp and so on ...  | - |
+* | carrier        | string |       | fast_tcp      | No        | type of carrier to use, like fast_tcp, tcp, udp and so on ...  | - |
 *
 *  The device will create a port with name <local> and will connect to a port colled <remote> at startup,
 * ex: <b> /myModule/linertial </b>, and will connect to a port called <b> /icub/inertial<b>.
