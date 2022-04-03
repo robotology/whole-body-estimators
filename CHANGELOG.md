@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Switched default carrier of `genericSensorClient` device from `udp` to `fast_tcp` to avoid delays up to 0.25 seconds when a receiver is interrupted (https://github.com/robotology/whole-body-estimators/pull/145).
 
 ### Fixed
-- Fixed the possibility of deadlock in detachAll method in `wholebodydynamics` and `baseEstimatorV1`. This deadlock could lead to freeze during closing of the yarprobotinterface or the Gazebo simulator if the `gazebo_yarp_robotinterface` plugin was used.
+- Fixed the possibility of deadlock in detachAll method in `wholebodydynamics` and `baseEstimatorV1`. This deadlock could lead to freeze during closing of the yarprobotinterface or the Gazebo simulator if the `gazebo_yarp_robotinterface` plugin was used (https://github.com/robotology/whole-body-estimators/pull/146).
 
 ## [0.6.1] - 2021-01-03
 
