@@ -2849,14 +2849,14 @@ void WholeBodyDynamicsDevice::run()
 
 bool WholeBodyDynamicsDevice::detachAll()
 {
-    std::lock_guard<std::mutex> guard(this->deviceMutex);
-
-    correctlyConfigured = false;
-
     if (isRunning())
     {
         stop();
     }
+
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
+
+    correctlyConfigured = false;
 
     // If gravity compensation was enabled, reset the offsets
     this->resetGravityCompensation();
