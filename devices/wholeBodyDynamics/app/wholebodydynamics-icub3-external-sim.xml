@@ -11,12 +11,12 @@
                                  r_hip_pitch,r_hip_roll,r_hip_yaw,r_knee,r_ankle_pitch,r_ankle_roll)</param>
         <param name="modelFile">model.urdf</param>
         <param name="fixedFrameGravity">(0,0,-9.81)</param>
-        <param name="defaultContactFrames">(l_hand,r_hand,root_link,l_foot_front,l_foot_rear,r_foot_front,r_foot_rear,l_upper_leg,r_upper_leg)</param>
+            <param name="defaultContactFrames">(l_hand,r_hand,root_link,l_foot_front,l_foot_rear,r_upper_leg,r_foot_front,r_foot_rear,l_lower_leg,r_lower_leg)</param>
         <param name="imuFrameName">imu_frame</param>
         <param name="useJointVelocity">true</param>
         <param name="useJointAcceleration">true</param>
         <param name="imuFilterCutoffInHz">3.0</param>
-        <param name="forceTorqueFilterCutoffInHz">3.0</param>
+        <param name="forceTorqueFilterCutoffInHz">2.0</param>
         <param name="jointVelFilterCutoffInHz">3.0</param> <!-- used if useJointVelocity is set to true -->
         <param name="jointAccFilterCutoffInHz">3.0</param> <!-- used if useJointAcceleration is set to true -->
         <param name="startWithZeroFTSensorOffsets">true</param> <!-- bypass using resetOffset of FT sensors in simulation -->
@@ -76,6 +76,9 @@
         <group name="WBD_OUTPUT_EXTERNAL_WRENCH_PORTS">
             <param name="/wholeBodyDynamics/left_arm/cartesianEndEffectorWrench:o">(l_hand,l_hand,root_link)</param>
             <param name="/wholeBodyDynamics/right_arm/cartesianEndEffectorWrench:o">(r_hand,r_hand,root_link)</param>
+            <param name="/wholeBodyDynamics/right_upper_leg/cartesianEndEffectorWrench:o">(r_upper_leg,r_upper_leg,root_link)</param>
+            <param name="/wholeBodyDynamics/left_lower_leg/cartesianEndEffectorWrench:o">(l_lower_leg,l_lower_leg,root_link)</param>
+            <param name="/wholeBodyDynamics/right_lower_leg/cartesianEndEffectorWrench:o">(r_lower_leg,r_lower_leg,root_link)</param>
             <param name="/wholeBodyDynamics/left_foot_front/cartesianEndEffectorWrench:o">(l_foot_front,l_sole,l_sole)</param>
             <param name="/wholeBodyDynamics/left_foot_rear/cartesianEndEffectorWrench:o">(l_foot_rear,l_sole,l_sole)</param>
             <param name="/wholeBodyDynamics/right_foot_front/cartesianEndEffectorWrench:o">(r_foot_front,r_sole,r_sole)</param>
@@ -100,6 +103,7 @@
                 <elem name="l_foot_rear_ft_sensor">left_lower_leg_rear_strain</elem>
                 <elem name="r_foot_front_ft_sensor">right_lower_leg_front_strain</elem>
                 <elem name="r_foot_rear_ft_sensor">right_lower_leg_rear_strain</elem>
+                <elem name="r_leg_ft_sensor">right_upper_leg_strain</elem>
             </paramlist>
         </action>
 
