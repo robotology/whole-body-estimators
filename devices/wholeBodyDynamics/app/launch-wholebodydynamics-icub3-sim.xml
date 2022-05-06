@@ -70,6 +70,11 @@
         <param name="local"> /wholeBodyDynamics/r_foot_rear_ft_sensor </param>
     </device>
 
+    <device name="right_upper_leg_strain" type="analogsensorclient">
+        <param name="remote"> /icubSim/right_leg/analog:o </param>
+        <param name="local"> /wholeBodyDynamics/r_leg_ft_sensor </param>
+    </device>
+
     <!-- estimators -->
     <xi:include href="estimators/wholebodydynamics-external.xml" />
 </robot>
