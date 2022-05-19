@@ -521,7 +521,7 @@ bool WholeBodyDynamicsDevice::parseOverrideContactFramesData(yarp::os::Bottle *_
                 for(int ay=0; ay < 3; ay++)
                 {
                     int index = 3*ax+ay;
-                    contactWrenchDirection[ax][ay] = _propContactWrenchDirection->get(index).asDouble();
+                    contactWrenchDirection[ax][ay] = _propContactWrenchDirection->get(index).asFloat64();
                 }
             }
         }
@@ -542,7 +542,7 @@ bool WholeBodyDynamicsDevice::parseOverrideContactFramesData(yarp::os::Bottle *_
                 for(int ay=0; ay < 3; ay++)
                 {
                     int index = 3*ax+ay;
-                    contactWrenchPosition[ax][ay] = _propContactWrenchPosition->get(index).asDouble();
+                    contactWrenchPosition[ax][ay] = _propContactWrenchPosition->get(index).asFloat64();
                 }
             }
         }
@@ -621,8 +621,8 @@ bool WholeBodyDynamicsDevice::openSkinContactListPorts(os::Searchable& config)
 
         std::string iDynTree_link_name = map_bot->get(0).asString();
         std::string iDynTree_skinFrame_name = map_bot->get(1).asList()->get(0).asString();
-        int skinDynLib_body_part = map_bot->get(1).asList()->get(1).asInt();
-        int skinDynLib_link_index = map_bot->get(1).asList()->get(2).asInt();
+        int skinDynLib_body_part = map_bot->get(1).asList()->get(1).asInt32();
+        int skinDynLib_link_index = map_bot->get(1).asList()->get(2).asInt32();
 
         bool ret_sdl = conversionHelper.addSkinDynLibAlias(estimator.model(),
                                                            iDynTree_link_name,iDynTree_skinFrame_name,
@@ -905,7 +905,7 @@ void WholeBodyDynamicsDevice::resizeBuffers()
 
         for (size_t i = 0; i < 6; ++i)
         {
-            wrenchValues.addDouble(0.0);
+            wrenchValues.addFloat64(0.0);
         }
     }
 }
@@ -921,12 +921,12 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
 
     if (prop.check("devicePeriodInSeconds"))
     {
-        if(!prop.find("devicePeriodInSeconds").isDouble())
+        if(!prop.find("devicePeriodInSeconds").isFloat64())
         {
             yError() << "wholeBodyDynamics : The devicePeriodInSeconds must be a double";
             return false;
         }
-        this->setPeriod(prop.find("devicePeriodInSeconds").asDouble());
+        this->setPeriod(prop.find("devicePeriodInSeconds").asFloat64());
     }
     else
     {
@@ -987,9 +987,9 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
         prop.find("fixedFrameGravity").isList() &&
         prop.find("fixedFrameGravity").asList()->size() == 3 )
     {
-        settings.fixedFrameGravity.x = prop.find("fixedFrameGravity").asList()->get(0).asDouble();
-        settings.fixedFrameGravity.y = prop.find("fixedFrameGravity").asList()->get(1).asDouble();
-        settings.fixedFrameGravity.z = prop.find("fixedFrameGravity").asList()->get(2).asDouble();
+        settings.fixedFrameGravity.x = prop.find("fixedFrameGravity").asList()->get(0).asFloat64();
+        settings.fixedFrameGravity.y = prop.find("fixedFrameGravity").asList()->get(1).asFloat64();
+        settings.fixedFrameGravity.z = prop.find("fixedFrameGravity").asList()->get(2).asFloat64();
     }
     else
     {
@@ -1090,9 +1090,9 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     // Set time to check for a new temperature measurement. The default value is 0.55;
     // is set in the device constructor
     if( prop.check("checkTemperatureEvery_seconds") &&
-        prop.find("checkTemperatureEvery_seconds").isDouble())
+        prop.find("checkTemperatureEvery_seconds").isFloat64())
     {
-        checkTemperatureEvery_seconds = prop.find("checkTemperatureEvery_seconds").asDouble();
+        checkTemperatureEvery_seconds = prop.find("checkTemperatureEvery_seconds").asFloat64();
     }
 
     if ( !(prop.check("startWithZeroFTSensorOffsets") && prop.find("startWithZeroFTSensorOffsets").isBool()) )
@@ -1148,9 +1148,9 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
 bool WholeBodyDynamicsDevice::applyLPFSettingsFromConfig(const yarp::os::Property& prop, const std::string& setting_name)
 {
     if( prop.check(setting_name) &&
-        prop.find(setting_name).isDouble() )
+        prop.find(setting_name).isFloat64() )
     {
-        double cut_off_freq = prop.find(setting_name).asDouble();
+        double cut_off_freq = prop.find(setting_name).asFloat64();
         if (setting_name == "imuFilterCutoffInHz") { settings.imuFilterCutoffInHz = cut_off_freq; }
         if (setting_name == "forceTorqueFilterCutoffInHz") { settings.forceTorqueFilterCutoffInHz = cut_off_freq; }
         if (setting_name == "jointVelFilterCutoffInHz") { settings.jointVelFilterCutoffInHz = cut_off_freq; }
@@ -1195,7 +1195,7 @@ bool WholeBodyDynamicsDevice::loadSecondaryCalibrationSettingsFromConfig(os::Sea
                 for(int c=0; c < 6; c++)
                 {
                     int rowMajorIndex = 6*r+c;
-                    secondaryCalibMat(r,c) = map_bot->get(1).asList()->get(rowMajorIndex).asDouble();
+                    secondaryCalibMat(r,c) = map_bot->get(1).asList()->get(rowMajorIndex).asFloat64();
                 }
             }
 
@@ -1256,9 +1256,9 @@ bool WholeBodyDynamicsDevice::loadTemperatureCoefficientsSettingsFromConfig(os::
 
             for(auto r=0u; r < 6; r++)
             {
-                temperatureCoeffs(r) = map_bot->get(1).asList()->get(r).asDouble();
+                temperatureCoeffs(r) = map_bot->get(1).asList()->get(r).asFloat64();
             }
-            tempOffset= map_bot->get(1).asList()->get(6).asDouble();
+            tempOffset= map_bot->get(1).asList()->get(6).asFloat64();
 
             // Linearly search for the specified sensor
             bool sensorFound = false;
@@ -1319,7 +1319,7 @@ bool WholeBodyDynamicsDevice::loadFTSensorOffsetFromConfig(os::Searchable& confi
 
             for(int r=0; r < 6; r++)
             {
-                ftOffset(r) = map_bot->get(1).asList()->get(r).asDouble();
+                ftOffset(r) = map_bot->get(1).asList()->get(r).asFloat64();
             }
 
 
