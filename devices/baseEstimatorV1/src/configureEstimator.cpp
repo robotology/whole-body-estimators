@@ -30,9 +30,9 @@ bool yarp::dev::baseEstimatorV1::loadEstimatorParametersFromConfig(const yarp::o
                                                      " Loading default robot name " << m_robot;
     }
 
-    if (config.check("device_period_in_seconds") && config.find("device_period_in_seconds").isDouble())
+    if (config.check("device_period_in_seconds") && config.find("device_period_in_seconds").isFloat64())
     {
-        m_device_period_in_s = config.find("device_period_in_seconds").asDouble();
+        m_device_period_in_s = config.find("device_period_in_seconds").asFloat64();
     }
     else
     {
@@ -98,7 +98,7 @@ bool yarp::dev::baseEstimatorV1::loadEstimatorParametersFromConfig(const yarp::o
 
         for (size_t i =0; i < 4; i++)
         {
-            m_initial_attitude_estimate_as_quaternion(i) = attitude->get(i).asDouble();
+            m_initial_attitude_estimate_as_quaternion(i) = attitude->get(i).asFloat64();
         }
     }
     else
@@ -110,9 +110,9 @@ bool yarp::dev::baseEstimatorV1::loadEstimatorParametersFromConfig(const yarp::o
                                                      "uing default value for initial attitude estimate: " << m_initial_attitude_estimate_as_quaternion.toString();
     }
 
-    if (config.check("imu_confidence_roll") && config.find("imu_confidence_roll").isDouble())
+    if (config.check("imu_confidence_roll") && config.find("imu_confidence_roll").isFloat64())
     {
-        m_imu_confidence_roll = config.find("imu_confidence_roll").asDouble();
+        m_imu_confidence_roll = config.find("imu_confidence_roll").asFloat64();
     }
     else
     {
@@ -120,9 +120,9 @@ bool yarp::dev::baseEstimatorV1::loadEstimatorParametersFromConfig(const yarp::o
                                                    " using default value " << m_imu_confidence_roll ;
     }
 
-    if (config.check("imu_confidence_pitch") && config.find("imu_confidence_pitch").isDouble())
+    if (config.check("imu_confidence_pitch") && config.find("imu_confidence_pitch").isFloat64())
     {
-        m_imu_confidence_pitch = config.find("imu_confidence_pitch").asDouble();
+        m_imu_confidence_pitch = config.find("imu_confidence_pitch").asFloat64();
     }
     else
     {
@@ -186,7 +186,7 @@ bool yarp::dev::baseEstimatorV1::loadEstimatorParametersFromConfig(const yarp::o
         m_head_to_base_joints_list_zero_pos.resize(upper_body_joint_zero_pos->size());
         for (auto idx = 0; idx < upper_body_joint_zero_pos->size(); idx++)
         {
-            m_head_to_base_joints_list_zero_pos(idx) = upper_body_joint_zero_pos->get(idx).asDouble();
+            m_head_to_base_joints_list_zero_pos(idx) = upper_body_joint_zero_pos->get(idx).asFloat64();
         }
     }
     else
@@ -210,7 +210,7 @@ bool yarp::dev::baseEstimatorV1::loadEstimatorParametersFromConfig(const yarp::o
 
     if (m_use_lpf)
     {
-        m_joint_vel_filter_cutoff_freq = config.check("joint_vel_lpf_cutoff_freq", yarp::os::Value(0.0)).asDouble();
+        m_joint_vel_filter_cutoff_freq = config.check("joint_vel_lpf_cutoff_freq", yarp::os::Value(0.0)).asFloat64();
         m_joint_vel_filter_sample_time_in_s = m_device_period_in_s;
     }
 
@@ -252,13 +252,13 @@ bool yarp::dev::baseEstimatorV1::loadLeggedOdometryParametersFromConfig(const ya
         }
 
         iDynTree::Position initial_reference_frame_p_world;
-        initial_reference_frame_p_world(0) = pose->get(0).asDouble();
-        initial_reference_frame_p_world(1) = pose->get(1).asDouble();
-        initial_reference_frame_p_world(2) = pose->get(2).asDouble();
+        initial_reference_frame_p_world(0) = pose->get(0).asFloat64();
+        initial_reference_frame_p_world(1) = pose->get(1).asFloat64();
+        initial_reference_frame_p_world(2) = pose->get(2).asFloat64();
 
-        iDynTree::Rotation initial_reference_frame_R_world = iDynTree::Rotation::RPY(pose->get(3).asDouble(),
-                                                                                     pose->get(4).asDouble(),
-                                                                                     pose->get(5).asDouble());
+        iDynTree::Rotation initial_reference_frame_R_world = iDynTree::Rotation::RPY(pose->get(3).asFloat64(),
+                                                                                     pose->get(4).asFloat64(),
+                                                                                     pose->get(5).asFloat64());
 
         m_initial_reference_frame_H_world = iDynTree::Transform(initial_reference_frame_R_world, initial_reference_frame_p_world);
     }
@@ -285,9 +285,9 @@ bool yarp::dev::baseEstimatorV1::loadBipedFootContactClassifierParametersFromCon
                                                    " Loading default initial primary foot " << m_initial_primary_foot;
     }
 
-    if (config.check("schmitt_stable_contact_make_time") && config.find("schmitt_stable_contact_make_time").isDouble())
+    if (config.check("schmitt_stable_contact_make_time") && config.find("schmitt_stable_contact_make_time").isFloat64())
     {
-        m_left_foot_contact_schmitt_params.stableTimeContactMake = config.find("schmitt_stable_contact_make_time").asDouble();
+        m_left_foot_contact_schmitt_params.stableTimeContactMake = config.find("schmitt_stable_contact_make_time").asFloat64();
         m_right_foot_contact_schmitt_params.stableTimeContactMake = m_left_foot_contact_schmitt_params.stableTimeContactMake;
     }
     else
@@ -297,9 +297,9 @@ bool yarp::dev::baseEstimatorV1::loadBipedFootContactClassifierParametersFromCon
         return false;
     }
 
-    if (config.check("schmitt_stable_contact_break_time") && config.find("schmitt_stable_contact_break_time").isDouble())
+    if (config.check("schmitt_stable_contact_break_time") && config.find("schmitt_stable_contact_break_time").isFloat64())
     {
-        m_left_foot_contact_schmitt_params.stableTimeContactBreak = config.find("schmitt_stable_contact_break_time").asDouble();
+        m_left_foot_contact_schmitt_params.stableTimeContactBreak = config.find("schmitt_stable_contact_break_time").asFloat64();
         m_right_foot_contact_schmitt_params.stableTimeContactBreak = m_left_foot_contact_schmitt_params.stableTimeContactBreak;
     }
     else
@@ -309,9 +309,9 @@ bool yarp::dev::baseEstimatorV1::loadBipedFootContactClassifierParametersFromCon
         return false;
     }
 
-    if (config.check("left_schmitt_contact_make_force_threshold") && config.find("left_schmitt_contact_make_force_threshold").isDouble())
+    if (config.check("left_schmitt_contact_make_force_threshold") && config.find("left_schmitt_contact_make_force_threshold").isFloat64())
     {
-        m_left_foot_contact_schmitt_params.contactMakeForceThreshold = config.find("left_schmitt_contact_make_force_threshold").asDouble();
+        m_left_foot_contact_schmitt_params.contactMakeForceThreshold = config.find("left_schmitt_contact_make_force_threshold").asFloat64();
     }
     else
     {
@@ -320,9 +320,9 @@ bool yarp::dev::baseEstimatorV1::loadBipedFootContactClassifierParametersFromCon
         return false;
     }
 
-    if (config.check("left_schmitt_contact_break_force_threshold") && config.find("left_schmitt_contact_break_force_threshold").isDouble())
+    if (config.check("left_schmitt_contact_break_force_threshold") && config.find("left_schmitt_contact_break_force_threshold").isFloat64())
     {
-        m_left_foot_contact_schmitt_params.contactBreakForceThreshold = config.find("left_schmitt_contact_break_force_threshold").asDouble();
+        m_left_foot_contact_schmitt_params.contactBreakForceThreshold = config.find("left_schmitt_contact_break_force_threshold").asFloat64();
     }
     else
     {
@@ -331,9 +331,9 @@ bool yarp::dev::baseEstimatorV1::loadBipedFootContactClassifierParametersFromCon
         return false;
     }
 
-    if (config.check("right_schmitt_contact_make_force_threshold") && config.find("right_schmitt_contact_make_force_threshold").isDouble())
+    if (config.check("right_schmitt_contact_make_force_threshold") && config.find("right_schmitt_contact_make_force_threshold").isFloat64())
     {
-        m_right_foot_contact_schmitt_params.contactMakeForceThreshold = config.find("right_schmitt_contact_make_force_threshold").asDouble();
+        m_right_foot_contact_schmitt_params.contactMakeForceThreshold = config.find("right_schmitt_contact_make_force_threshold").asFloat64();
     }
     else
     {
@@ -342,9 +342,9 @@ bool yarp::dev::baseEstimatorV1::loadBipedFootContactClassifierParametersFromCon
         return false;
     }
 
-    if (config.check("right_schmitt_contact_break_force_threshold") && config.find("right_schmitt_contact_break_force_threshold").isDouble())
+    if (config.check("right_schmitt_contact_break_force_threshold") && config.find("right_schmitt_contact_break_force_threshold").isFloat64())
     {
-        m_right_foot_contact_schmitt_params.contactBreakForceThreshold = config.find("right_schmitt_contact_break_force_threshold").asDouble();
+        m_right_foot_contact_schmitt_params.contactBreakForceThreshold = config.find("right_schmitt_contact_break_force_threshold").asFloat64();
     }
     else
     {
@@ -358,18 +358,18 @@ bool yarp::dev::baseEstimatorV1::loadBipedFootContactClassifierParametersFromCon
 
 bool yarp::dev::baseEstimatorV1::loadIMUAttitudeMahonyEstimatorParametersFromConfig(const yarp::os::Searchable& config)
 {
-    if (config.check("mahony_kp") && config.find("mahony_kp").isDouble())
+    if (config.check("mahony_kp") && config.find("mahony_kp").isFloat64())
     {
-        m_imu_attitude_observer_params.kp = config.find("mahony_kp").asDouble();
+        m_imu_attitude_observer_params.kp = config.find("mahony_kp").asFloat64();
     }
     else
     {
         yWarning() << "floatingBaseEstimatorV1: " << "Attitude estimator will use default gain kp: " << m_imu_attitude_observer_params.kp ;
     }
 
-    if (config.check("mahony_ki") && config.find("mahony_ki").isDouble())
+    if (config.check("mahony_ki") && config.find("mahony_ki").isFloat64())
     {
-        m_imu_attitude_observer_params.ki = config.find("mahony_ki").asDouble();
+        m_imu_attitude_observer_params.ki = config.find("mahony_ki").asFloat64();
     }
     else
     {
@@ -385,9 +385,9 @@ bool yarp::dev::baseEstimatorV1::loadIMUAttitudeMahonyEstimatorParametersFromCon
         yWarning() << "floatingBaseEstimatorV1: " << "use magnetometer flag set to " << m_imu_attitude_observer_params.use_magnetometer_measurements;
     }
 
-    if (config.check("mahony_discretization_time_step_in_seconds") && config.find("mahony_discretization_time_step_in_seconds").isDouble())
+    if (config.check("mahony_discretization_time_step_in_seconds") && config.find("mahony_discretization_time_step_in_seconds").isFloat64())
     {
-        m_imu_attitude_observer_params.time_step_in_seconds = config.find("mahony_discretization_time_step_in_seconds").asDouble();
+        m_imu_attitude_observer_params.time_step_in_seconds = config.find("mahony_discretization_time_step_in_seconds").asFloat64();
     }
     else
     {
@@ -399,81 +399,81 @@ bool yarp::dev::baseEstimatorV1::loadIMUAttitudeMahonyEstimatorParametersFromCon
 
 bool yarp::dev::baseEstimatorV1::loadIMUAttitudeQEKFParamtersFromConfig(const yarp::os::Searchable& config)
 {
-    if (config.check("qekf_discretization_time_step_in_seconds") && config.find("qekf_discretization_time_step_in_seconds").isDouble())
+    if (config.check("qekf_discretization_time_step_in_seconds") && config.find("qekf_discretization_time_step_in_seconds").isFloat64())
     {
-        m_imu_attitude_qekf_params.time_step_in_seconds = config.find("qekf_discretization_time_step_in_seconds").asDouble();
+        m_imu_attitude_qekf_params.time_step_in_seconds = config.find("qekf_discretization_time_step_in_seconds").asFloat64();
     }
     else
     {
         yWarning() << "floatingBaseEstimatorV1: " << "Attitude estimator will use default discretization time step: " << m_imu_attitude_qekf_params.time_step_in_seconds ;
     }
 
-    if (config.check("qekf_accelerometer_noise_variance") && config.find("qekf_accelerometer_noise_variance").isDouble())
+    if (config.check("qekf_accelerometer_noise_variance") && config.find("qekf_accelerometer_noise_variance").isFloat64())
     {
-        m_imu_attitude_qekf_params.accelerometer_noise_variance = config.find("qekf_accelerometer_noise_variance").asDouble();
+        m_imu_attitude_qekf_params.accelerometer_noise_variance = config.find("qekf_accelerometer_noise_variance").asFloat64();
     }
     else
     {
         yWarning() << "floatingBaseEstimatorV1: " << "Attitude estimator will use default accelerometer noise variance: " << m_imu_attitude_qekf_params.accelerometer_noise_variance ;
     }
 
-    if (config.check("qekf_magnetometer_noise_variance") && config.find("qekf_magnetometer_noise_variance").isDouble())
+    if (config.check("qekf_magnetometer_noise_variance") && config.find("qekf_magnetometer_noise_variance").isFloat64())
     {
-        m_imu_attitude_qekf_params.magnetometer_noise_variance = config.find("qekf_magnetometer_noise_variance").asDouble();
+        m_imu_attitude_qekf_params.magnetometer_noise_variance = config.find("qekf_magnetometer_noise_variance").asFloat64();
     }
     else
     {
         yWarning() << "floatingBaseEstimatorV1: " << "Attitude estimator will use default magnetometer noise variance: " << m_imu_attitude_qekf_params.magnetometer_noise_variance ;
     }
 
-    if (config.check("qekf_gyroscope_noise_variance") && config.find("qekf_gyroscope_noise_variance").isDouble())
+    if (config.check("qekf_gyroscope_noise_variance") && config.find("qekf_gyroscope_noise_variance").isFloat64())
     {
-        m_imu_attitude_qekf_params.gyroscope_noise_variance = config.find("qekf_gyroscope_noise_variance").asDouble();
+        m_imu_attitude_qekf_params.gyroscope_noise_variance = config.find("qekf_gyroscope_noise_variance").asFloat64();
     }
     else
     {
         yWarning() << "floatingBaseEstimatorV1: " << "Attitude estimator will use default gyroscope noise variance: " << m_imu_attitude_qekf_params.gyroscope_noise_variance ;
     }
 
-    if (config.check("qekf_gyro_bias_noise_variance") && config.find("qekf_gyro_bias_noise_variance").isDouble())
+    if (config.check("qekf_gyro_bias_noise_variance") && config.find("qekf_gyro_bias_noise_variance").isFloat64())
     {
-        m_imu_attitude_qekf_params.gyro_bias_noise_variance = config.find("qekf_gyro_bias_noise_variance").asDouble();
+        m_imu_attitude_qekf_params.gyro_bias_noise_variance = config.find("qekf_gyro_bias_noise_variance").asFloat64();
     }
     else
     {
         yWarning() << "floatingBaseEstimatorV1: " << "Attitude estimator will use default gyro bias noise variance: " << m_imu_attitude_qekf_params.gyro_bias_noise_variance ;
     }
 
-    if (config.check("qekf_initial_orientation_error_variance") && config.find("qekf_initial_orientation_error_variance").isDouble())
+    if (config.check("qekf_initial_orientation_error_variance") && config.find("qekf_initial_orientation_error_variance").isFloat64())
     {
-        m_imu_attitude_qekf_params.initial_orientation_error_variance = config.find("qekf_initial_orientation_error_variance").asDouble();
+        m_imu_attitude_qekf_params.initial_orientation_error_variance = config.find("qekf_initial_orientation_error_variance").asFloat64();
     }
     else
     {
         yWarning() << "floatingBaseEstimatorV1: " << "Attitude estimator will use default initial state orientation variance: " << m_imu_attitude_qekf_params.initial_orientation_error_variance ;
     }
 
-    if (config.check("qekf_initial_ang_vel_error_variance") && config.find("qekf_initial_ang_vel_error_variance").isDouble())
+    if (config.check("qekf_initial_ang_vel_error_variance") && config.find("qekf_initial_ang_vel_error_variance").isFloat64())
     {
-        m_imu_attitude_qekf_params.initial_ang_vel_error_variance = config.find("qekf_initial_ang_vel_error_variance").asDouble();
+        m_imu_attitude_qekf_params.initial_ang_vel_error_variance = config.find("qekf_initial_ang_vel_error_variance").asFloat64();
     }
     else
     {
         yWarning() << "floatingBaseEstimatorV1: " << "Attitude estimator will use default initial state angular velocity variance: " << m_imu_attitude_qekf_params.initial_ang_vel_error_variance ;
     }
 
-    if (config.check("qekf_initial_gyro_bias_error_variance") && config.find("qekf_initial_gyro_bias_error_variance").isDouble())
+    if (config.check("qekf_initial_gyro_bias_error_variance") && config.find("qekf_initial_gyro_bias_error_variance").isFloat64())
     {
-        m_imu_attitude_qekf_params.initial_gyro_bias_error_variance = config.find("qekf_initial_gyro_bias_error_variance").asDouble();
+        m_imu_attitude_qekf_params.initial_gyro_bias_error_variance = config.find("qekf_initial_gyro_bias_error_variance").asFloat64();
     }
     else
     {
         yWarning() << "floatingBaseEstimatorV1: " << "Attitude estimator will use default initial state gyro bias variance: " << m_imu_attitude_qekf_params.initial_gyro_bias_error_variance ;
     }
 
-    if (config.check("qekf_bias_correlation_time_factor") && config.find("qekf_bias_correlation_time_factor").isDouble())
+    if (config.check("qekf_bias_correlation_time_factor") && config.find("qekf_bias_correlation_time_factor").isFloat64())
     {
-        m_imu_attitude_qekf_params.bias_correlation_time_factor = config.find("qekf_bias_correlation_time_factor").asDouble();
+        m_imu_attitude_qekf_params.bias_correlation_time_factor = config.find("qekf_bias_correlation_time_factor").asFloat64();
     }
     else
     {

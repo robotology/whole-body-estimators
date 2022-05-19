@@ -99,13 +99,13 @@ bool VirtualAnalogClient::open(Searchable& config)
         }
     }
 
-    if( !( prop.check("virtualAnalogSensorInteger") && prop.find("virtualAnalogSensorInteger").isInt() ) )
+    if( !( prop.check("virtualAnalogSensorInteger") && prop.find("virtualAnalogSensorInteger").isInt32() ) )
     {
         yError("VirtualAnalogClient: Missing required virtualAnalogSensorInteger int parameter");
         return false;
     }
 
-    m_virtualAnalogSensorInteger = prop.find("virtualAnalogSensorInteger").isInt();
+    m_virtualAnalogSensorInteger = prop.find("virtualAnalogSensorInteger").isInt32();
 
     // Resize buffer
     measureBuffer.resize(m_axisName.size(),0.0);
@@ -187,10 +187,10 @@ void VirtualAnalogClient::sendData()
 {
     Bottle & a = m_outputPort.prepare();
     a.clear();
-    a.addInt(m_virtualAnalogSensorInteger);
+    a.addInt32(m_virtualAnalogSensorInteger);
     for(size_t i=0;i<measureBuffer.length();i++)
     {
-        a.addDouble(measureBuffer(i));
+        a.addFloat64(measureBuffer(i));
     }
     m_outputPort.write();
 }
