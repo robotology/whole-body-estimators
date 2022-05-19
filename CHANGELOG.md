@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Fixed the possibility of deadlock in detachAll method in `wholebodydynamics` and `baseEstimatorV1`. This deadlock could lead to freeze during closing of the yarprobotinterface or the Gazebo simulator if the `gazebo_yarp_robotinterface` plugin was used (https://github.com/robotology/whole-body-estimators/pull/146).
+- Fixed YARP deprecations. (See [!151](https://github.com/robotology/whole-body-estimators/pull/151))
 
 ## [0.6.1] - 2021-01-03
 
