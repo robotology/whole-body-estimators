@@ -5,6 +5,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+## [0.7.0] - 2022-05-27
+
 ### Added
 - Add a steady-state Kalman filter with a null jerk model for the joint velocity and acceleration estimation in `WholeBodyDynamics`. (See [!139](https://github.com/robotology/whole-body-estimators/pull/139)).
 
@@ -16,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed the possibility of deadlock in detachAll method in `wholebodydynamics` and `baseEstimatorV1`. This deadlock could lead to freeze during closing of the yarprobotinterface or the Gazebo simulator if the `gazebo_yarp_robotinterface` plugin was used (https://github.com/robotology/whole-body-estimators/pull/146).
 - Fixed YARP deprecations. (See [!151](https://github.com/robotology/whole-body-estimators/pull/151))
 
-## [0.6.1] - 2021-01-03
+## [0.6.1] - 2022-01-03
 
 ### Fixed
 - Fixed compilation against YARP 3.6 (https://github.com/robotology/whole-body-estimators/pull/135).
