@@ -1744,11 +1744,20 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         return false;
     }
 
+yError() << "==============> wholeBodyDynamics:attachAll nrMASFTSensors: " << nrMASFTSensors << " remapper FTS:  " << remappedMASInterfaces.ftMultiSensors->getNrOfSixAxisForceTorqueSensors();
     if (nrMASFTSensors != remappedMASInterfaces.ftMultiSensors->getNrOfSixAxisForceTorqueSensors())
     {
         yError() << "WholeBodyDynamicsDevice::attachAll Invalid number of MAS FT sensors after remapper";
         return false;
     }
+
+    if (nrMASFTSensors != ftMultipleAnalogSensorNames.size())
+    {
+	yError() << "WholeBodyDynamicsDevice::attachAll Invalid number of MAS FT sensor names";
+        return false;
+    }
+
+yError() << "===================================> Fino a qui tutto bene....1";
 
     ftMultipleAnalogSensorIdxMapping.resize(ftMultipleAnalogSensorNames.size());
     for (auto ftDx = 0; ftDx < nrMASFTSensors; ftDx++)
@@ -1756,9 +1765,9 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         std::string sensorName;
         remappedMASInterfaces.ftMultiSensors->getSixAxisForceTorqueSensorName(ftDx, sensorName);
         auto ftIter = std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName);
-        auto ftMapIdx = std::distance(ftMultipleAnalogSensorNames.begin(), ftIter);
         if (ftIter != ftMultipleAnalogSensorNames.end())
         {
+	    auto ftMapIdx = std::distance(ftMultipleAnalogSensorNames.begin(), ftIter);
             ftMultipleAnalogSensorIdxMapping[ftMapIdx] = ftDx;
         }
     }
@@ -1839,6 +1848,9 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
             return false;
         }
     }
+
+yError() << "===================================> Fino a qui tutto bene......................9999";
+
 
     return true;
 }
@@ -2025,6 +2037,8 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
     double timeFTStamp=yarp::os::Time::now();
     bool readTemperatureSensorThisTime=false;
     yarp::dev::MAS_status    sensorStatus;
+    ftMeasurement.resize(6);
+
     for(size_t ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
     {
         std::string sensorName = estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
@@ -2038,6 +2052,10 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
             auto sensorId = ftMultipleAnalogSensorIdxMapping[ftID];
             double timestamp;
             remappedMASInterfaces.ftMultiSensors->getSixAxisForceTorqueSensorMeasure(ftID, ftMeasurement, timestamp);
+            
+	    yError() << "==================> FT name: " << sensorName << " sensor measure: " << ftMeasurement.toString(); 
+
+	    ok = true;
         }
         else
         {
@@ -2052,7 +2070,7 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
         }
 
         iDynTree::Wrench bufWrench;
-        int ftRetVal = ftSensors[ft]->read(ftMeasurement);
+        //int ftRetVal = ftSensors[ft]->read(ftMeasurement);
         if (timeFTStamp-prevFTTempTimeStamp>checkTemperatureEvery_seconds){
             if (ftTempMapping[ft]!=-1){
                 sensorStatus=remappedMASInterfaces.temperatureSensors->getTemperatureSensorStatus(ftTempMapping[ft]);
