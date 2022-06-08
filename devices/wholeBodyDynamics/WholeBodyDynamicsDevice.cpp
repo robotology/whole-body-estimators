@@ -1683,7 +1683,8 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     //std::vector<std::string>     tempDeviceNames;
     std::vector<IAnalogSensor *> ftList;
     std::vector<std::string>     ftDeviceNames;
-    std::vector<std::string>     ftAnalogSensorNames;
+
+    std::size_t nrMASFTSensors{0}, nrAnalogFTSensors{0};
     for(auto devIdx = 0; devIdx <p.size(); devIdx++)
     {
         ISixAxisForceTorqueSensors * fts = nullptr;
@@ -1692,6 +1693,14 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         {
             ftSensorList.push(const_cast<PolyDriverDescriptor&>(*p[devIdx]));
             ftDeviceNames.push_back(p[devIdx]->key);
+            auto nrFTsinThisDevice = fts->getNrOfSixAxisForceTorqueSensors();
+            nrMASFTSensors +=  nrFTsinThisDevice;
+            for (auto ftDx = 0; ftDx < nrFTsinThisDevice; ftDx++)
+            {
+                std::string ftName;
+                fts->getSixAxisForceTorqueSensorName(ftDx, ftName);
+                ftMultipleAnalogSensorNames.emplace_back(ftName);
+            }
         }
         // A device is considered an ft if it implements IAnalogSensor and has 6 channels
         IAnalogSensor * pAnalogSens = nullptr;
@@ -1702,6 +1711,7 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
                 ftList.push_back(pAnalogSens);
                 ftDeviceNames.push_back(p[devIdx]->key);
                 ftAnalogSensorNames.push_back(p[devIdx]->key);
+                nrAnalogFTSensors += 1;
             }
         }
 
@@ -1713,14 +1723,17 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     }
     yDebug()<<"wholeBodyDynamicsDevice :: number of ft sensors found in both ft + mas"<<ftDeviceNames.size()<< "where analog are "<<ftList.size()<<" and mas are "<<ftSensorList.size();
 
-    if( ftList.size() != estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) )
+    auto totalNrFTDevices{nrAnalogFTSensors + nrMASFTSensors};
+    if( totalNrFTDevices < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) )
     {
         yError() << "wholeBodyDynamicsDevice : was expecting "
                  << estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)
-                 << " from the model, but got " << ftList.size() << " FT sensor in the attach list.";
+                 << " from the model, but got only " << totalNrFTDevices << " FT sensor either using "
+                 << " analog or MAS interface in the attach list.";
         return false;
     }
 
+    ftSensors = ftList;
     // Attach the controlBoardList to the controlBoardRemapper
     bool ok = remappedMASInterfaces.multwrap->attachAll(ftSensorList);
     ok = ok & remappedMASInterfaces.multwrap->attachAll(tempSensorList);
@@ -1729,6 +1742,25 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     {
         yError() << " WholeBodyDynamicsDevice::attachAll in attachAll of the remappedMASInterfaces";
         return false;
+    }
+
+    if (nrMASFTSensors != remappedMASInterfaces.ftMultiSensors->getNrOfSixAxisForceTorqueSensors())
+    {
+        yError() << "WholeBodyDynamicsDevice::attachAll Invalid number of MAS FT sensors after remapper";
+        return false;
+    }
+
+    ftMultipleAnalogSensorIdxMapping.resize(ftMultipleAnalogSensorNames.size());
+    for (auto ftDx = 0; ftDx < nrMASFTSensors; ftDx++)
+    {
+        std::string sensorName;
+        remappedMASInterfaces.ftMultiSensors->getSixAxisForceTorqueSensorName(ftDx, sensorName);
+        auto ftIter = std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName);
+        auto ftMapIdx = std::distance(ftMultipleAnalogSensorNames.begin(), ftIter);
+        if (ftIter != ftMultipleAnalogSensorNames.end())
+        {
+            ftMultipleAnalogSensorIdxMapping[ftMapIdx] = ftDx;
+        }
     }
 
     // Check if the MASremapper and the estimator have a consistent number of ft sensors
@@ -1771,32 +1803,21 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     }
     //End of temporary temperature check
 
-
-    // Old check performed on ft sensors
-    // For now we assume that the name of the F/T sensor device match the sensor name in the URDF
-    // In the future we could use a new fancy sensor interface
-    ftSensors.resize(ftList.size());
-    for(size_t IDTsensIdx=0; IDTsensIdx < ftSensors.size(); IDTsensIdx++)
+    // iterate through ftMultipleAnalogSensorNames
+    // check if each name is a FT sensor in the URDF
+    auto nrFTsInURDF = estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE);
+    for(size_t IDTsensIdx=0; IDTsensIdx < nrFTsInURDF; IDTsensIdx++)
     {
         std::string sensorName = estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,IDTsensIdx)->getName();
 
-        // Search for a suitable device
-        int deviceThatHasTheSameNameOfTheSensor = -1;
-        for(size_t deviceIdx = 0; deviceIdx < ftList.size(); deviceIdx++)
-        {
-            if( ftAnalogSensorNames[deviceIdx] == sensorName )
-            {
-                deviceThatHasTheSameNameOfTheSensor = deviceIdx;
-            }
-        }
+        bool ftInAnalog = (std::find(ftAnalogSensorNames.begin(), ftAnalogSensorNames.end(), sensorName) != ftAnalogSensorNames.end());
+        bool ftInMAS = (std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName) != ftMultipleAnalogSensorNames.end());
 
-        if( deviceThatHasTheSameNameOfTheSensor == -1 )
+        if (!ftInAnalog && !ftInMAS)
         {
             yError() << "WholeBodyDynamicsDevice was expecting a sensor named " << sensorName << " but it did not find one in the attached devices";
             return false;
         }
-
-        ftSensors[IDTsensIdx] = ftList[deviceThatHasTheSameNameOfTheSensor];
     }
 
     if (!settings.disableSensorReadCheckAtStartup) {
@@ -2006,6 +2027,30 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
     yarp::dev::MAS_status    sensorStatus;
     for(size_t ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
     {
+        std::string sensorName = estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
+
+        bool ok;
+        auto ftMasITer = (std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName));
+        if (ftMasITer != ftMultipleAnalogSensorNames.end())
+        {
+            auto ftID = std::distance(ftMultipleAnalogSensorNames.begin(), ftMasITer);
+            auto sensorName = ftMultipleAnalogSensorNames[ftID];
+            auto sensorId = ftMultipleAnalogSensorIdxMapping[ftID];
+            double timestamp;
+            remappedMASInterfaces.ftMultiSensors->getSixAxisForceTorqueSensorMeasure(ftID, ftMeasurement, timestamp);
+        }
+        else
+        {
+
+            auto ftAnalogIter = (std::find(ftAnalogSensorNames.begin(), ftAnalogSensorNames.end(), sensorName));
+            if (ftAnalogIter != ftAnalogSensorNames.end())
+            {
+                auto ftID = std::distance(ftMultipleAnalogSensorNames.begin(), ftMasITer);
+                int ftRetVal = ftSensors[ftID]->read(ftMeasurement);
+                ok = (ftRetVal == IAnalogSensor::AS_OK);
+            }
+        }
+
         iDynTree::Wrench bufWrench;
         int ftRetVal = ftSensors[ft]->read(ftMeasurement);
         if (timeFTStamp-prevFTTempTimeStamp>checkTemperatureEvery_seconds){
@@ -2029,7 +2074,6 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
                 tempMeasurements[ft]=0;
             }
         }
-        bool ok = (ftRetVal == IAnalogSensor::AS_OK);
 
         FTSensorsReadCorrectly = FTSensorsReadCorrectly && ok && TempSensorReadCorrectly;
 
