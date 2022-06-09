@@ -1744,7 +1744,6 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         return false;
     }
 
-yError() << "==============> wholeBodyDynamics:attachAll nrMASFTSensors: " << nrMASFTSensors << " remapper FTS:  " << remappedMASInterfaces.ftMultiSensors->getNrOfSixAxisForceTorqueSensors();
     if (nrMASFTSensors != remappedMASInterfaces.ftMultiSensors->getNrOfSixAxisForceTorqueSensors())
     {
         yError() << "WholeBodyDynamicsDevice::attachAll Invalid number of MAS FT sensors after remapper";
@@ -1756,8 +1755,6 @@ yError() << "==============> wholeBodyDynamics:attachAll nrMASFTSensors: " << nr
 	yError() << "WholeBodyDynamicsDevice::attachAll Invalid number of MAS FT sensor names";
         return false;
     }
-
-yError() << "===================================> Fino a qui tutto bene....1";
 
     ftMultipleAnalogSensorIdxMapping.resize(ftMultipleAnalogSensorNames.size());
     for (auto ftDx = 0; ftDx < nrMASFTSensors; ftDx++)
@@ -1848,8 +1845,6 @@ yError() << "===================================> Fino a qui tutto bene....1";
             return false;
         }
     }
-
-yError() << "===================================> Fino a qui tutto bene......................9999";
 
 
     return true;
@@ -2048,13 +2043,10 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
         if (ftMasITer != ftMultipleAnalogSensorNames.end())
         {
             auto ftID = std::distance(ftMultipleAnalogSensorNames.begin(), ftMasITer);
-            auto sensorName = ftMultipleAnalogSensorNames[ftID];
             auto sensorId = ftMultipleAnalogSensorIdxMapping[ftID];
             double timestamp;
-            remappedMASInterfaces.ftMultiSensors->getSixAxisForceTorqueSensorMeasure(ftID, ftMeasurement, timestamp);
+            remappedMASInterfaces.ftMultiSensors->getSixAxisForceTorqueSensorMeasure(sensorId, ftMeasurement, timestamp);
             
-	    yError() << "==================> FT name: " << sensorName << " sensor measure: " << ftMeasurement.toString(); 
-
 	    ok = true;
         }
         else
@@ -2593,7 +2585,7 @@ void WholeBodyDynamicsDevice::computeCalibration()
                                                        calibrationBuffers.predictedJointTorquesForCalibration);
 
         // The kinematics information was already set by the readSensorsAndUpdateKinematics method, just compute the offset and add to the buffer
-        for(size_t ft = 0; ft < ftSensors.size(); ft++)
+        for(size_t ft = 0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++)
         {
             if( calibrationBuffers.calibratingFTsensor[ft] )
             {
@@ -2618,7 +2610,7 @@ void WholeBodyDynamicsDevice::computeCalibration()
         if( calibrationBuffers.nrOfSamplesUsedUntilNowForCalibration >= calibrationBuffers.nrOfSamplesToUseForCalibration )
         {
             // Compute the offset by averaging the results
-            for(size_t ft = 0; ft < ftSensors.size(); ft++)
+            for(size_t ft = 0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++)
             {
                 if( calibrationBuffers.calibratingFTsensor[ft] )
                 {
