@@ -2062,7 +2062,6 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
         }
 
         iDynTree::Wrench bufWrench;
-        //int ftRetVal = ftSensors[ft]->read(ftMeasurement);
         if (timeFTStamp-prevFTTempTimeStamp>checkTemperatureEvery_seconds){
             if (ftTempMapping[ft]!=-1){
                 sensorStatus=remappedMASInterfaces.temperatureSensors->getTemperatureSensorStatus(ftTempMapping[ft]);
