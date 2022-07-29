@@ -451,6 +451,13 @@ private:
      */
     std::vector<wholeBodyDynamics::SixAxisForceTorqueMeasureProcessor> ftProcessors;
 
+    /**
+     * Vector of Analog FT Sensor names
+     */
+    std::vector<std::string>     ftAnalogSensorNames;
+    std::vector<std::string>     ftMultipleAnalogSensorNames;
+    std::vector<int>  ftMultipleAnalogSensorIdxMapping;
+
     /***
      * RPC Calibration related methods
      */
