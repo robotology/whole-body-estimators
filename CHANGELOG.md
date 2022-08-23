@@ -6,11 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
-- Introduce MAS Read for FT sensors in `WholeBodyDynamics` device (https://github.com/robotology/whole-body-estimators/pull/153).
 
 ### Changed
 
 ### Fixed
+
+## [0.8.0] - 2022-08-23
+
+### Added
+- Introduce MAS Read for FT sensors in `WholeBodyDynamics` device (https://github.com/robotology/whole-body-estimators/pull/153).
 
 ## [0.7.0] - 2022-05-27
 
