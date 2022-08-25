@@ -1,3 +1,4 @@
+#include "TimeProfiler.h"
 #define SKIN_EVENTS_TIMEOUT 0.2
 #include "WholeBodyDynamicsDevice.h"
 
@@ -39,6 +40,8 @@ WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): yarp::os::PeriodicThread(def
                                                     isIMUAttached{false},
                                                     settingsEditor(settings)
 {
+    this->setPriority(10, 2);
+
     // Calibration quantities
     calibrationBuffers.ongoingCalibration = false;
     calibrationBuffers.calibratingFTsensor.resize(0);
@@ -1633,6 +1636,12 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
         yDebug() << "wholeBodyDynamics Statistics: Filtered FT ports opened in " << yarp::os::Time::now() - tick << "s.";
     }
 
+    // print the clock once every 5 minutes
+    m_timerHandler.setHorizon(5.0 * 60 /getPeriod());
+    m_timerHandler.addTimer("all",
+                            WholeBodyDynamics::Timer("all",
+                                                     std::chrono::duration<double>(getPeriod())));
+    m_timerHandler.setVerbosity(true);
     yDebug() << "wholeBodyDynamics Statistics: Configuration finished. Waiting attachAll to be called.";
 
     return true;
@@ -2650,27 +2659,40 @@ void WholeBodyDynamicsDevice::publishEstimatedQuantities()
         // Only send estimation if a valid offset is available
         if( validOffsetAvailable )
         {
+
+            m_timerHandler.tic("Publish - torque");
             //Send torques
             publishTorques();
+            m_timerHandler.toc("Publish - torque");
+
 
             //Send external contacts
             if (useSkinForContacts)
             {
+                m_timerHandler.tic("Publish - contact");
                 publishContacts();
+                m_timerHandler.toc("Publish - contact");
             }
 
+            m_timerHandler.tic("Publish - wrench");
             //Send external wrench estimates
             publishExternalWrenches();
+            m_timerHandler.toc("Publish - wrench");
 
+
+            m_timerHandler.tic("Publish - gravity");
             // Send gravity compensation torques
             publishGravityCompensation();
+            m_timerHandler.toc("Publish - gravity");
 
             //Send filtered inertia for gravity compensation
             //publishFilteredInertialForGravityCompensator();
 
             //Send filtered force torque sensor measurment, if requested
             if( streamFilteredFT){
+                m_timerHandler.tic("Publish - filtered FT");
                 publishFilteredFTWithoutOffset();
+                m_timerHandler.toc("Publish - filtered FT");
             }
         }
     }
@@ -2870,6 +2892,9 @@ void WholeBodyDynamicsDevice::publishFilteredFTWithoutOffset()
 
 void WholeBodyDynamicsDevice::run()
 {
+
+    m_timerHandler.tic("all");
+
     std::lock_guard<std::mutex> guard(this->deviceMutex);
 
     if( correctlyConfigured )
@@ -2878,26 +2903,43 @@ void WholeBodyDynamicsDevice::run()
         //this->reconfigureClassFromSettings();
 
         // Read sensor readings
+        m_timerHandler.tic("read sensors");
         this->readSensors();
+        m_timerHandler.toc("read sensors");
 
         // Filter sensor and remove offset
+        m_timerHandler.tic("remove offset");
         this->filterSensorsAndRemoveSensorOffsets();
+        m_timerHandler.toc("remove offset");
 
         // Update kinematics
+        m_timerHandler.tic("kinematics");
         this->updateKinematics();
+        m_timerHandler.toc("kinematics");
 
         // Read contacts info from the skin or from assume contact location
+        m_timerHandler.tic("contact points");
         this->readContactPoints();
+        m_timerHandler.toc("contact points");
 
         // Compute calibration if we are in calibration mode
+        m_timerHandler.tic("calibration");
         this->computeCalibration();
+        m_timerHandler.toc("calibration");
 
         // Compute estimated external forces and internal joint torques
+        m_timerHandler.tic("compute forces");
         this->computeExternalForcesAndJointTorques();
+        m_timerHandler.toc("compute forces");
 
         // Publish estimated quantities
+        m_timerHandler.tic("publish");
         this->publishEstimatedQuantities();
+        m_timerHandler.toc("publish");
     }
+
+    m_timerHandler.toc("all");
+    m_timerHandler.profiling();
 }
 
 bool WholeBodyDynamicsDevice::detachAll()

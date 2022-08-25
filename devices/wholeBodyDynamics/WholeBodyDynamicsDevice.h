@@ -31,6 +31,7 @@
 #include <wholeBodyDynamics_IDLServer.h>
 #include "SixAxisForceTorqueMeasureHelpers.h"
 #include "GravityCompensationHelpers.h"
+#include "TimeProfiler.h"
 
 #include <vector>
 #include <mutex>
@@ -752,6 +753,8 @@ private:
     std::vector<size_t> m_gravityCompesationJoints;
     iDynTree::JointDOFsDoubleArray m_gravityCompensationTorques;
     void resetGravityCompensation();
+
+    WholeBodyDynamics::TimerHandler m_timerHandler;
 
 public:
     // CONSTRUCTOR
