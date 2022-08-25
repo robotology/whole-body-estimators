@@ -40,6 +40,8 @@ WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): yarp::os::PeriodicThread(def
                                                     isIMUAttached{false},
                                                     settingsEditor(settings)
 {
+    this->setPriority(10, 2);
+
     // Calibration quantities
     calibrationBuffers.ongoingCalibration = false;
     calibrationBuffers.calibratingFTsensor.resize(0);
