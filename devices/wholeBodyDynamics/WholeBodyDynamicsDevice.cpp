@@ -2657,27 +2657,40 @@ void WholeBodyDynamicsDevice::publishEstimatedQuantities()
         // Only send estimation if a valid offset is available
         if( validOffsetAvailable )
         {
+
+            m_timerHandler.tic("Publish - torque");
             //Send torques
             publishTorques();
+            m_timerHandler.toc("Publish - torque");
+
 
             //Send external contacts
             if (useSkinForContacts)
             {
+                m_timerHandler.tic("Publish - contact");
                 publishContacts();
+                m_timerHandler.toc("Publish - contact");
             }
 
+            m_timerHandler.tic("Publish - wrench");
             //Send external wrench estimates
             publishExternalWrenches();
+            m_timerHandler.toc("Publish - wrench");
 
+
+            m_timerHandler.tic("Publish - gravity");
             // Send gravity compensation torques
             publishGravityCompensation();
+            m_timerHandler.toc("Publish - gravity");
 
             //Send filtered inertia for gravity compensation
             //publishFilteredInertialForGravityCompensator();
 
             //Send filtered force torque sensor measurment, if requested
             if( streamFilteredFT){
+                m_timerHandler.tic("Publish - filtered FT");
                 publishFilteredFTWithoutOffset();
+                m_timerHandler.toc("Publish - filtered FT");
             }
         }
     }
