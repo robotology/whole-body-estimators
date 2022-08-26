@@ -29,6 +29,7 @@
 
 #include <wholeBodyDynamicsSettings.h>
 #include <wholeBodyDynamics_IDLServer.h>
+#include <VectorsCollection.h>
 #include "SixAxisForceTorqueMeasureHelpers.h"
 #include "GravityCompensationHelpers.h"
 
@@ -271,7 +272,6 @@ private:
     /**
      * Open-related methods
      */
-
     bool openSettingsPort();
     bool openRPCPort();
     bool openRemapperControlBoard(os::Searchable& config);
@@ -731,12 +731,12 @@ private:
      * in the link frame. The bottle is a list of pairs. The first element is
      * the link name, the second is the wrench.
      */
-    yarp::os::Bottle netExternalWrenchesBottle;
+    VectorsCollection netExternalWrenches;
 
     /**
      * Port for streaming the netWrenchesBottle;
      */
-    yarp::os::BufferedPort<yarp::os::Bottle> netExternalWrenchesPort;
+    yarp::os::BufferedPort<VectorsCollection> netExternalWrenchesPort;
 
     /**
      * Flag to publish the next external wrenches on each link.

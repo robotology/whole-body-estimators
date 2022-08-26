@@ -26,6 +26,7 @@ if(ENABLE_wholebodydynamics)
 
     target_link_libraries(wholeBodyDynamicsDevice   wholeBodyDynamicsSettings
                                                     wholeBodyDynamics_IDLServer
+                                                    VectorsCollection
                                                     ctrlLibRT
                                                     ${YARP_LIBRARIES}
                                                     skinDynLib
