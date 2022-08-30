@@ -899,14 +899,10 @@ void WholeBodyDynamicsDevice::resizeBuffers()
          link < static_cast<iDynTree::LinkIndex>(netExternalWrenchesExertedByTheEnviroment.getNrOfLinks());
          ++link)
     {
-        yarp::os::Bottle& wrenchBottle = netExternalWrenchesBottle.addList();
-        wrenchBottle.addString(estimator.model().getLinkName(link));
-        yarp::os::Bottle& wrenchValues = wrenchBottle.addList();
-
-        for (size_t i = 0; i < 6; ++i)
-        {
-            wrenchValues.addFloat64(0.0);
-        }
+        netExternalWrenches.vectors[estimator.model().getLinkName(link)].resize(6);
+        std::fill(netExternalWrenches.vectors[estimator.model().getLinkName(link)].begin(),
+                  netExternalWrenches.vectors[estimator.model().getLinkName(link)].end(),
+                  0.0);
     }
 }
 
@@ -2839,14 +2835,13 @@ void WholeBodyDynamicsDevice::publishExternalWrenches()
              link < static_cast<iDynTree::LinkIndex>(netExternalWrenchesExertedByTheEnviroment.getNrOfLinks());
              ++link)
         {
-            yarp::os::Bottle* wrenchPair = netExternalWrenchesBottle.get(link).asList();
-            yarp::os::Bottle* linkWrenchBottle = wrenchPair->get(1).asList(); //The first value is the name, the second the wrench
+            auto& wrench = netExternalWrenches.vectors[estimator.model().getLinkName(link)];
             for (size_t i = 0; i < 6; ++i)
             {
-                linkWrenchBottle->get(i) = yarp::os::Value(netExternalWrenchesExertedByTheEnviroment(link)(i));
+                wrench[i] = netExternalWrenchesExertedByTheEnviroment(link)(i);
             }
         }
-        broadcastData<yarp::os::Bottle>(netExternalWrenchesBottle, netExternalWrenchesPort);
+        broadcastData(netExternalWrenches, netExternalWrenchesPort);
     }
 
 }
