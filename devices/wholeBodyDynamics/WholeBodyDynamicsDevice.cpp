@@ -2051,7 +2051,7 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
             auto ftAnalogIter = (std::find(ftAnalogSensorNames.begin(), ftAnalogSensorNames.end(), sensorName));
             if (ftAnalogIter != ftAnalogSensorNames.end())
             {
-                auto ftID = std::distance(ftMultipleAnalogSensorNames.begin(), ftMasITer);
+                auto ftID = std::distance(ftAnalogSensorNames.begin(), ftAnalogIter);
                 int ftRetVal = ftSensors[ftID]->read(ftMeasurement);
                 ok = (ftRetVal == IAnalogSensor::AS_OK);
             }
