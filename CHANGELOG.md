@@ -10,7 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
-- Fix a bug introduced in 0.8.0, due to which estimation of external forces and internal torques when FT sensors are read from sensors that expose an `IAnalogSensor` interface was not working (https://github.com/robotology/whole-body-estimators/pull/157, https://github.com/robotology/whole-body-estimators/pull/156).
+
+## [0.9.0] - 2022-08-31
+
+### Changed
+- Implement `vectors collection` and use it for streaming `netExternalWrenches` instead of `yarp::os::Bottle`. (See [!155](https://github.com/robotology/whole-body-estimators/pull/155)).
+
+### Fixed
+- Fix a bug introduced in `0.8.0`, due to which estimation of external forces and internal torques when FT sensors are read from sensors that expose an `IAnalogSensor` interface was not working (https://github.com/robotology/whole-body-estimators/pull/157, https://github.com/robotology/whole-body-estimators/pull/156).
 
 ## [0.8.0] - 2022-08-23
 
