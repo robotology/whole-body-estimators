@@ -229,3 +229,15 @@ bool VirtualAnalogClient::getJointType(int axis, JointTypeEnum& type)
     type = m_axisType[axis];
     return true;
 }
+
+bool VirtualAnalogClient::getAxes(int* ax)
+{
+    if( !ax )
+    {
+        yError() << "VirtualAnalogClient: getAxes failed : invalid argument passed";
+        return false;
+    }
+
+    *ax = VirtualAnalogClient::getVirtualAnalogSensorChannels();
+    return true;
+}
