@@ -239,4 +239,5 @@ virtual bool VirtualAnalogClient::getAxes(int* ax)
     }
 
     *ax = VirtualAnalogClient::getVirtualAnalogSensorChannels();
+    return true;
 }
