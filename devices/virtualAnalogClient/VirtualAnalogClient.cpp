@@ -230,7 +230,7 @@ bool VirtualAnalogClient::getJointType(int axis, JointTypeEnum& type)
     return true;
 }
 
-virtual bool VirtualAnalogClient::getAxes(int* ax)
+bool VirtualAnalogClient::getAxes(int* ax)
 {
     if( !ax )
     {
