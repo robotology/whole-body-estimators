@@ -346,5 +346,12 @@ bool VirtualAnalogRemapper::getJointType(int axis, JointTypeEnum& type)
 
 bool VirtualAnalogRemapper::getAxes(int* ax)
 {
-    return this->m_axesNames.size();
+    if( !ax )
+    {
+        yError() << "VirtualAnalogRemapper: getAxes failed : invalid argument passed";
+        return false;
+    }
+
+    *ax = this->m_axesNames.size();
+    return true;
 }
