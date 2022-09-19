@@ -129,6 +129,7 @@ public:
     /** IAxisInfo methods (documented in IVirtualAnalogSensor class) */
     virtual bool getAxisName(int axis, std::string& name);
     virtual bool getJointType(int axis, yarp::dev::JointTypeEnum& type);
+    virtual bool getAxes(int* ax);
 
     /** IMultipleWrapper methods (documented in IMultipleWrapper */
     virtual bool attachAll(const PolyDriverList &p);

@@ -343,3 +343,8 @@ bool VirtualAnalogRemapper::getJointType(int axis, JointTypeEnum& type)
     }
     return ret;
 }
+
+bool VirtualAnalogRemapper::getAxes(int* ax)
+{
+    return this->m_axesNames.size();
+}
