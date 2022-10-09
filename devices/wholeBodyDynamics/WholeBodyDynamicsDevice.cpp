@@ -2607,8 +2607,25 @@ void WholeBodyDynamicsDevice::computeCalibration()
             // Compute the offset by averaging the results
             for(size_t ft = 0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++)
             {
-                if( calibrationBuffers.calibratingFTsensor[ft] )
+                bool useCalibrationForThisSensor = true;
+
+                if(calibrationBuffers.calib_code == "arms")
                 {
+                    std::string sensorName = estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
+                    if(sensorName == "r_arm_ft_sensor" || sensorName == "l_arm_ft_sensor") 
+                    {
+                        useCalibrationForThisSensor = true;
+                    }
+                    else
+                    {
+                        useCalibrationForThisSensor = false;
+                    } 
+                }
+
+
+                if( calibrationBuffers.calibratingFTsensor[ft] && useCalibrationForThisSensor )
+                {
+ 
                     iDynTree::Wrench measurementMean, estimationMean;
                     computeMean(calibrationBuffers.offsetSumBuffer[ft],calibrationBuffers.nrOfSamplesUsedUntilNowForCalibration,ftProcessors[ft].offset());
                     computeMean(calibrationBuffers.measurementSumBuffer[ft],calibrationBuffers.nrOfSamplesUsedUntilNowForCalibration,measurementMean);
@@ -3152,8 +3169,7 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJets
 bool WholeBodyDynamicsDevice::calib(const std::string& calib_code, const int32_t nr_of_samples)
 {
     std::lock_guard<std::mutex> guard(this->deviceMutex);
-
-    yWarning() << "wholeBodyDynamics : calib ignoring calib_code " << calib_code;
+    calibrationBuffers.calib_code = calib_code;
 
     bool ok = this->setupCalibrationWithExternalWrenchOnOneFrame("base_link",nr_of_samples);
 

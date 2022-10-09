@@ -433,6 +433,7 @@ private:
     struct
     {
         bool ongoingCalibration;
+        std::string calib_code;
         std::vector<bool> calibratingFTsensor;
         std::vector<iDynTree::Vector6> offsetSumBuffer;
         std::vector<iDynTree::Vector6> measurementSumBuffer;
