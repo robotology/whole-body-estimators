@@ -993,6 +993,15 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
         return false;
     }
 
+    if (!(prop.check("useDefaultKinSourceOnlyForCalibrationAndGravityForRuntime") && prop.find("useDefaultKinSourceOnlyForCalibrationAndGravityForRuntime").isBool())) 
+    {
+        yError() << "wholeBodyDynamics : missing required parameter useDefaultKinSourceOnlyForCalibrationAndGravityForRuntime";
+        return false;
+    }
+
+    this->useDefaultKinSourceOnlyForCalibrationAndGravityForRuntime = prop.find("useDefaultKinSourceOnlyForCalibrationAndGravityForRuntime").asBool();
+
+
     // Set the port prefix. The default value "/wholeBodyDynamics"
     // is set in the device constructor
     if( prop.check("portPrefix") &&
@@ -2342,8 +2351,29 @@ void WholeBodyDynamicsDevice::filterSensorsAndRemoveSensorOffsets()
 
 void WholeBodyDynamicsDevice::updateKinematics()
 {
+    // Handle useDefaultKinSourceOnlyForCalibrationAndGravityForRuntime option
+    bool useIMU = true;
+    if (useDefaultKinSourceOnlyForCalibrationAndGravityForRuntime)
+    {
+        if (calibrationBuffers.ongoingCalibration)
+        {
+            if (settings.kinematicSource == IMU) 
+            {
+                useIMU = true;
+            }
+            else 
+            {
+                useIMU = false;
+            }
+        }
+        else
+        {
+            useIMU = false;
+        }
+    }
+
     // Read IMU Sensor and update the kinematics in the model
-    if( settings.kinematicSource == IMU )
+    if( useIMU )
     {
         // Hardcode for the meanwhile
         iDynTree::FrameIndex imuFrameIndex = estimator.model().getFrameIndex(settings.imuFrameName);

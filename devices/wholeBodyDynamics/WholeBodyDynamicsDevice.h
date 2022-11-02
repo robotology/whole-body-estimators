@@ -254,6 +254,7 @@ private:
      * a YARP RPC port.
      */
     wholeBodyDynamicsSettings settings;
+    bool useDefaultKinSourceOnlyForCalibrationAndGravityForRuntime{false};
     wholeBodyDynamicsSettings::Editor settingsEditor;
 
     /**
