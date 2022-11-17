@@ -8,7 +8,7 @@
 #include <yarp/os/PeriodicThread.h>
 
 #include <yarp/dev/IAnalogSensor.h>
-#include <yarp/dev/GenericSensorInterfaces.h>
+#include <yarp/dev/IGenericSensor.h>
 
 #include <iDynTree/yarp/YARPConversions.h>
 #include <iDynTree/Core/Utils.h>
