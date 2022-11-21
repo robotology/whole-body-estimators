@@ -10,8 +10,8 @@
 
 #include <yarp/os/Network.h>
 #include <yarp/os/BufferedPort.h>
-#include <yarp/dev/PreciselyTimed.h>
-#include <yarp/dev/GenericSensorInterfaces.h>
+#include <yarp/dev/IPreciselyTimed.h>
+#include <yarp/dev/IGenericSensor.h>
 #include <yarp/sig/Vector.h>
 
 #include <yarp/os/Time.h>

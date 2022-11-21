@@ -7,13 +7,13 @@
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
-#include <yarp/dev/Wrapper.h>
+#include <yarp/dev/IMultipleWrapper.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/RpcServer.h>
 #include <yarp/dev/IVirtualAnalogSensor.h>
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/MultipleAnalogSensorsInterfaces.h>
-#include <yarp/dev/GenericSensorInterfaces.h>
+#include <yarp/dev/IGenericSensor.h>
 
 // iCub includes
 #include <iCub/skinDynLib/skinContactList.h>
