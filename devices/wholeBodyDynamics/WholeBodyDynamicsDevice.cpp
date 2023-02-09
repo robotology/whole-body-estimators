@@ -1744,7 +1744,6 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         return false;
     }
 
-    yDebug() << "Elobaid: remappedMASInterfaces= " << remappedMASInterfaces.ftMultiSensors->getNrOfSixAxisForceTorqueSensors();
     if (nrMASFTSensors != remappedMASInterfaces.ftMultiSensors->getNrOfSixAxisForceTorqueSensors())
     {
         yError() << "WholeBodyDynamicsDevice::attachAll Invalid number of MAS FT sensors after remapper";
@@ -1922,12 +1921,20 @@ bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
                     }
                 }
             }
-            bool foundOneIMUMAS = (noOfMASDevicesWithOneAcc == 1) && (noOfMASDevicesWithOneGyro == 1);
-            if(foundOneIMUMAS)
-            {
-                yInfo()<<"wholeBodyDynamics : Found one IMU multipleAnalogSensor device with accelerometer "<< masAccName << " and gyroscope "<< masGyroName;
-                break;
-            }
+        }
+
+        if((noOfMASDevicesWithOneAcc == 1) && (noOfMASDevicesWithOneGyro == 1))
+        {
+            yInfo() << "wholeBodyDynamics : Found one IMU multipleAnalogSensor device with accelerometer " << masAccName << " and gyroscope " << masGyroName;
+        }
+        else if((noOfMASDevicesWithOneAcc > 1) || (noOfMASDevicesWithOneGyro > 1))
+        {
+            yError() << "wholeBodyDynamics : Found more than one IMU multipleAnalogSensor devices attached, you need to attach one and only one IMU.";
+        }
+        else if((noOfMASDevicesWithOneAcc < 1) || (noOfMASDevicesWithOneGyro < 1))
+        {
+            yError() << "wholeBodyDynamics : Did not find one IMU multipleAnalogSensor devices attached, you need to attach one and only one IMU.";
+            yError() << "wholeBodyDynamics : In case you are trying to attach an IMU device of the type IGenericSensor, remove the group \"HW_USE_MAS_IMU\" from your config file.";
         }
     }
     if (!settings.disableSensorReadCheckAtStartup) {
