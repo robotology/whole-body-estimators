@@ -31,6 +31,9 @@
 *.out
 *.app
 
-
 # Qtcreator project
 *.user
+
+# clangd
+**/compile_commands.json
+**/.cache/

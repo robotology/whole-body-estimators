@@ -1,3 +1,4 @@
+#include <yarp/os/Log.h>
 #define SKIN_EVENTS_TIMEOUT 0.2
 #include "WholeBodyDynamicsDevice.h"
 
@@ -1687,9 +1688,12 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         ITemperatureSensors *tempS =nullptr;
         if( p[devIdx]->poly->view(fts) )
         {
-            ftSensorList.push(const_cast<PolyDriverDescriptor&>(*p[devIdx]));
-            ftDeviceNames.push_back(p[devIdx]->key);
             auto nrFTsinThisDevice = fts->getNrOfSixAxisForceTorqueSensors();
+            if(nrFTsinThisDevice > 0)
+            {
+                ftSensorList.push(const_cast<PolyDriverDescriptor&>(*p[devIdx]));
+                ftDeviceNames.push_back(p[devIdx]->key);
+            }
             nrMASFTSensors +=  nrFTsinThisDevice;
             for (auto ftDx = 0; ftDx < nrFTsinThisDevice; ftDx++)
             {
@@ -1717,7 +1721,7 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
            // tempDeviceNames.push_back(p[devIdx]->key);
         }
     }
-    yDebug()<<"wholeBodyDynamicsDevice :: number of ft sensors found in both ft + mas"<<ftDeviceNames.size()<< "where analog are "<<ftList.size()<<" and mas are "<<ftSensorList.size();
+    yDebug()<<"wholeBodyDynamicsDevice :: number of devices that could contain FT sensors found "<<ftDeviceNames.size()<< "where analog are "<<ftList.size()<<" and MAS are "<<ftSensorList.size();
 
     auto totalNrFTDevices{nrAnalogFTSensors + nrMASFTSensors};
     if( totalNrFTDevices < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) )
@@ -1866,7 +1870,7 @@ bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
 
         if( nrOfIMUDetected != 1 )
         {
-            yError() << "WholeBodyDynamicsDevice was expecting only one IMU, but it did not find " << nrOfIMUDetected << " in the attached devices";
+            yError() << "WholeBodyDynamicsDevice was expecting one and only one IMU, but it found " << nrOfIMUDetected << " in the attached devices";
             return false;
         }
 
@@ -1877,47 +1881,60 @@ bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
     }
     else
     {
+        size_t noOfMASDevicesWithOneAcc{0};
+        size_t noOfMASDevicesWithOneGyro{0};
+        // Iterate over all the attached devices
         for(size_t devIdx = 0; devIdx < (size_t)p.size(); devIdx++)
         {
             IThreeAxisLinearAccelerometers * pAcc{nullptr};
+            // All MAS devices should satisfy the following condition
             if( p[devIdx]->poly->view(pAcc) )
             {
-                if (pAcc->getNrOfThreeAxisLinearAccelerometers() != 1)
+                // Check if the MAS device is actually an IMU = contains one accelerometer
+                // and the accelerometer's name matches the one in the configuration file
+                if(pAcc->getNrOfThreeAxisLinearAccelerometers() == 1)
                 {
-                     yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- Nr acc should be 1";
-                    return false;
+                    std::string accName;
+                    pAcc->getThreeAxisLinearAccelerometerName(0, accName);
+                    if (accName == masAccName)
+                    {
+                        masAccInterface = pAcc;
+                        noOfMASDevicesWithOneAcc++;
+                    }
                 }
-
-                std::string accName;
-                pAcc->getThreeAxisLinearAccelerometerName(0, accName);
-                if (accName != masAccName)
-                {
-                    yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- acc name mismatch";
-                    return false;
-                }
-
-                masAccInterface = pAcc;
             }
 
             IThreeAxisGyroscopes * pGyro{nullptr};
+            // All MAS devices should satisfy this condition
             if( p[devIdx]->poly->view(pGyro) )
             {
-                if (pGyro->getNrOfThreeAxisGyroscopes() != 1)
+                // Check if the MAS device is actually an IMU = contains one gyroscope
+                // and the gyroscope's name matches the one in the configuration file
+                if(pGyro->getNrOfThreeAxisGyroscopes() == 1)
                 {
-                     yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- Nr gyro should be 1";
-                    return false;
+                    std::string gyroName;
+                    pGyro->getThreeAxisGyroscopeName(0, gyroName);
+                    if (gyroName == masGyroName)
+                    {
+                        masGyroInterface = pGyro;
+                        noOfMASDevicesWithOneGyro++;
+                    }
                 }
-
-                std::string gyroName;
-                pGyro->getThreeAxisGyroscopeName(0, gyroName);
-                if (gyroName != masGyroName)
-                {
-                    yError() << "WholeBodyDynamicsDevice MAS IMU ERROR - gyro name mismatch";
-                    return false;
-                }
-
-                masGyroInterface = pGyro;
             }
+        }
+
+        if((noOfMASDevicesWithOneAcc == 1) && (noOfMASDevicesWithOneGyro == 1))
+        {
+            yInfo() << "wholeBodyDynamics : Found one IMU multipleAnalogSensor device with accelerometer " << masAccName << " and gyroscope " << masGyroName;
+        }
+        else if((noOfMASDevicesWithOneAcc > 1) || (noOfMASDevicesWithOneGyro > 1))
+        {
+            yError() << "wholeBodyDynamics : Found more than one IMU multipleAnalogSensor devices attached, you need to attach one and only one IMU.";
+        }
+        else if((noOfMASDevicesWithOneAcc < 1) || (noOfMASDevicesWithOneGyro < 1))
+        {
+            yError() << "wholeBodyDynamics : Did not find one IMU multipleAnalogSensor devices attached, you need to attach one and only one IMU.";
+            yError() << "wholeBodyDynamics : In case you are trying to attach an IMU device of the type IGenericSensor, remove the group \"HW_USE_MAS_IMU\" from your config file.";
         }
     }
     if (!settings.disableSensorReadCheckAtStartup) {
