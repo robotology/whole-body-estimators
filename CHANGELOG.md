@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 ### Fixed
+
+## [0.9.1] - 2023-02-09
+
+### Fixed
 - fix attaching both IMU and FTs as MAS network wrappers (https://github.com/robotology/whole-body-estimators/pull/167).
 - Implement `VirtualAnalogClient::getAxes` and `VirtualAnalogRemapper::getAxes` to fix compilation against YARP 3.8 (https://github.com/robotology/whole-body-estimators/pull/159, https://github.com/robotology/whole-body-estimators/pull/160).
 - Fix compilation against YARP 3.8 (https://github.com/robotology/whole-body-estimators/pull/166).
