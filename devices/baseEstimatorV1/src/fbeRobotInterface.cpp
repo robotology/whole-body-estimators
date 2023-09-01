@@ -136,11 +136,11 @@ bool yarp::dev::baseEstimatorV1::loadEstimator()
     resizeBuffers();
     setPeriod(m_device_period_in_s);
 
-    ok = m_sensors_list.getSensorIndex(iDynTree::SIX_AXIS_FORCE_TORQUE, m_left_foot_ft_sensor, m_left_foot_ft_sensor_index) && ok;
-    ok = m_sensors_list.getSensorIndex(iDynTree::SIX_AXIS_FORCE_TORQUE, m_right_foot_ft_sensor, m_right_foot_ft_sensor_index) && ok;
+    ok = m_sensors_list.getSensorIndex(iDynTree::SIX_AXIS_FORCE_TORQUE, m_left_foot_ft, m_left_foot_ft_index) && ok;
+    ok = m_sensors_list.getSensorIndex(iDynTree::SIX_AXIS_FORCE_TORQUE, m_right_foot_ft, m_right_foot_ft_index) && ok;
 
-    m_r_sole_R_r_ft_sensor = m_kin_dyn_comp.getRelativeTransform(m_model.getFrameIndex(m_right_sole), m_right_foot_ft_sensor_index).getRotation();
-    m_l_sole_R_l_ft_sensor = m_kin_dyn_comp.getRelativeTransform(m_model.getFrameIndex(m_left_sole), m_left_foot_ft_sensor_index).getRotation();
+    m_r_sole_R_r_ft = m_kin_dyn_comp.getRelativeTransform(m_model.getFrameIndex(m_right_sole), m_right_foot_ft_index).getRotation();
+    m_l_sole_R_l_ft = m_kin_dyn_comp.getRelativeTransform(m_model.getFrameIndex(m_left_sole), m_left_foot_ft_index).getRotation();
 
     ok = loadLeggedOdometry();
     ok = loadBipedFootContactClassifier() && ok;
@@ -177,7 +177,7 @@ bool yarp::dev::baseEstimatorV1::attachAllForceTorqueSensors(const yarp::dev::Po
         yarp::dev::IAnalogSensor* p_forcetorque = 0;
         if (p[dev_idx]->poly->view(p_forcetorque))
         {
-            if (p_forcetorque->getChannels() == (int)m_nr_of_channels_in_YARP_FT_sensor)
+            if (p_forcetorque->getChannels() == (int)m_nr_of_channels_in_YARP_ft)
             {
                 ft_sensor_list.push_back(p_forcetorque);
                 ft_sensor_name.push_back(p[dev_idx]->key);
@@ -216,7 +216,7 @@ bool yarp::dev::baseEstimatorV1::attachAllForceTorqueSensors(const yarp::dev::Po
 
     m_nr_of_forcetorque_sensors_detected = m_whole_body_forcetorque_interface.size();
     // dry run of readFTSensors() to check if all FTs work and to initialize buffers
-    m_ft_measurements_from_yarp_server.resize(m_nr_of_channels_in_YARP_FT_sensor);
+    m_ft_measurements_from_yarp_server.resize(m_nr_of_channels_in_YARP_ft);
     bool verbose{false};
     if (!sensorReadDryRun(verbose, &yarp::dev::baseEstimatorV1::readFTSensors))
     {

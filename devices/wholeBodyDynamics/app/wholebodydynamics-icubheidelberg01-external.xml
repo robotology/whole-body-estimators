@@ -55,10 +55,10 @@
                 <!-- imu -->
                 <elem name="imu">inertial</elem>
                 <!-- ft -->
-                <elem name="l_leg_ft_sensor">left_upper_leg_strain</elem>
-                <elem name="r_leg_ft_sensor">right_upper_leg_strain</elem>
-                <elem name="l_foot_ft_sensor">left_lower_leg_strain</elem>
-                <elem name="r_foot_ft_sensor">right_lower_leg_strain</elem>
+                <elem name="l_leg_ft">left_upper_leg_strain</elem>
+                <elem name="r_leg_ft">right_upper_leg_strain</elem>
+                <elem name="l_foot_ft">left_lower_leg_strain</elem>
+                <elem name="r_foot_ft">right_lower_leg_strain</elem>
             </paramlist>
         </action>
 

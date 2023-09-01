@@ -55,24 +55,24 @@ bool yarp::dev::baseEstimatorV1::loadEstimatorParametersFromConfig(const yarp::o
                                                      " Loading default robot name " << m_base_link_name;
     }
 
-    if (config.check("left_foot_ft_sensor") && config.find("left_foot_ft_sensor").isString())
+    if (config.check("left_foot_ft") && config.find("left_foot_ft").isString())
     {
-        m_left_foot_ft_sensor = config.find("left_foot_ft_sensor").asString();
+        m_left_foot_ft = config.find("left_foot_ft").asString();
     }
     else
     {
-        yWarning() << "floatingBaseEstimatorV1: " << "Could not find \"left_foot_ft_sensor\" parameter in configuration file." <<
-                                                     " Loading default FT sensor name " << m_left_foot_ft_sensor;
+        yWarning() << "floatingBaseEstimatorV1: " << "Could not find \"left_foot_ft\" parameter in configuration file." <<
+                                                     " Loading default FT sensor name " << m_left_foot_ft;
     }
 
-    if (config.check("right_foot_ft_sensor") && config.find("right_foot_ft_sensor").isString())
+    if (config.check("right_foot_ft") && config.find("right_foot_ft").isString())
     {
-        m_right_foot_ft_sensor = config.find("right_foot_ft_sensor").asString();
+        m_right_foot_ft = config.find("right_foot_ft").asString();
     }
     else
     {
-        yWarning() << "floatingBaseEstimatorV1: " << "Could not find \"right_foot_ft_sensor\" parameter in configuration file." <<
-                                                     " Loading default FT sensor name  " << m_right_foot_ft_sensor;
+        yWarning() << "floatingBaseEstimatorV1: " << "Could not find \"right_foot_ft\" parameter in configuration file." <<
+                                                     " Loading default FT sensor name  " << m_right_foot_ft;
     }
 
     if (config.check("attitude_filter_type") && config.find("attitude_filter_type").isString())

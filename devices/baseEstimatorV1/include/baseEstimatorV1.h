@@ -547,7 +547,7 @@ namespace yarp {
 
         const double m_sensor_timeout_in_seconds{2.0}; ///< Timeout to check for sensor measurements during dry run initial check
         const size_t m_nr_of_channels_in_YARP_IMU_sensor{12}; ///< Number of channels available in YARP IMU sensor output port
-        const size_t m_nr_of_channels_in_YARP_FT_sensor{6}; ///< Number of channels available in YARP FT sensor output port
+        const size_t m_nr_of_channels_in_YARP_ft{6}; ///< Number of channels available in YARP FT sensor output port
         bool m_use_multiple_analog_sensor_interface{false}; ///< Flag to switch between analog sensor interface or multiple analog sensor interface
 
         iDynTree::JointPosDoubleArray m_joint_positions; ///< joint positions array
@@ -620,12 +620,12 @@ namespace yarp {
         yarp::sig::Vector m_world_velocity_base; ///< 6D vector velocity of floating base frame in the world reference frame
         yarp::sig::Vector m_world_velocity_base_from_imu;
 
-        std::string m_left_foot_ft_sensor{"l_foot_ft_sensor"};
-        std::ptrdiff_t m_left_foot_ft_sensor_index, m_right_foot_ft_sensor_index;
-        std::string m_right_foot_ft_sensor{"r_foot_ft_sensor"};
+        std::string m_left_foot_ft{"l_foot_ft"};
+        std::ptrdiff_t m_left_foot_ft_index, m_right_foot_ft_index;
+        std::string m_right_foot_ft{"r_foot_ft"};
         std::string m_right_sole{"r_sole"};
         std::string m_left_sole{"l_sole"};
-        iDynTree::Rotation m_l_sole_R_l_ft_sensor, m_r_sole_R_r_ft_sensor;
+        iDynTree::Rotation m_l_sole_R_l_ft, m_r_sole_R_r_ft;
         iDynTree::KinDynComputations m_kin_dyn_comp;
         iDynTree::Position m_com_position;
         iDynTree::Vector3 m_com_velocity;
