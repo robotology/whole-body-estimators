@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         build_type: [Release]
-        os: [ubuntu-latest, windows-latest, macos-latest]
+        os: [ubuntu-latest, windows-2019, macos-latest]
       fail-fast: false
 
     steps:
@@ -24,9 +24,8 @@ jobs:
 
     - uses: conda-incubator/setup-miniconda@v2
       with:
-        mamba-version: "*"
-        channels: conda-forge,defaults
-        channel-priority: true
+       miniforge-variant: Mambaforge
+       miniforge-version: latest
 
     - name: Dependencies
       shell: bash -l {0}

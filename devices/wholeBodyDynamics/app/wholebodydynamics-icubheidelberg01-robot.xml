@@ -3,7 +3,9 @@
 
 <devices robot="iCubHeidelberg01" build="1">
     <device name="wholebodydynamics" type="wholebodydynamics">
-        <param name="axesNames">(torso_pitch,torso_roll,torso_yaw,l_hip_pitch,l_hip_roll,l_hip_yaw,l_knee,l_ankle_pitch,l_ankle_roll,r_hip_pitch,r_hip_roll,r_hip_yaw,r_knee,r_ankle_pitch,r_ankle_roll)</param>
+        <param name="axesNames">(torso_pitch,torso_roll,torso_yaw,
+                                 l_hip_pitch,l_hip_roll,l_hip_yaw,l_knee,l_ankle_pitch,l_ankle_roll,
+                                 r_hip_pitch,r_hip_roll,r_hip_yaw,r_knee,r_ankle_pitch,r_ankle_roll)</param>
         <param name="modelFile">model.urdf</param>
         <param name="fixedFrameGravity">(0,0,-9.81)</param>
         <param name="defaultContactFrames">(root_link,l_sole,r_sole,l_lower_leg,r_lower_leg)</param>
@@ -13,8 +15,30 @@
         <param name="imuFilterCutoffInHz">3.0</param>
         <param name="forceTorqueFilterCutoffInHz">3.0</param>
         <param name="jointVelFilterCutoffInHz">3.0</param> <!-- used if useJointVelocity is set to true -->
-        <param name="jointAccFilterCutoffInHz">3.0</param> <!-- used if useJointAcceleration is set to true -->        
+        <param name="jointAccFilterCutoffInHz">3.0</param> <!-- used if useJointAcceleration is set to true -->
         <param name="devicePeriodInSeconds">0.01</param>
+        <param name="estimateJointVelocityAcceleration">false</param>  <!-- if true a kf will estimate the joint velocities and accelerations -->
+        <param name="processNoiseCovariance">(1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                              1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1,
+                                              1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1, 1.0e+1)</param>
+        <param name="measurementNoiseCovariance">(1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                                  1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3)</param>
+        <param name="stateCovariance">(5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4,
+                                       5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4, 5.0e-4,
+                                       1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3, 1.0e-3,
+                                       1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1,
+                                       1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1, 1.0e-1)</param>
 
         <!-- map between iDynTree links (identified by a name)
              and skinDynLib links (identified by their frame name, a BodyPart enum

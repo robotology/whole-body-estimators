@@ -7,13 +7,13 @@
 #include <yarp/dev/DeviceDriver.h>
 #include <yarp/dev/PolyDriver.h>
 #include <yarp/dev/ControlBoardInterfaces.h>
-#include <yarp/dev/Wrapper.h>
+#include <yarp/dev/IMultipleWrapper.h>
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/RpcServer.h>
 #include <yarp/dev/IVirtualAnalogSensor.h>
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/MultipleAnalogSensorsInterfaces.h>
-#include <yarp/dev/GenericSensorInterfaces.h>
+#include <yarp/dev/IGenericSensor.h>
 
 // iCub includes
 #include <iCub/skinDynLib/skinContactList.h>
@@ -22,12 +22,14 @@
 #include <iDynTree/Estimation/ExtWrenchesAndJointTorquesEstimator.h>
 #include <iDynTree/skinDynLibConversions.h>
 #include <iDynTree/KinDynComputations.h>
+#include <iDynTree/Estimation/KalmanFilter.h>
 
 // Filters
 #include "ctrlLibRT/filters.h"
 
 #include <wholeBodyDynamicsSettings.h>
 #include <wholeBodyDynamics_IDLServer.h>
+#include <VectorsCollection.h>
 #include "SixAxisForceTorqueMeasureHelpers.h"
 #include "GravityCompensationHelpers.h"
 
@@ -59,6 +61,10 @@ struct outputWrenchPortInformation
 
 class wholeBodyDynamicsDeviceFilters
 {
+    private:
+
+    bool initCovarianceMatrix(const yarp::os::Searchable &config, std::string parameterName, iDynTree::MatrixDynSize & matrix);
+
     public:
 
     wholeBodyDynamicsDeviceFilters();
@@ -78,10 +84,13 @@ class wholeBodyDynamicsDeviceFilters
                                double cutOffForIMUInHz,
                                double cutOffForJointVelInHz,
                                double cutOffForJointAccInHz);
+
     /**
      * Deallocate the filters
      */
     void fini();
+
+    bool initKalmanFilter(const yarp::os::Searchable &config, std::unique_ptr<iDynTree::DiscreteKalmanFilterHelper> &kf, double periodInSeconds, int nrOfDOFsProcessed);
 
 
     ~wholeBodyDynamicsDeviceFilters();
@@ -100,6 +109,9 @@ class wholeBodyDynamicsDeviceFilters
 
     ///< low pass filter for Joint accelerations
     iCub::ctrl::realTime::FirstOrderLowPassFilter * jntAccFilter;
+
+    ///< KF filter for Joint velocity and accelerations
+    std::unique_ptr<iDynTree::DiscreteKalmanFilterHelper> jntVelAccKFFilter;
 
     ///< Yarp vector buffer of dimension 3
     yarp::sig::Vector bufferYarp3;
@@ -260,7 +272,6 @@ private:
     /**
      * Open-related methods
      */
-
     bool openSettingsPort();
     bool openRPCPort();
     bool openRemapperControlBoard(os::Searchable& config);
@@ -390,7 +401,10 @@ private:
     yarp::sig::Vector              ftMeasurement;
     yarp::sig::Vector              imuMeasurement;
     yarp::sig::Vector              estimatedJointTorquesYARP;
-    yarp::sig::VectorOf<double>              tempMeasurements;
+    yarp::sig::VectorOf<double>    tempMeasurements;
+    iDynTree::JointDOFsDoubleArray jointPosKF;
+    iDynTree::JointDOFsDoubleArray jointVelKF;
+    iDynTree::JointDOFsDoubleArray jointAccKF;
 
     /***
      * Buffer for raw sensors measurements.
@@ -437,6 +451,13 @@ private:
      */
     std::vector<wholeBodyDynamics::SixAxisForceTorqueMeasureProcessor> ftProcessors;
 
+    /**
+     * Vector of Analog FT Sensor names
+     */
+    std::vector<std::string>     ftAnalogSensorNames;
+    std::vector<std::string>     ftMultipleAnalogSensorNames;
+    std::vector<int>  ftMultipleAnalogSensorIdxMapping;
+
     /***
      * RPC Calibration related methods
      */
@@ -452,7 +473,7 @@ private:
      /**
       * Calibrate the force/torque sensors when on double support
       * (WARNING: calibrate the sensors when the only external forces acting on the robot are on the sole).
-      * For this calibration the strong assumption of simmetry of the robot and its pose is done.
+      * For this calibration the strong assumption of symmetry of the robot and its pose is done.
       * @param calib_code argument to specify the sensors to calibrate (all,arms,legs,feet)
       * @param nr_of_samples number of samples
       * @return true/false on success/failure
@@ -461,15 +482,16 @@ private:
 
      /**
       * Calibrate the force/torque sensors when on double support and with jet engines turned ON and on idle thrust
-      * (WARNING: works only with iRonCub-Mk1).
+      * (WARNING: works only with iRonCub-XX models).
       * (WARNING: calibrate the sensors when the only external forces acting on the robot are on the sole).
-      * For this calibration the strong assumption of simmetry of the robot and its pose is done. Also, only pure forces are
+      * For this calibration the strong assumption of symmetry of the robot and its pose is done. Also, only pure forces are
       * assumed to be acting on the soles
+      * @param ironcub_model argument to specify the particular model of iRonCub (mk1, mk1.1)
       * @param calib_code argument to specify the sensors to calibrate (all,arms,legs,feet)
       * @param nr_of_samples number of samples
       * @return true/false on success/failure
       */
-     virtual bool calibStandingWithJetsiRonCubMk1(const std::string& calib_code, const int32_t nr_of_samples = 100);
+     virtual bool calibStandingWithJetsiRonCub(const std::string& ironcub_model, const std::string& calib_code, const int32_t nr_of_samples = 100);
 
      /**
       * Calibrate the force/torque sensors when on single support on left foot
@@ -594,6 +616,10 @@ private:
        */
       virtual bool setUseOfJointAccelerations(const bool enable);
       /**
+      * Set if to estimate or not the joint velocities and acceleration.
+      */
+      virtual bool setUseOfJointVelocityAccelerationEstimation(const bool enable);
+      /**
        * Get the current settings in the form of a string.
        * @return the current settings as a human readable string.
        */
@@ -602,7 +628,7 @@ private:
     void setupCalibrationCommonPart(const int32_t nrOfSamples);
     bool setupCalibrationWithExternalWrenchOnOneFrame(const std::string & frameName, const int32_t nrOfSamples);
     bool setupCalibrationWithExternalWrenchesOnTwoFrames(const std::string & frame1Name, const std::string & frame2Name, const int32_t nrOfSamples);
-    bool setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1(const int32_t nrOfSamples);
+    bool setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub(const std::string& ironcub_model, const int32_t nrOfSamples);
 
      /**
       * RPC Calibration related attributes
@@ -705,12 +731,12 @@ private:
      * in the link frame. The bottle is a list of pairs. The first element is
      * the link name, the second is the wrench.
      */
-    yarp::os::Bottle netExternalWrenchesBottle;
+    VectorsCollection netExternalWrenches;
 
     /**
      * Port for streaming the netWrenchesBottle;
      */
-    yarp::os::BufferedPort<yarp::os::Bottle> netExternalWrenchesPort;
+    yarp::os::BufferedPort<VectorsCollection> netExternalWrenchesPort;
 
     /**
      * Flag to publish the next external wrenches on each link.

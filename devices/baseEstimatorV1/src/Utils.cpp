@@ -90,15 +90,15 @@ bool iDynTreeHelper::Triplets::getTripletsFromValues(const yarp::os::Value& inpu
             return false;
         }
 
-        int row = tripletPtr->get(0).asInt();
-        int col = tripletPtr->get(1).asInt();
+        int row = tripletPtr->get(0).asInt32();
+        int col = tripletPtr->get(1).asInt32();
 
         if(col >= matrixDimension || row >= matrixDimension)
         {
             yError() << "[getSparseMatrixFromTriplets] element position exceeds the matrix dimension.";
             return false;
         }
-        output.pushTriplet(iDynTree::Triplet(col, row, tripletPtr->get(2).asDouble()));
+        output.pushTriplet(iDynTree::Triplet(col, row, tripletPtr->get(2).asFloat64()));
     }
     return true;
 }
@@ -141,12 +141,12 @@ bool YarpHelper::yarpListToiDynTreeVectorDynSize(const yarp::os::Value& input, i
 
     for (int i = 0; i < inputPtr->size(); i++)
     {
-        if (!inputPtr->get(i).isDouble() && !inputPtr->get(i).isInt())
+        if (!inputPtr->get(i).isFloat64() && !inputPtr->get(i).isInt32())
         {
             yError() << "[yarpListToiDynTreeVectorDynSize] The input is expected to be a double or a int";
             return false;
         }
-        output(i) = inputPtr->get(i).asDouble();
+        output(i) = inputPtr->get(i).asFloat64();
     }
     return true;
 }
@@ -225,13 +225,13 @@ bool YarpHelper::getNumberFromSearchable(const yarp::os::Searchable& config, con
         return false;
     }
 
-    if(!value->isDouble())
+    if(!value->isFloat64())
     {
         yError() << "[getNumberFromSearchable] the value is not a double.";
         return false;
     }
 
-    number = value->asDouble();
+    number = value->asFloat64();
     return true;
 }
 
@@ -245,13 +245,13 @@ bool YarpHelper::getNumberFromSearchable(const yarp::os::Searchable& config, con
         return false;
     }
 
-    if(!value->isInt())
+    if(!value->isInt32())
     {
         yError() << "[getNumberFromSearchable] the value is not an integer.";
         return false;
     }
 
-    number = value->asInt();
+    number = value->asInt32();
     return true;
 }
 

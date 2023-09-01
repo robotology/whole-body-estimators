@@ -24,10 +24,10 @@
 #include <yarp/os/ResourceFinder.h>
 #include <yarp/os/RpcClient.h>
 #include <yarp/dev/DeviceDriver.h>
-#include <yarp/dev/Wrapper.h>
+#include <yarp/dev/IMultipleWrapper.h>
 #include <yarp/dev/IEncoders.h>
 #include <yarp/dev/IAnalogSensor.h>
-#include <yarp/dev/GenericSensorInterfaces.h>
+#include <yarp/dev/IGenericSensor.h>
 #include <yarp/os/LogStream.h>
 #include <yarp/eigen/Eigen.h>
 #include <yarp/sig/Vector.h>

@@ -6,15 +6,61 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 ### Added
+
+### Changed
+
+### Fixed
+
+## [0.9.1] - 2023-02-09
+
+### Fixed
+- fix attaching both IMU and FTs as MAS network wrappers (https://github.com/robotology/whole-body-estimators/pull/167).
+- Implement `VirtualAnalogClient::getAxes` and `VirtualAnalogRemapper::getAxes` to fix compilation against YARP 3.8 (https://github.com/robotology/whole-body-estimators/pull/159, https://github.com/robotology/whole-body-estimators/pull/160).
+- Fix compilation against YARP 3.8 (https://github.com/robotology/whole-body-estimators/pull/166).
+
+## [0.9.0] - 2022-08-31
+
+### Changed
+- Implement `vectors collection` and use it for streaming `netExternalWrenches` instead of `yarp::os::Bottle`. (See [!155](https://github.com/robotology/whole-body-estimators/pull/155)).
+
+### Fixed
+- Fix a bug introduced in `0.8.0`, due to which estimation of external forces and internal torques when FT sensors are read from sensors that expose an `IAnalogSensor` interface was not working (https://github.com/robotology/whole-body-estimators/pull/157, https://github.com/robotology/whole-body-estimators/pull/156).
+
+## [0.8.0] - 2022-08-23
+
+### Added
+- Introduce MAS Read for FT sensors in `WholeBodyDynamics` device (https://github.com/robotology/whole-body-estimators/pull/153).
+
+## [0.7.0] - 2022-05-27
+
+### Added
+- Add a steady-state Kalman filter with a null jerk model for the joint velocity and acceleration estimation in `WholeBodyDynamics`. (See [!139](https://github.com/robotology/whole-body-estimators/pull/139)).
+
+### Changed
+- Updated the `yarp rpc` command `calibStandingWithJetsiRonCubMk1` to be `calibStandingWithJetsiRonCub`, in order to perform `calibStanding` for the models `iRonCub-Mk1` and `iRonCub-Mk1_1` (See [!136](https://github.com/robotology/whole-body-estimators/pull/136)).
+- Switched default carrier of `genericSensorClient` device from `udp` to `fast_tcp` to avoid delays up to 0.25 seconds when a receiver is interrupted (https://github.com/robotology/whole-body-estimators/pull/145).
+
+### Fixed
+- Fixed the possibility of deadlock in detachAll method in `wholebodydynamics` and `baseEstimatorV1`. This deadlock could lead to freeze during closing of the yarprobotinterface or the Gazebo simulator if the `gazebo_yarp_robotinterface` plugin was used (https://github.com/robotology/whole-body-estimators/pull/146).
+- Fixed YARP deprecations. (See [!151](https://github.com/robotology/whole-body-estimators/pull/151))
+
+## [0.6.1] - 2022-01-03
+
+### Fixed
+- Fixed compilation against YARP 3.6 (https://github.com/robotology/whole-body-estimators/pull/135).
+
+## [0.6.0] - 2021-12-03
+### Added
 - Add a parameter to set the periodicity of the WholeBodyDynamics thread (See [!130](https://github.com/robotology/whole-body-estimators/pull/130)).
 
 ### Fixed
 - Fixed joint acceleration filtering (See [!124](https://github.com/robotology/whole-body-estimators/pull/124)).
-- Fixed `wholeBodyDynamics` device when loaded by the `gazebo_yarp_robotinterface` Gazebo plugin [!126](https://github.com/robotology/whole-body-estimators/issues/126)
+- Fixed `wholeBodyDynamics` device when loaded by the `gazebo_yarp_robotinterface` Gazebo plugin [!126](https://github.com/robotology/whole-body-estimators/issues/126).
+- Switch to generate YARP idl files at every build to fix compatibility with YARP master [!131](https://github.com/robotology/whole-body-estimators/pull/131).
+
 ### Changed
 - Always enable compilation of devices (See [!115](https://github.com/robotology/whole-body-estimators/pull/115))
 - Migrate from `RateThread` to `PeriodicThread` in WholeBodyDynamics device (See [!130](https://github.com/robotology/whole-body-estimators/pull/130)).
-
 
 ## [0.5.1] - 2021-07-12
 ### Added

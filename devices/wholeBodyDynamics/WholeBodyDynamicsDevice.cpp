@@ -1,3 +1,4 @@
+#include <yarp/os/Log.h>
 #define SKIN_EVENTS_TIMEOUT 0.2
 #include "WholeBodyDynamicsDevice.h"
 
@@ -8,7 +9,7 @@
 #include <yarp/os/PeriodicThread.h>
 
 #include <yarp/dev/IAnalogSensor.h>
-#include <yarp/dev/GenericSensorInterfaces.h>
+#include <yarp/dev/IGenericSensor.h>
 
 #include <iDynTree/yarp/YARPConversions.h>
 #include <iDynTree/Core/Utils.h>
@@ -176,6 +177,35 @@ bool getConfigParamsAsList(os::Searchable& config,std::string propertyName , std
     return true;
 }
 
+bool getConfigParamsAsList(const yarp::os::Searchable& config,std::string propertyName , iDynTree::VectorDynSize & list, bool isRequired)
+{
+    yarp::os::Property prop;
+    prop.fromString(config.toString().c_str());
+    yarp::os::Bottle *propNames=prop.find(propertyName).asList();
+    if(propNames==nullptr)
+    {
+        if(isRequired)
+        {
+            yError() <<"WholeBodyDynamicsDevice: Error parsing parameters: \" "<<propertyName<<" \" should be followed by a list\n";
+        }
+        return false;
+    }
+
+    list.resize(propNames->size());
+    for(auto elem=0u; elem < propNames->size(); elem++)
+    {
+        const auto value = propNames->get(elem);
+        if( !value.isFloat64() && !value.isInt32() )
+        {
+            yError() << "WholeBodyDynamicsDevice: Error parsing parameters: \" "<<propertyName<<" \". Expected double or integer array.\n";
+            return false;
+        }
+        list(elem) = value.asFloat64();
+    }
+
+    return true;
+}
+
 bool getUsedDOFsList(os::Searchable& config, std::vector<std::string> & usedDOFs)
 {
     bool required{true};
@@ -193,7 +223,6 @@ bool getGravityCompensationDOFsList(os::Searchable& config, std::vector<std::str
     bool required{true};
     return getConfigParamsAsList(config,"gravityCompensationAxesNames",gravityCompensationDOFs, required);
 }
-
 
 bool WholeBodyDynamicsDevice::openRemapperControlBoard(os::Searchable& config)
 {
@@ -493,7 +522,7 @@ bool WholeBodyDynamicsDevice::parseOverrideContactFramesData(yarp::os::Bottle *_
                 for(int ay=0; ay < 3; ay++)
                 {
                     int index = 3*ax+ay;
-                    contactWrenchDirection[ax][ay] = _propContactWrenchDirection->get(index).asDouble();
+                    contactWrenchDirection[ax][ay] = _propContactWrenchDirection->get(index).asFloat64();
                 }
             }
         }
@@ -514,7 +543,7 @@ bool WholeBodyDynamicsDevice::parseOverrideContactFramesData(yarp::os::Bottle *_
                 for(int ay=0; ay < 3; ay++)
                 {
                     int index = 3*ax+ay;
-                    contactWrenchPosition[ax][ay] = _propContactWrenchPosition->get(index).asDouble();
+                    contactWrenchPosition[ax][ay] = _propContactWrenchPosition->get(index).asFloat64();
                 }
             }
         }
@@ -593,8 +622,8 @@ bool WholeBodyDynamicsDevice::openSkinContactListPorts(os::Searchable& config)
 
         std::string iDynTree_link_name = map_bot->get(0).asString();
         std::string iDynTree_skinFrame_name = map_bot->get(1).asList()->get(0).asString();
-        int skinDynLib_body_part = map_bot->get(1).asList()->get(1).asInt();
-        int skinDynLib_link_index = map_bot->get(1).asList()->get(2).asInt();
+        int skinDynLib_body_part = map_bot->get(1).asList()->get(1).asInt32();
+        int skinDynLib_link_index = map_bot->get(1).asList()->get(2).asInt32();
 
         bool ret_sdl = conversionHelper.addSkinDynLibAlias(estimator.model(),
                                                            iDynTree_link_name,iDynTree_skinFrame_name,
@@ -824,6 +853,11 @@ void WholeBodyDynamicsDevice::resizeBuffers()
     this->estimatedJointTorques.resize(estimator.model());
     this->estimatedJointTorquesYARP.resize(this->estimatedJointTorques.size(),0.0);
     this->estimateExternalContactWrenches.resize(estimator.model());
+    this->jointPosKF.resize(estimator.model());
+    this->jointVelKF.resize(estimator.model());
+    this->jointAccKF.resize(estimator.model());
+    jointVelKF.zero();
+    jointAccKF.zero();
 
     // Resize F/T stuff
     size_t nrOfFTSensors = estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE);
@@ -866,14 +900,10 @@ void WholeBodyDynamicsDevice::resizeBuffers()
          link < static_cast<iDynTree::LinkIndex>(netExternalWrenchesExertedByTheEnviroment.getNrOfLinks());
          ++link)
     {
-        yarp::os::Bottle& wrenchBottle = netExternalWrenchesBottle.addList();
-        wrenchBottle.addString(estimator.model().getLinkName(link));
-        yarp::os::Bottle& wrenchValues = wrenchBottle.addList();
-
-        for (size_t i = 0; i < 6; ++i)
-        {
-            wrenchValues.addDouble(0.0);
-        }
+        netExternalWrenches.vectors[estimator.model().getLinkName(link)].resize(6);
+        std::fill(netExternalWrenches.vectors[estimator.model().getLinkName(link)].begin(),
+                  netExternalWrenches.vectors[estimator.model().getLinkName(link)].end(),
+                  0.0);
     }
 }
 
@@ -888,12 +918,12 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
 
     if (prop.check("devicePeriodInSeconds"))
     {
-        if(!prop.find("devicePeriodInSeconds").isDouble())
+        if(!prop.find("devicePeriodInSeconds").isFloat64())
         {
             yError() << "wholeBodyDynamics : The devicePeriodInSeconds must be a double";
             return false;
         }
-        this->setPeriod(prop.find("devicePeriodInSeconds").asDouble());
+        this->setPeriod(prop.find("devicePeriodInSeconds").asFloat64());
     }
     else
     {
@@ -954,9 +984,9 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
         prop.find("fixedFrameGravity").isList() &&
         prop.find("fixedFrameGravity").asList()->size() == 3 )
     {
-        settings.fixedFrameGravity.x = prop.find("fixedFrameGravity").asList()->get(0).asDouble();
-        settings.fixedFrameGravity.y = prop.find("fixedFrameGravity").asList()->get(1).asDouble();
-        settings.fixedFrameGravity.z = prop.find("fixedFrameGravity").asList()->get(2).asDouble();
+        settings.fixedFrameGravity.x = prop.find("fixedFrameGravity").asList()->get(0).asFloat64();
+        settings.fixedFrameGravity.y = prop.find("fixedFrameGravity").asList()->get(1).asFloat64();
+        settings.fixedFrameGravity.z = prop.find("fixedFrameGravity").asList()->get(2).asFloat64();
     }
     else
     {
@@ -1010,6 +1040,18 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
         settings.useJointAcceleration = prop.find(useJointAccelerationOptionName.c_str()).asBool();
     }
 
+    std::string estimateJointVelocityAccelerationOptionName = "estimateJointVelocityAcceleration";
+    if( !(prop.check(estimateJointVelocityAccelerationOptionName.c_str()) && prop.find(estimateJointVelocityAccelerationOptionName.c_str()).isBool()) )
+    {
+        yWarning() << "wholeBodyDynamics: estimateVelocityAccelerationOptionName bool parameter missing, please specify it.";
+        yWarning() << "wholeBodyDynamics: setting estimateVelocityAccelerationOptionName to the default value of true, but this is a deprecated behaviour that will be removed in the future.";
+        settings.estimateJointVelocityAcceleration = false;
+    }
+    else
+    {
+        settings.estimateJointVelocityAcceleration = prop.find(estimateJointVelocityAccelerationOptionName.c_str()).asBool();
+    }
+
     // Check for measurements low pass filter cutoff frequencies
     if (!applyLPFSettingsFromConfig(prop, "imuFilterCutoffInHz"))
     {
@@ -1045,9 +1087,9 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     // Set time to check for a new temperature measurement. The default value is 0.55;
     // is set in the device constructor
     if( prop.check("checkTemperatureEvery_seconds") &&
-        prop.find("checkTemperatureEvery_seconds").isDouble())
+        prop.find("checkTemperatureEvery_seconds").isFloat64())
     {
-        checkTemperatureEvery_seconds = prop.find("checkTemperatureEvery_seconds").asDouble();
+        checkTemperatureEvery_seconds = prop.find("checkTemperatureEvery_seconds").asFloat64();
     }
 
     if ( !(prop.check("startWithZeroFTSensorOffsets") && prop.find("startWithZeroFTSensorOffsets").isBool()) )
@@ -1103,9 +1145,9 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
 bool WholeBodyDynamicsDevice::applyLPFSettingsFromConfig(const yarp::os::Property& prop, const std::string& setting_name)
 {
     if( prop.check(setting_name) &&
-        prop.find(setting_name).isDouble() )
+        prop.find(setting_name).isFloat64() )
     {
-        double cut_off_freq = prop.find(setting_name).asDouble();
+        double cut_off_freq = prop.find(setting_name).asFloat64();
         if (setting_name == "imuFilterCutoffInHz") { settings.imuFilterCutoffInHz = cut_off_freq; }
         if (setting_name == "forceTorqueFilterCutoffInHz") { settings.forceTorqueFilterCutoffInHz = cut_off_freq; }
         if (setting_name == "jointVelFilterCutoffInHz") { settings.jointVelFilterCutoffInHz = cut_off_freq; }
@@ -1150,7 +1192,7 @@ bool WholeBodyDynamicsDevice::loadSecondaryCalibrationSettingsFromConfig(os::Sea
                 for(int c=0; c < 6; c++)
                 {
                     int rowMajorIndex = 6*r+c;
-                    secondaryCalibMat(r,c) = map_bot->get(1).asList()->get(rowMajorIndex).asDouble();
+                    secondaryCalibMat(r,c) = map_bot->get(1).asList()->get(rowMajorIndex).asFloat64();
                 }
             }
 
@@ -1211,9 +1253,9 @@ bool WholeBodyDynamicsDevice::loadTemperatureCoefficientsSettingsFromConfig(os::
 
             for(auto r=0u; r < 6; r++)
             {
-                temperatureCoeffs(r) = map_bot->get(1).asList()->get(r).asDouble();
+                temperatureCoeffs(r) = map_bot->get(1).asList()->get(r).asFloat64();
             }
-            tempOffset= map_bot->get(1).asList()->get(6).asDouble();
+            tempOffset= map_bot->get(1).asList()->get(6).asFloat64();
 
             // Linearly search for the specified sensor
             bool sensorFound = false;
@@ -1274,7 +1316,7 @@ bool WholeBodyDynamicsDevice::loadFTSensorOffsetFromConfig(os::Searchable& confi
 
             for(int r=0; r < 6; r++)
             {
-                ftOffset(r) = map_bot->get(1).asList()->get(r).asDouble();
+                ftOffset(r) = map_bot->get(1).asList()->get(r).asFloat64();
             }
 
 
@@ -1420,6 +1462,18 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     // resize internal buffers
     this->resizeBuffers();
+
+    // initialize kalman filter
+    if(settings.estimateJointVelocityAcceleration)
+    {
+        filters.jntVelAccKFFilter = std::make_unique<iDynTree::DiscreteKalmanFilterHelper>();
+
+        if( !filters.initKalmanFilter(config, filters.jntVelAccKFFilter, getPeriod(), estimator.model().getNrOfDOFs()))
+        {
+            yError() << "wholeBodyDynamics: unable to init kalman filter.";
+            return false;
+        }
+    }
 
     // Open settings related to gravity compensation (we need the estimator to be open)
     ok = this->loadGravityCompensationSettingsFromConfig(config);
@@ -1626,15 +1680,27 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     //std::vector<std::string>     tempDeviceNames;
     std::vector<IAnalogSensor *> ftList;
     std::vector<std::string>     ftDeviceNames;
-    std::vector<std::string>     ftAnalogSensorNames;
+
+    std::size_t nrMASFTSensors{0}, nrAnalogFTSensors{0};
     for(auto devIdx = 0; devIdx <p.size(); devIdx++)
     {
         ISixAxisForceTorqueSensors * fts = nullptr;
         ITemperatureSensors *tempS =nullptr;
         if( p[devIdx]->poly->view(fts) )
         {
-            ftSensorList.push(const_cast<PolyDriverDescriptor&>(*p[devIdx]));
-            ftDeviceNames.push_back(p[devIdx]->key);
+            auto nrFTsinThisDevice = fts->getNrOfSixAxisForceTorqueSensors();
+            if(nrFTsinThisDevice > 0)
+            {
+                ftSensorList.push(const_cast<PolyDriverDescriptor&>(*p[devIdx]));
+                ftDeviceNames.push_back(p[devIdx]->key);
+            }
+            nrMASFTSensors +=  nrFTsinThisDevice;
+            for (auto ftDx = 0; ftDx < nrFTsinThisDevice; ftDx++)
+            {
+                std::string ftName;
+                fts->getSixAxisForceTorqueSensorName(ftDx, ftName);
+                ftMultipleAnalogSensorNames.emplace_back(ftName);
+            }
         }
         // A device is considered an ft if it implements IAnalogSensor and has 6 channels
         IAnalogSensor * pAnalogSens = nullptr;
@@ -1645,6 +1711,7 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
                 ftList.push_back(pAnalogSens);
                 ftDeviceNames.push_back(p[devIdx]->key);
                 ftAnalogSensorNames.push_back(p[devIdx]->key);
+                nrAnalogFTSensors += 1;
             }
         }
 
@@ -1654,16 +1721,19 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
            // tempDeviceNames.push_back(p[devIdx]->key);
         }
     }
-    yDebug()<<"wholeBodyDynamicsDevice :: number of ft sensors found in both ft + mas"<<ftDeviceNames.size()<< "where analog are "<<ftList.size()<<" and mas are "<<ftSensorList.size();
+    yDebug()<<"wholeBodyDynamicsDevice :: number of devices that could contain FT sensors found "<<ftDeviceNames.size()<< "where analog are "<<ftList.size()<<" and MAS are "<<ftSensorList.size();
 
-    if( ftList.size() != estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) )
+    auto totalNrFTDevices{nrAnalogFTSensors + nrMASFTSensors};
+    if( totalNrFTDevices < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) )
     {
         yError() << "wholeBodyDynamicsDevice : was expecting "
                  << estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)
-                 << " from the model, but got " << ftList.size() << " FT sensor in the attach list.";
+                 << " from the model, but got only " << totalNrFTDevices << " FT sensor either using "
+                 << " analog or MAS interface in the attach list.";
         return false;
     }
 
+    ftSensors = ftList;
     // Attach the controlBoardList to the controlBoardRemapper
     bool ok = remappedMASInterfaces.multwrap->attachAll(ftSensorList);
     ok = ok & remappedMASInterfaces.multwrap->attachAll(tempSensorList);
@@ -1672,6 +1742,31 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     {
         yError() << " WholeBodyDynamicsDevice::attachAll in attachAll of the remappedMASInterfaces";
         return false;
+    }
+
+    if (nrMASFTSensors != remappedMASInterfaces.ftMultiSensors->getNrOfSixAxisForceTorqueSensors())
+    {
+        yError() << "WholeBodyDynamicsDevice::attachAll Invalid number of MAS FT sensors after remapper";
+        return false;
+    }
+
+    if (nrMASFTSensors != ftMultipleAnalogSensorNames.size())
+    {
+	yError() << "WholeBodyDynamicsDevice::attachAll Invalid number of MAS FT sensor names";
+        return false;
+    }
+
+    ftMultipleAnalogSensorIdxMapping.resize(ftMultipleAnalogSensorNames.size());
+    for (auto ftDx = 0; ftDx < nrMASFTSensors; ftDx++)
+    {
+        std::string sensorName;
+        remappedMASInterfaces.ftMultiSensors->getSixAxisForceTorqueSensorName(ftDx, sensorName);
+        auto ftIter = std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName);
+        if (ftIter != ftMultipleAnalogSensorNames.end())
+        {
+	    auto ftMapIdx = std::distance(ftMultipleAnalogSensorNames.begin(), ftIter);
+            ftMultipleAnalogSensorIdxMapping[ftMapIdx] = ftDx;
+        }
     }
 
     // Check if the MASremapper and the estimator have a consistent number of ft sensors
@@ -1714,32 +1809,21 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     }
     //End of temporary temperature check
 
-
-    // Old check performed on ft sensors
-    // For now we assume that the name of the F/T sensor device match the sensor name in the URDF
-    // In the future we could use a new fancy sensor interface
-    ftSensors.resize(ftList.size());
-    for(size_t IDTsensIdx=0; IDTsensIdx < ftSensors.size(); IDTsensIdx++)
+    // iterate through ftMultipleAnalogSensorNames
+    // check if each name is a FT sensor in the URDF
+    auto nrFTsInURDF = estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE);
+    for(size_t IDTsensIdx=0; IDTsensIdx < nrFTsInURDF; IDTsensIdx++)
     {
         std::string sensorName = estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,IDTsensIdx)->getName();
 
-        // Search for a suitable device
-        int deviceThatHasTheSameNameOfTheSensor = -1;
-        for(size_t deviceIdx = 0; deviceIdx < ftList.size(); deviceIdx++)
-        {
-            if( ftAnalogSensorNames[deviceIdx] == sensorName )
-            {
-                deviceThatHasTheSameNameOfTheSensor = deviceIdx;
-            }
-        }
+        bool ftInAnalog = (std::find(ftAnalogSensorNames.begin(), ftAnalogSensorNames.end(), sensorName) != ftAnalogSensorNames.end());
+        bool ftInMAS = (std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName) != ftMultipleAnalogSensorNames.end());
 
-        if( deviceThatHasTheSameNameOfTheSensor == -1 )
+        if (!ftInAnalog && !ftInMAS)
         {
             yError() << "WholeBodyDynamicsDevice was expecting a sensor named " << sensorName << " but it did not find one in the attached devices";
             return false;
         }
-
-        ftSensors[IDTsensIdx] = ftList[deviceThatHasTheSameNameOfTheSensor];
     }
 
     if (!settings.disableSensorReadCheckAtStartup) {
@@ -1761,6 +1845,7 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
             return false;
         }
     }
+
 
     return true;
 }
@@ -1785,7 +1870,7 @@ bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
 
         if( nrOfIMUDetected != 1 )
         {
-            yError() << "WholeBodyDynamicsDevice was expecting only one IMU, but it did not find " << nrOfIMUDetected << " in the attached devices";
+            yError() << "WholeBodyDynamicsDevice was expecting one and only one IMU, but it found " << nrOfIMUDetected << " in the attached devices";
             return false;
         }
 
@@ -1796,47 +1881,60 @@ bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
     }
     else
     {
+        size_t noOfMASDevicesWithOneAcc{0};
+        size_t noOfMASDevicesWithOneGyro{0};
+        // Iterate over all the attached devices
         for(size_t devIdx = 0; devIdx < (size_t)p.size(); devIdx++)
         {
             IThreeAxisLinearAccelerometers * pAcc{nullptr};
+            // All MAS devices should satisfy the following condition
             if( p[devIdx]->poly->view(pAcc) )
             {
-                if (pAcc->getNrOfThreeAxisLinearAccelerometers() != 1)
+                // Check if the MAS device is actually an IMU = contains one accelerometer
+                // and the accelerometer's name matches the one in the configuration file
+                if(pAcc->getNrOfThreeAxisLinearAccelerometers() == 1)
                 {
-                     yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- Nr acc should be 1";
-                    return false;
+                    std::string accName;
+                    pAcc->getThreeAxisLinearAccelerometerName(0, accName);
+                    if (accName == masAccName)
+                    {
+                        masAccInterface = pAcc;
+                        noOfMASDevicesWithOneAcc++;
+                    }
                 }
-
-                std::string accName;
-                pAcc->getThreeAxisLinearAccelerometerName(0, accName);
-                if (accName != masAccName)
-                {
-                    yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- acc name mismatch";
-                    return false;
-                }
-
-                masAccInterface = pAcc;
             }
 
             IThreeAxisGyroscopes * pGyro{nullptr};
+            // All MAS devices should satisfy this condition
             if( p[devIdx]->poly->view(pGyro) )
             {
-                if (pGyro->getNrOfThreeAxisGyroscopes() != 1)
+                // Check if the MAS device is actually an IMU = contains one gyroscope
+                // and the gyroscope's name matches the one in the configuration file
+                if(pGyro->getNrOfThreeAxisGyroscopes() == 1)
                 {
-                     yError() << "WholeBodyDynamicsDevice MAS IMU ERROR- Nr gyro should be 1";
-                    return false;
+                    std::string gyroName;
+                    pGyro->getThreeAxisGyroscopeName(0, gyroName);
+                    if (gyroName == masGyroName)
+                    {
+                        masGyroInterface = pGyro;
+                        noOfMASDevicesWithOneGyro++;
+                    }
                 }
-
-                std::string gyroName;
-                pGyro->getThreeAxisGyroscopeName(0, gyroName);
-                if (gyroName != masGyroName)
-                {
-                    yError() << "WholeBodyDynamicsDevice MAS IMU ERROR - gyro name mismatch";
-                    return false;
-                }
-
-                masGyroInterface = pGyro;
             }
+        }
+
+        if((noOfMASDevicesWithOneAcc == 1) && (noOfMASDevicesWithOneGyro == 1))
+        {
+            yInfo() << "wholeBodyDynamics : Found one IMU multipleAnalogSensor device with accelerometer " << masAccName << " and gyroscope " << masGyroName;
+        }
+        else if((noOfMASDevicesWithOneAcc > 1) || (noOfMASDevicesWithOneGyro > 1))
+        {
+            yError() << "wholeBodyDynamics : Found more than one IMU multipleAnalogSensor devices attached, you need to attach one and only one IMU.";
+        }
+        else if((noOfMASDevicesWithOneAcc < 1) || (noOfMASDevicesWithOneGyro < 1))
+        {
+            yError() << "wholeBodyDynamics : Did not find one IMU multipleAnalogSensor devices attached, you need to attach one and only one IMU.";
+            yError() << "wholeBodyDynamics : In case you are trying to attach an IMU device of the type IGenericSensor, remove the group \"HW_USE_MAS_IMU\" from your config file.";
         }
     }
     if (!settings.disableSensorReadCheckAtStartup) {
@@ -1947,10 +2045,36 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
     double timeFTStamp=yarp::os::Time::now();
     bool readTemperatureSensorThisTime=false;
     yarp::dev::MAS_status    sensorStatus;
+    ftMeasurement.resize(6);
+
     for(size_t ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
     {
+        std::string sensorName = estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
+
+        bool ok;
+        auto ftMasITer = (std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName));
+        if (ftMasITer != ftMultipleAnalogSensorNames.end())
+        {
+            auto ftID = std::distance(ftMultipleAnalogSensorNames.begin(), ftMasITer);
+            auto sensorId = ftMultipleAnalogSensorIdxMapping[ftID];
+            double timestamp;
+            remappedMASInterfaces.ftMultiSensors->getSixAxisForceTorqueSensorMeasure(sensorId, ftMeasurement, timestamp);
+            
+	    ok = true;
+        }
+        else
+        {
+
+            auto ftAnalogIter = (std::find(ftAnalogSensorNames.begin(), ftAnalogSensorNames.end(), sensorName));
+            if (ftAnalogIter != ftAnalogSensorNames.end())
+            {
+                auto ftID = std::distance(ftAnalogSensorNames.begin(), ftAnalogIter);
+                int ftRetVal = ftSensors[ftID]->read(ftMeasurement);
+                ok = (ftRetVal == IAnalogSensor::AS_OK);
+            }
+        }
+
         iDynTree::Wrench bufWrench;
-        int ftRetVal = ftSensors[ft]->read(ftMeasurement);
         if (timeFTStamp-prevFTTempTimeStamp>checkTemperatureEvery_seconds){
             if (ftTempMapping[ft]!=-1){
                 sensorStatus=remappedMASInterfaces.temperatureSensors->getTemperatureSensorStatus(ftTempMapping[ft]);
@@ -1972,7 +2096,6 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
                 tempMeasurements[ft]=0;
             }
         }
-        bool ok = (ftRetVal == IAnalogSensor::AS_OK);
 
         FTSensorsReadCorrectly = FTSensorsReadCorrectly && ok && TempSensorReadCorrectly;
 
@@ -2075,7 +2198,6 @@ void WholeBodyDynamicsDevice::readSensors()
     }
 
     // At the moment we are assuming that all joints are revolute
-
     if( settings.useJointVelocity )
     {
         ok = remappedControlBoardInterfaces.encs->getEncoderSpeeds(jointVel.data());
@@ -2104,7 +2226,6 @@ void WholeBodyDynamicsDevice::readSensors()
 
         // Convert from degrees (used on wire by YARP) to radians (used by iDynTree)
         convertVectorFromDegreesToRadians(jointAcc);
-
     }
     else
     {
@@ -2151,6 +2272,49 @@ void WholeBodyDynamicsDevice::filterSensorsAndRemoveSensorOffsets()
         iDynTree::toiDynTree(outputFt,filteredFTMeasure);
 
         filteredSensorMeasurements.setMeasurement(iDynTree::SIX_AXIS_FORCE_TORQUE,ft,filteredFTMeasure);
+    }
+
+    if( settings.estimateJointVelocityAcceleration )
+    {
+        iDynTree::VectorDynSize kfState;
+        kfState.resize(estimator.model().getNrOfDOFs()*3);
+
+        iDynTree::VectorDynSize measurement(estimator.model().getNrOfDOFs());
+
+        iDynTree::toEigen(measurement) = iDynTree::toEigen(jointPos);
+
+        if (!filters.jntVelAccKFFilter->kfPredict())
+        {
+            yError() << " wholeBodyDynamics : kf predict step failed ";
+        }
+
+        if (!filters.jntVelAccKFFilter->kfSetMeasurementVector(measurement))
+        {
+            yError() << " wholeBodyDynamics : kf cannot set measurement ";
+        }
+
+        if (!filters.jntVelAccKFFilter->kfUpdate())
+        {
+            yError() << " wholeBodyDynamics : kf update step failed ";
+        }
+
+        // The first estimator.model().getNrOfDOFs() values of the state are the joint positions
+        // the following estimator.model().getNrOfDOFs() values are the joint velocities
+        // the last estimator.model().getNrOfDOFs() values are the joint accelerations
+
+        filters.jntVelAccKFFilter->kfGetStates(kfState);
+
+        iDynTree::toEigen(jointPosKF) = iDynTree::toEigen(kfState).head(estimator.model().getNrOfDOFs());
+
+        if( settings.useJointVelocity )
+        {
+            iDynTree::toEigen(jointVelKF) = iDynTree::toEigen(kfState).segment(estimator.model().getNrOfDOFs(),estimator.model().getNrOfDOFs());
+        }
+
+        if( settings.useJointAcceleration )
+        {
+            iDynTree::toEigen(jointAccKF) = iDynTree::toEigen(kfState).tail(estimator.model().getNrOfDOFs());
+        }
     }
 
     // Filter joint vel
@@ -2201,8 +2365,16 @@ void WholeBodyDynamicsDevice::updateKinematics()
         // Hardcode for the meanwhile
         iDynTree::FrameIndex imuFrameIndex = estimator.model().getFrameIndex(settings.imuFrameName);
 
-        estimator.updateKinematicsFromFloatingBase(jointPos,jointVel,jointAcc,imuFrameIndex,
-                                                   filteredIMUMeasurements.linProperAcc,filteredIMUMeasurements.angularVel,filteredIMUMeasurements.angularAcc);
+        if(settings.estimateJointVelocityAcceleration)
+        {
+            estimator.updateKinematicsFromFloatingBase(jointPos,jointVelKF,jointAccKF,imuFrameIndex,
+                                                       filteredIMUMeasurements.linProperAcc,filteredIMUMeasurements.angularVel,filteredIMUMeasurements.angularAcc);
+        }
+        else
+        {
+            estimator.updateKinematicsFromFloatingBase(jointPos,jointVel,jointAcc,imuFrameIndex,
+                                                       filteredIMUMeasurements.linProperAcc,filteredIMUMeasurements.angularVel,filteredIMUMeasurements.angularAcc);
+        }
 
         if( m_gravityCompensationEnabled )
         {
@@ -2222,7 +2394,14 @@ void WholeBodyDynamicsDevice::updateKinematics()
         gravity(1) = settings.fixedFrameGravity.y;
         gravity(2) = settings.fixedFrameGravity.z;
 
-        estimator.updateKinematicsFromFixedBase(jointPos,jointVel,jointAcc,fixedFrameIndex,gravity);
+        if( settings.estimateJointVelocityAcceleration )
+        {
+            estimator.updateKinematicsFromFixedBase(jointPos,jointVelKF,jointAccKF,fixedFrameIndex,gravity);
+        }
+        else
+        {
+            estimator.updateKinematicsFromFixedBase(jointPos,jointVel,jointAcc,fixedFrameIndex,gravity);
+        }
 
         if( m_gravityCompensationEnabled )
         {
@@ -2418,7 +2597,7 @@ void WholeBodyDynamicsDevice::computeCalibration()
                                                        calibrationBuffers.predictedJointTorquesForCalibration);
 
         // The kinematics information was already set by the readSensorsAndUpdateKinematics method, just compute the offset and add to the buffer
-        for(size_t ft = 0; ft < ftSensors.size(); ft++)
+        for(size_t ft = 0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++)
         {
             if( calibrationBuffers.calibratingFTsensor[ft] )
             {
@@ -2443,7 +2622,7 @@ void WholeBodyDynamicsDevice::computeCalibration()
         if( calibrationBuffers.nrOfSamplesUsedUntilNowForCalibration >= calibrationBuffers.nrOfSamplesToUseForCalibration )
         {
             // Compute the offset by averaging the results
-            for(size_t ft = 0; ft < ftSensors.size(); ft++)
+            for(size_t ft = 0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++)
             {
                 if( calibrationBuffers.calibratingFTsensor[ft] )
                 {
@@ -2611,7 +2790,10 @@ void WholeBodyDynamicsDevice::publishExternalWrenches()
         // Update kinDynComp model
         iDynTree::Vector3 dummyGravity;
         dummyGravity.zero();
-        this->kinDynComp.setRobotState(this->jointPos,this->jointVel,dummyGravity);
+        if ( settings.estimateJointVelocityAcceleration )
+            this->kinDynComp.setRobotState(this->jointPos,this->jointVelKF,dummyGravity);
+        else
+            this->kinDynComp.setRobotState(this->jointPos,this->jointVel,dummyGravity);
     }
 
     if (enablePublishNetExternalWrenches || this->outputWrenchPorts.size() > 0)
@@ -2670,14 +2852,13 @@ void WholeBodyDynamicsDevice::publishExternalWrenches()
              link < static_cast<iDynTree::LinkIndex>(netExternalWrenchesExertedByTheEnviroment.getNrOfLinks());
              ++link)
         {
-            yarp::os::Bottle* wrenchPair = netExternalWrenchesBottle.get(link).asList();
-            yarp::os::Bottle* linkWrenchBottle = wrenchPair->get(1).asList(); //The first value is the name, the second the wrench
+            auto& wrench = netExternalWrenches.vectors[estimator.model().getLinkName(link)];
             for (size_t i = 0; i < 6; ++i)
             {
-                linkWrenchBottle->get(i) = yarp::os::Value(netExternalWrenchesExertedByTheEnviroment(link)(i));
+                wrench[i] = netExternalWrenchesExertedByTheEnviroment(link)(i);
             }
         }
-        broadcastData<yarp::os::Bottle>(netExternalWrenchesBottle, netExternalWrenchesPort);
+        broadcastData(netExternalWrenches, netExternalWrenchesPort);
     }
 
 }
@@ -2733,14 +2914,14 @@ void WholeBodyDynamicsDevice::run()
 
 bool WholeBodyDynamicsDevice::detachAll()
 {
-    std::lock_guard<std::mutex> guard(this->deviceMutex);
-
-    correctlyConfigured = false;
-
     if (isRunning())
     {
         stop();
     }
+
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
+
+    correctlyConfigured = false;
 
     // If gravity compensation was enabled, reset the offsets
     this->resetGravityCompensation();
@@ -2863,14 +3044,42 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithExternalWrenchesOnTwoFrames(co
     return true;
 }
 
-bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1(const int32_t nrOfSamples)
+bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub(const std::string& ironcub_model, const int32_t nrOfSamples)
 {
     // Let's configure the external forces that then are assume to be active on the robot while calibration on two links (assumed to be symmetric)
 
     // Clear the class
     calibrationBuffers.assumedContactLocationsForCalibration.clear();
 
-    // Check if the iRonCub-Mk1 jets frames exist
+    double ArmsIdleThrustN = 0;
+    double BackIdleThrustN = 0;
+    // Check if `ironcub_model` is correct and configure the idle thrust
+    // Model iRonCub-Mk1
+    if(ironcub_model.compare("mk1") == 0)
+    {
+        // Nominal Idle thrust values for JetCat P100 jet models = 2N
+        // Nominal Idle thrust values for JetCat P220 jet models = 9N
+        // The negative sign is for the force direction represented in the Back Jet frame
+        ArmsIdleThrustN = -2;
+        BackIdleThrustN = -9;
+    }
+    // Model iRonCub-Mk1_1
+    else if(ironcub_model.compare("mk1.1") == 0)
+    {
+        // Nominal Idle thrust values for JetCat P160 jet models = 7N
+        // Nominal Idle thrust values for JetCat P220 jet models = 9N
+        // The negative sign is for the force direction represented in the Back Jet frame
+        ArmsIdleThrustN = -7;
+        BackIdleThrustN = -9;
+    }
+    // Model name is incorrect
+    else
+    {
+        yError() << "Model name is invalid, choose either mk1 or mk1.1" ;
+        return false;
+    }
+
+    // Check if the iRonCub-XX jets frames exist
     std::string leftArmJetFrame = {"l_arm_jet_turbine"};
     std::string RightArmJetFrame = {"r_arm_jet_turbine"};
     std::string leftBackJetFrame = {"chest_l_jet_turbine"};
@@ -2878,28 +3087,28 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJets
     iDynTree::FrameIndex frameLAIndex = estimator.model().getFrameIndex(leftArmJetFrame);
     if( frameLAIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << leftArmJetFrame << ", Are you using iRonCub-Mk1?";
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << leftArmJetFrame << ", Are you using iRonCub-" << ironcub_model <<"?";
         return false;
     }
 
     iDynTree::FrameIndex frameRAIndex = estimator.model().getFrameIndex(RightArmJetFrame);
     if( frameRAIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << RightArmJetFrame << ", Are you using iRonCub-Mk1?";
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << RightArmJetFrame << ", Are you using iRonCub-" << ironcub_model <<"?";
         return false;
     }
 
     iDynTree::FrameIndex frameLBIndex = estimator.model().getFrameIndex(leftBackJetFrame);
     if( frameLBIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << leftBackJetFrame << ", Are you using iRonCub-Mk1?";
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << leftBackJetFrame << ", Are you using iRonCub-" << ironcub_model <<"?";
         return false;
     }
 
     iDynTree::FrameIndex frameRBIndex = estimator.model().getFrameIndex(RightBackJetFrame);
     if( frameRBIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << RightBackJetFrame << ", Are you using iRonCub-Mk1?";
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << RightBackJetFrame << ", Are you using iRonCub-" << ironcub_model <<"?";
         return false;
     }
 
@@ -2909,31 +3118,26 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJets
     iDynTree::FrameIndex frameLSIndex = estimator.model().getFrameIndex(LeftSoleFrame);
     if( frameLSIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << LeftSoleFrame;
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << LeftSoleFrame;
         return false;
     }
 
     iDynTree::FrameIndex frameRSIndex = estimator.model().getFrameIndex(RightSoleFrame);
     if( frameRSIndex == iDynTree::FRAME_INVALID_INDEX )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 impossible to find frame " << RightSoleFrame;
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" impossible to find frame " << RightSoleFrame;
         return false;
     }
 
     // We assume that all the 6 contacts are Pure Forces with Known Directions (1D) at the origin of each frame
     iDynTree::Direction zPosAxis = iDynTree::Direction(0,0,1);
     iDynTree::Direction zNegAxis = iDynTree::Direction(0,0,-1);
-    // Nominal Idle thrust values for JetCat P100 jet models = 2N
-    // The negative sign is for the force direction represented in the Arm Jet frame
-    double p100IdleThrustN = -2;
-    // Nominal Idle thrust values for JetCat P220 jet models = 9N
-    // The negative sign is for the force direction represented in the Back Jet frame
-    double p220IdleThrustN = -9;
-    iDynTree::Force jetArmForce = iDynTree::Force(0,0,p100IdleThrustN);
+
+    iDynTree::Force jetArmForce = iDynTree::Force(0,0,ArmsIdleThrustN);
     iDynTree::Torque jetArmTorque = iDynTree::Torque(0,0,0);
     iDynTree::Wrench jetArmWrench = iDynTree::Wrench(jetArmForce, jetArmTorque);
 
-    iDynTree::Force jetBackForce = iDynTree::Force(0,0,p220IdleThrustN);
+    iDynTree::Force jetBackForce = iDynTree::Force(0,0,BackIdleThrustN);
     iDynTree::Torque jetBackTorque = iDynTree::Torque(0,0,0);
     iDynTree::Wrench jetBackWrench = iDynTree::Wrench(jetBackForce, jetBackTorque);
 
@@ -2953,7 +3157,7 @@ bool WholeBodyDynamicsDevice::setupCalibrationWithVerticalForcesOnTheFeetAndJets
 
     if( !ok )
     {
-        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1 error";
+        yError() << "wholeBodyDynamics : setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub" << ironcub_model <<" error";
         return false;
     }
 
@@ -2996,13 +3200,13 @@ bool WholeBodyDynamicsDevice::calibStanding(const std::string& calib_code, const
 
 }
 
-bool WholeBodyDynamicsDevice::calibStandingWithJetsiRonCubMk1(const std::string& calib_code, const int32_t nr_of_samples)
+bool WholeBodyDynamicsDevice::calibStandingWithJetsiRonCub(const std::string& ironcub_model, const std::string& calib_code, const int32_t nr_of_samples)
 {
     std::lock_guard<std::mutex> guard(this->deviceMutex);
 
-    yWarning() << "wholeBodyDynamics : calibStandingWithJetsiRonCubMk1 ignoring calib_code " << calib_code;
+    yWarning() << "wholeBodyDynamics : calibStandingWithJetsiRonCub" << ironcub_model <<" ignoring calib_code " << calib_code;
 
-    bool ok = this->setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCubMk1(nr_of_samples);
+    bool ok = this->setupCalibrationWithVerticalForcesOnTheFeetAndJetsONiRonCub(ironcub_model, nr_of_samples);
 
     if( !ok )
     {
@@ -3239,6 +3443,15 @@ bool WholeBodyDynamicsDevice::setUseOfJointAccelerations(const bool enable)
     return true;
 }
 
+bool WholeBodyDynamicsDevice::setUseOfJointVelocityAccelerationEstimation(const bool enable)
+{
+    std::lock_guard<std::mutex> guard(this->deviceMutex);
+
+    this->settings.estimateJointVelocityAcceleration = enable;
+
+    return true;
+}
+
 std::string WholeBodyDynamicsDevice::getCurrentSettingsString()
 {
    std::lock_guard<std::mutex> guard(this->deviceMutex);
@@ -3282,11 +3495,116 @@ wholeBodyDynamicsDeviceFilters::wholeBodyDynamicsDeviceFilters(): imuLinearAccel
                                                                   forcetorqueFilters(0),
                                                                   jntVelFilter(0),
                                                                   jntAccFilter(0),
+                                                                  jntVelAccKFFilter(nullptr),
                                                                   bufferYarp3(0),
                                                                   bufferYarp6(0),
                                                                   bufferYarpDofs(0)
 {
 
+}
+
+bool wholeBodyDynamicsDeviceFilters::initCovarianceMatrix(const yarp::os::Searchable &config, std::string parameterName, iDynTree::MatrixDynSize & matrix)
+{
+    iDynTree::VectorDynSize covariances;
+    if(!getConfigParamsAsList(config, parameterName, covariances, true))
+    {
+        yError() << " wholeBodyDynamics : covariance vector not valid. ";
+        return false;
+    }
+
+    if( (matrix.cols() != matrix.rows()) || (covariances.size() != matrix.cols()) )
+    {
+        yError() << " wholeBodyDynamics : size of covariance vector does not match covariance matrix size. Expected " << matrix.cols() << " . Read " << covariances.size();
+        return false;
+    }
+
+    matrix.zero();
+    iDynTree::toEigen(matrix).diagonal() = iDynTree::toEigen(covariances);
+
+    return true;
+}
+
+bool wholeBodyDynamicsDeviceFilters::initKalmanFilter(const yarp::os::Searchable &config, std::unique_ptr<iDynTree::DiscreteKalmanFilterHelper> &kf, double periodInSeconds, int nrOfDOFsProcessed)
+{
+    // Steady-state Kalman Filter with a null jerk model.
+    //
+    // The state vector contains the joint positions, velocities and accelerations.
+    // x = [q0,...,qn,dq0,...,dqn,ddq0,...,ddqn]
+    //
+    // There is no input. The measures are the joint positions.
+    // y = [q0,...,qn]
+    //
+    // State space model:
+    // x{k+1} = A x{k}
+    // y{k}   = C x{k}
+
+    iDynTree::MatrixDynSize A(3*nrOfDOFsProcessed, 3*nrOfDOFsProcessed);
+    A.zero();
+    for (int i = 0; i < nrOfDOFsProcessed; i++)
+    {
+        A(i, i) = 1;
+        A(i, i+nrOfDOFsProcessed) = periodInSeconds;
+        A(i, i+2*nrOfDOFsProcessed) = 0.5*periodInSeconds*periodInSeconds;
+
+        A(i+nrOfDOFsProcessed, i+nrOfDOFsProcessed) = 1;
+        A(i+nrOfDOFsProcessed, i+2*nrOfDOFsProcessed) = periodInSeconds;
+
+        A(i+2*nrOfDOFsProcessed, i+2*nrOfDOFsProcessed) = 1;
+    }
+
+    iDynTree::MatrixDynSize C(nrOfDOFsProcessed, 3*nrOfDOFsProcessed);
+    iDynTree::toEigen(C).setIdentity();
+
+    iDynTree::MatrixDynSize Q(3*nrOfDOFsProcessed,3*nrOfDOFsProcessed);
+    if(!this->initCovarianceMatrix(config, "processNoiseCovariance", Q))
+    {
+        yError() << " wholeBodyDynamics : failed to set process noise covariance matrix. ";
+        return false;
+    }
+
+    iDynTree::MatrixDynSize R(nrOfDOFsProcessed,nrOfDOFsProcessed);
+    if(!this->initCovarianceMatrix(config, "measurementNoiseCovariance", R))
+    {
+        yError() << " wholeBodyDynamics : failed to set measurement noise covariance matrix. ";
+        return false;
+    }
+
+    iDynTree::MatrixDynSize P0(3*nrOfDOFsProcessed,3*nrOfDOFsProcessed);
+    if(!this->initCovarianceMatrix(config, "stateCovariance", P0))
+    {
+        yError() << " wholeBodyDynamics : failed to set initial state covariance matrix. ";
+        return false;
+    }
+
+    if (!kf->constructKalmanFilter(A, C))
+    {
+        yError() << " wholeBodyDynamics : kalman filter cannot be constructed. ";
+        return false;
+    }
+
+    bool ok = kf->kfSetSystemNoiseCovariance(Q) && kf->kfSetMeasurementNoiseCovariance(R) && kf->kfSetStateCovariance(P0);
+    if(!ok)
+    {
+        yError() << " wholeBodyDynamics : unable to initialize the kf covariances. ";
+        return false;
+    }
+
+    iDynTree::VectorDynSize x0;
+    x0.resize(3*nrOfDOFsProcessed);
+    x0.zero();
+    if (!kf->kfSetInitialState(x0))
+    {
+        yError() << " wholeBodyDynamics : Impossible to set initial state. ";
+        return false;
+    }
+
+    if (!kf->kfInit())
+    {
+        yError() << " wholeBodyDynamics : Impossible to initialize kalman fitler. ";
+        return false;
+    }
+
+    return true;
 }
 
 void wholeBodyDynamicsDeviceFilters::init(int nrOfFTSensors,
@@ -3370,6 +3688,11 @@ void wholeBodyDynamicsDeviceFilters::fini()
     {
         delete jntAccFilter;
         jntAccFilter = 0;
+    }
+
+    if( jntVelAccKFFilter )
+    {
+        jntVelAccKFFilter.reset(nullptr);
     }
 }
 

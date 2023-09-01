@@ -546,12 +546,12 @@ void yarp::dev::baseEstimatorV1::publishFloatingBaseState()
     state_bottle.clear();
     for (unsigned int i = 0; i < m_world_pose_base_in_R6.size(); i++)
     {
-        state_bottle.addDouble(m_world_pose_base_in_R6[i]);
+        state_bottle.addFloat64(m_world_pose_base_in_R6[i]);
     }
 
     for (unsigned int i = 0; i < m_joint_positions.size(); i++)
     {
-        state_bottle.addDouble(m_joint_positions(i));
+        state_bottle.addFloat64(m_joint_positions(i));
     }
 
     m_floating_base_state_port.write();
@@ -563,12 +563,12 @@ void yarp::dev::baseEstimatorV1::publishFloatingBasePoseVelocity()
     state_bottle.clear();
     for (unsigned int i = 0; i < m_world_pose_base_in_R6.size(); i++)
     {
-        state_bottle.addDouble(m_world_pose_base_in_R6[i]);
+        state_bottle.addFloat64(m_world_pose_base_in_R6[i]);
     }
 
     for (unsigned int i = 0; i < m_world_velocity_base.size(); i++)
     {
-        state_bottle.addDouble(m_world_velocity_base[i]);
+        state_bottle.addFloat64(m_world_velocity_base[i]);
     }
 
     m_floating_base_pose_port.write();
@@ -580,12 +580,12 @@ void yarp::dev::baseEstimatorV1::publishCOMEstimate()
     com_bottle.clear();
     for (unsigned int i = 0; i < m_com_position.size(); i++)
     {
-        com_bottle.addDouble(m_com_position(i));
+        com_bottle.addFloat64(m_com_position(i));
     }
 
     for (unsigned int i = 0; i < m_com_velocity.size(); i++)
     {
-        com_bottle.addDouble(m_com_velocity(i));
+        com_bottle.addFloat64(m_com_velocity(i));
     }
 
     m_com_port.write();
@@ -595,10 +595,10 @@ void yarp::dev::baseEstimatorV1::publishContactState()
 {
     yarp::os::Bottle &state_bottle = m_contact_state_port.prepare();
     state_bottle.clear();
-    state_bottle.addDouble(m_left_foot_contact_normal_force);
-    state_bottle.addDouble(m_right_foot_contact_normal_force);
-    state_bottle.addInt(m_biped_foot_contact_classifier->getLeftFootContactState());
-    state_bottle.addInt(m_biped_foot_contact_classifier->getRightFootContactState());
+    state_bottle.addFloat64(m_left_foot_contact_normal_force);
+    state_bottle.addFloat64(m_right_foot_contact_normal_force);
+    state_bottle.addInt32(m_biped_foot_contact_classifier->getLeftFootContactState());
+    state_bottle.addInt32(m_biped_foot_contact_classifier->getRightFootContactState());
     state_bottle.addString(m_current_fixed_frame);
     m_contact_state_port.write();
 }
@@ -629,15 +629,15 @@ void yarp::dev::baseEstimatorV1::publishIMUAttitudeEstimatorStates()
 
     yarp::os::Bottle &state_bottle = m_imu_attitude_observer_estimated_state_port.prepare();
     state_bottle.clear();
-    state_bottle.addDouble(rad2deg(m_imu_attitude_estimate_as_rpy(0))); // orientation roll
-    state_bottle.addDouble(rad2deg(m_imu_attitude_estimate_as_rpy(1))); // orientation pitch
-    state_bottle.addDouble(rad2deg(m_imu_attitude_estimate_as_rpy(2))); // orientation yaw
-    state_bottle.addDouble(rad2deg(attitude_observer_state(4))); // ang vel about x
-    state_bottle.addDouble(rad2deg(attitude_observer_state(5))); // ang vel about y
-    state_bottle.addDouble(rad2deg(attitude_observer_state(6))); // ang vel about z
-    state_bottle.addDouble(rad2deg(attitude_observer_state(7))); // gyro bias about x
-    state_bottle.addDouble(rad2deg(attitude_observer_state(8))); // gyro bias about y
-    state_bottle.addDouble(rad2deg(attitude_observer_state(9))); // gyro bias about z
+    state_bottle.addFloat64(rad2deg(m_imu_attitude_estimate_as_rpy(0))); // orientation roll
+    state_bottle.addFloat64(rad2deg(m_imu_attitude_estimate_as_rpy(1))); // orientation pitch
+    state_bottle.addFloat64(rad2deg(m_imu_attitude_estimate_as_rpy(2))); // orientation yaw
+    state_bottle.addFloat64(rad2deg(attitude_observer_state(4))); // ang vel about x
+    state_bottle.addFloat64(rad2deg(attitude_observer_state(5))); // ang vel about y
+    state_bottle.addFloat64(rad2deg(attitude_observer_state(6))); // ang vel about z
+    state_bottle.addFloat64(rad2deg(attitude_observer_state(7))); // gyro bias about x
+    state_bottle.addFloat64(rad2deg(attitude_observer_state(8))); // gyro bias about y
+    state_bottle.addFloat64(rad2deg(attitude_observer_state(9))); // gyro bias about z
 
     m_imu_attitude_observer_estimated_state_port.write();
 }
@@ -649,9 +649,9 @@ void yarp::dev::baseEstimatorV1::publishIMUAttitudeQEKFEstimates()
 
     yarp::os::Bottle &state_bottle = m_imu_attitude_qekf_estimated_state_port.prepare();
     state_bottle.clear();
-    state_bottle.addDouble(rad2deg(rpy(0)));
-    state_bottle.addDouble(rad2deg(rpy(1)));
-    state_bottle.addDouble(rad2deg(rpy(2)));
+    state_bottle.addFloat64(rad2deg(rpy(0)));
+    state_bottle.addFloat64(rad2deg(rpy(1)));
+    state_bottle.addFloat64(rad2deg(rpy(2)));
 
     m_imu_attitude_qekf_estimated_state_port.write();
 }

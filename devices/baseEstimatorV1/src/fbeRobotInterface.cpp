@@ -566,12 +566,12 @@ bool yarp::dev::baseEstimatorV1::loadTransformBroadcaster()
 
 bool yarp::dev::baseEstimatorV1::detachAll()
 {
-    std::lock_guard<std::mutex> guard(m_device_mutex);
-    m_device_initialized_correctly = false;
     if (isRunning())
     {
         stop();
     }
+    std::lock_guard<std::mutex> guard(m_device_mutex);
+    m_device_initialized_correctly = false;
     return true;
 }
 

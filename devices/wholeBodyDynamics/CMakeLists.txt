@@ -7,7 +7,6 @@ find_package(YARP REQUIRED)
 find_package(ICUB REQUIRED)
 find_package(iDynTree REQUIRED)
 
-
 yarp_prepare_plugin(wholebodydynamics CATEGORY device
                                       TYPE yarp::dev::WholeBodyDynamicsDevice
                                       INCLUDE "WholeBodyDynamicsDevice.h"
@@ -27,6 +26,7 @@ if(ENABLE_wholebodydynamics)
 
     target_link_libraries(wholeBodyDynamicsDevice   wholeBodyDynamicsSettings
                                                     wholeBodyDynamics_IDLServer
+                                                    VectorsCollection
                                                     ctrlLibRT
                                                     ${YARP_LIBRARIES}
                                                     skinDynLib
