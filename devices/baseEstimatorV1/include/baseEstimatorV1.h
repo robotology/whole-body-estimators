@@ -620,9 +620,9 @@ namespace yarp {
         yarp::sig::Vector m_world_velocity_base; ///< 6D vector velocity of floating base frame in the world reference frame
         yarp::sig::Vector m_world_velocity_base_from_imu;
 
-        std::string m_left_foot_ft_sensor{"l_foot_ft_sensor"};
+        std::string m_left_foot_ft_sensor{"l_foot_ft"};
         std::ptrdiff_t m_left_foot_ft_sensor_index, m_right_foot_ft_sensor_index;
-        std::string m_right_foot_ft_sensor{"r_foot_ft_sensor"};
+        std::string m_right_foot_ft_sensor{"r_foot_ft"};
         std::string m_right_sole{"r_sole"};
         std::string m_left_sole{"l_sole"};
         iDynTree::Rotation m_l_sole_R_l_ft_sensor, m_r_sole_R_r_ft_sensor;
