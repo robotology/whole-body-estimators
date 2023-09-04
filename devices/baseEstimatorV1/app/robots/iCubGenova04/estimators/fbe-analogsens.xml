@@ -13,8 +13,8 @@
         <param name="device_period_in_seconds">0.010</param>
         <param name="joints_list">("neck_pitch", "neck_roll", "neck_yaw", "torso_pitch", "torso_roll", "torso_yaw", "l_shoulder_pitch", "l_shoulder_roll", "l_shoulder_yaw", "l_elbow", "r_shoulder_pitch", "r_shoulder_roll", "r_shoulder_yaw", "r_elbow", "l_hip_pitch", "l_hip_roll", "l_hip_yaw", "l_knee", "l_ankle_pitch", "l_ankle_roll", "r_hip_pitch", "r_hip_roll", "r_hip_yaw", "r_knee", "r_ankle_pitch", "r_ankle_roll", "l_arm_ft_sensor", "r_arm_ft_sensor", "l_leg_ft_sensor", "r_leg_ft_sensor", "l_foot_ft_sensor", "r_foot_ft_sensor")</param>
         <param name="base_link">root_link</param>
-        <param name="left_foot_ft_sensor">l_foot_ft_sensor</param>
-        <param name="right_foot_ft_sensor">r_foot_ft_sensor</param>
+        <param name="left_foot_ft">l_foot_ft</param>
+        <param name="right_foot_ft">r_foot_ft</param>
         <param name="imu_name">head_imu_acc_1x1</param> <!-- options are: "head_imu_acc_1x1" or "root_link_imu_acc" -->
         <param name="head_imu_link">head</param>
         <param name="head_to_base_joints_list">("neck_pitch", "neck_roll", "neck_yaw", "torso_pitch", "torso_roll", "torso_yaw")</param>
@@ -83,12 +83,12 @@
                 <elem name="head_imu_acc_1x1">inertial</elem>
 <!--                 <elem name="root_link_imu_acc">xsens_inertial</elem> -->
             <!-- f/t sensors -->
-                <elem name="l_arm_ft_sensor">left_upper_arm_strain</elem>
-                <elem name="r_arm_ft_sensor">right_upper_arm_strain</elem>
-                <elem name="l_leg_ft_sensor">left_upper_leg_strain</elem>
-                <elem name="r_leg_ft_sensor">right_upper_leg_strain</elem>
-                <elem name="l_foot_ft_sensor">left_lower_leg_strain</elem>
-                <elem name="r_foot_ft_sensor">right_lower_leg_strain</elem>
+                <elem name="l_arm_ft">left_upper_arm_strain</elem>
+                <elem name="r_arm_ft">right_upper_arm_strain</elem>
+                <elem name="l_leg_ft">left_upper_leg_strain</elem>
+                <elem name="r_leg_ft">right_upper_leg_strain</elem>
+                <elem name="l_foot_ft">left_lower_leg_strain</elem>
+                <elem name="r_foot_ft">right_lower_leg_strain</elem>
             </paramlist>
         </action>
 

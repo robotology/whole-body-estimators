@@ -33,7 +33,7 @@ For an overview on `wholeBodyDynamics` and to understand how to run the device, 
 | contactWrenchPosition |      -   | vector of doubles |  -    |    -          | Yes if 'overrideContactFrames' exists      | It should contain 3 fields for each override frame.  |     |
 | useJointVelocity     |        - | bool              |  -    |      true     |  No      | Select if the measured joint velocities (read from the getEncoderSpeeds method) are used for estimation, or if they should be forced to 0.0 . | The default value of true is deprecated, and in the future the parameter will be required. |
 | useJointAcceleration |        - | bool              |  -    |      true     |  No      | Select if the measured joint accelerations (read from the getEncoderAccelerations method) are used for estimation, or if they should be forced to 0.0 . | The default value of true is deprecated, and in the future the parameter will be required. |
-| streamFilteredFT     |        - | bool              |  -    |      false    |  No      | Select if the filtered and offset removed forces will be streamed or not. The name of the ports have the following syntax:  portname=(portPrefix+"/filteredFT/"+sensorName). Example: "myPrefix/filteredFT/l_leg_ft_sensor" | The value streamed by this ports is affected by the secondary calibration matrix, the estimated offset and temperature coefficients ( if any ). |
+| streamFilteredFT     |        - | bool              |  -    |      false    |  No      | Select if the filtered and offset removed forces will be streamed or not. The name of the ports have the following syntax:  portname=(portPrefix+"/filteredFT/"+sensorName). Example: "myPrefix/filteredFT/l_leg_ft" | The value streamed by this ports is affected by the secondary calibration matrix, the estimated offset and temperature coefficients ( if any ). |
 | publishNetExternalWrenches |        - | bool          |  -    |      false   |  No      | Flag to stream the net external wrenches acting on each link on the port portPrefix+"/netExternalWrenches:o". The content is a bottle of n pairs, where n is the number of links. The first element of each pair is the name of the link. The second element is yet another list of 6 elements containing the value of the net external wrench, defined in the link frame. The first three elements are the linear part, while the other three are the angular part.| |
 | useSkinForContacts     |        - | bool              |  -    |      true    |  No      | Flag to skip using tactile skin sensors for updating contact points and external force (pressure) information | |
 | estimateJointVelocityAcceleration     |        - | bool              |  -    |      false    |  No      | Flag to estimate the joint velocities and accelerations using Kalman filter. If true, the same measurements from the low level are ignored. | |
@@ -86,13 +86,13 @@ Typically this estimates are provided only for the upper joints (arms and torso)
 
   ``` xml
        <group name="FT_SECONDARY_CALIBRATION">
-              <param name="l_arm_ft_sensor">(1.0,0.0,0.0,0.0,0.0,0.0,
+              <param name="l_arm_ft">(1.0,0.0,0.0,0.0,0.0,0.0,
                                              0.0,1.0,0.0,0.0,0.0,0.0,
                                              0.0,0.0,1.0,0.0,0.0,0.0,
                                              0.0,0.0,0.0,1.0,0.0,0.0,
                                              0.0,0.0,0.0,0.0,1.0,0.0,
                                              0.0,0.0,0.0,0.0,0.0,1.0)                   </param>
-              <param name="r_arm_ft_sensor">(1.0,0.0,0.0,0.0,0.0,0.0,
+              <param name="r_arm_ft">(1.0,0.0,0.0,0.0,0.0,0.0,
                                              0.0,1.0,0.0,0.0,0.0,0.0,
                                              0.0,0.0,1.0,0.0,0.0,0.0,
                                              0.0,0.0,0.0,0.001,0.0,0.0,
@@ -121,8 +121,8 @@ Typically this estimates are provided only for the upper joints (arms and torso)
   Example of part of a configuration file using `.xml` `yarprobotinterface` format (remember to put the fractional dot!).
   ``` xml
        <group name="FT_TEMPERATURE_COEFFICIENTS">
-              <param name="l_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0,0.0)</param>
-              <param name="r_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0,0.0)</param>
+              <param name="l_arm_ft">(0.0,0.0,0.0,0.0,0.0,0.0,0.0)</param>
+              <param name="r_arm_ft">(0.0,0.0,0.0,0.0,0.0,0.0,0.0)</param>
        </group>
   ```
 
@@ -143,8 +143,8 @@ Typically this estimates are provided only for the upper joints (arms and torso)
   Example of part of a configuration file using `.xml` `yarprobotinterface` format (remember to put the fractional dot!).
   ``` xml
        <group name="FT_OFFSET">
-              <param name="l_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0)</param>
-              <param name="r_arm_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0)</param>
+              <param name="l_arm_ft">(0.0,0.0,0.0,0.0,0.0,0.0)</param>
+              <param name="r_arm_ft">(0.0,0.0,0.0,0.0,0.0,0.0)</param>
        </group>
   ```
 
@@ -215,12 +215,12 @@ For a detailed explanation on their usage, please see the document [Using temper
                   <!-- imu -->
                   <elem name="imu">inertial</elem>
                   <!-- ft -->
-                  <elem name="l_arm_ft_sensor">left_upper_arm_strain</elem>
-                  <elem name="r_arm_ft_sensor">right_upper_arm_strain</elem>
-                  <elem name="l_leg_ft_sensor">left_upper_leg_strain</elem>
-                  <elem name="r_leg_ft_sensor">right_upper_leg_strain</elem>
-                  <elem name="l_foot_ft_sensor">left_lower_leg_strain</elem>
-                  <elem name="r_foot_ft_sensor">right_lower_leg_strain</elem>
+                  <elem name="l_arm_ft">left_upper_arm_strain</elem>
+                  <elem name="r_arm_ft">right_upper_arm_strain</elem>
+                  <elem name="l_leg_ft">left_upper_leg_strain</elem>
+                  <elem name="r_leg_ft">right_upper_leg_strain</elem>
+                  <elem name="l_foot_ft">left_lower_leg_strain</elem>
+                  <elem name="r_foot_ft">right_lower_leg_strain</elem>
               </paramlist>
           </action>
 

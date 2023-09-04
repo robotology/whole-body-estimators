@@ -16,8 +16,8 @@ To enable the use of temperature compensation and constant offset features in wh
 Example: 
 ```
 <group name="multipleAnalogSensorsNames">
-              <param name="TemperatureSensorsNames">(l_leg_ft_sensor,r_leg_ft_sensor,l_foot_ft_sensor,r_foot_ft_sensor)</param>
-              <param name="SixAxisForceTorqueSensorsNames">(l_leg_ft_sensor,r_leg_ft_sensor,l_foot_ft_sensor,r_foot_ft_sensor)</param>
+              <param name="TemperatureSensorsNames">(l_leg_ft,r_leg_ft,l_foot_ft,r_foot_ft)</param>
+              <param name="SixAxisForceTorqueSensorsNames">(l_leg_ft,r_leg_ft,l_foot_ft,r_foot_ft)</param>
 </group>`
 ```
 ## Add the temperature coefficients
@@ -28,7 +28,7 @@ Example:
 
 ```
        <group name="FT_TEMPERATURE_COEFFICIENTS">
-              <param name="l_leg_ft_sensor">(-0.0933  ,  0.2048  ,  1.3342  , -0.0155  ,  0.0027  ,  0.0039  , 30.4064)</param>
+              <param name="l_leg_ft">(-0.0933  ,  0.2048  ,  1.3342  , -0.0155  ,  0.0027  ,  0.0039  , 30.4064)</param>
         </group>
 ```
 
@@ -39,8 +39,8 @@ Inside the group the name of the sensors followed by its coefficients should be 
 Example:
 ```
         <group name="FT_OFFSET">
-              <param name="l_leg_ft_sensor">(24.8009  , -6.2369 , -62.0044 , -0.0588 ,  -0.2425  ,  0.1253)</param>
-             <!-- <param name="r_leg_ft_sensor">(0.0,0.0,0.0,0.0,0.0,0.0)</param> -->
+              <param name="l_leg_ft">(24.8009  , -6.2369 , -62.0044 , -0.0588 ,  -0.2425  ,  0.1253)</param>
+             <!-- <param name="r_leg_ft">(0.0,0.0,0.0,0.0,0.0,0.0)</param> -->
        </group>
 ```
 

@@ -111,10 +111,10 @@
                 <!-- imu -->
                 <elem name="imu">inertial</elem>
                 <!-- ft -->
-                <elem name="l_arm_ft_sensor">left_upper_arm_strain</elem>
-                <elem name="r_arm_ft_sensor">right_upper_arm_strain</elem>
-                <elem name="l_leg_ft_sensor">left_upper_leg_strain</elem>
-                <elem name="r_leg_ft_sensor">right_upper_leg_strain</elem>
+                <elem name="l_arm_ft">left_upper_arm_strain</elem>
+                <elem name="r_arm_ft">right_upper_arm_strain</elem>
+                <elem name="l_leg_ft">left_upper_leg_strain</elem>
+                <elem name="r_leg_ft">right_upper_leg_strain</elem>
             </paramlist>
         </action>
 
