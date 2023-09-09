@@ -130,5 +130,5 @@
     </device>
 
     <!-- estimators -->
-    <xi:include href="estimators/wholebodydynamics-external.xml" />
+    <xi:include href="./wholebodydynamics-icub-external-and-can-six-fts.xml" />
 </robot>
