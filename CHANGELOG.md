@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Change FT sensors names for compatibility with icub-models >= 2.0.0 and robots-configuration >= 2.5.0 (https://github.com/robotology/whole-body-estimators/pull/172).
+- Update WBD launch files (https://github.com/robotology/whole-body-estimators/pull/173).
 
 ### Fixed
 
