@@ -12,7 +12,7 @@
         <param name="modelFile">model.urdf</param>
         <param name="fixedFrameGravity">(0,0,-9.81)</param>
         <param name="defaultContactFrames">(l_hand,r_hand,root_link,l_sole,r_sole,l_lower_leg,r_lower_leg,l_elbow_1,r_elbow_1)</param>
-        <param name="imuFrameName">imu_frame</param>
+        <param name="imuFrameName">head_imu_0</param>
         <param name="useJointVelocity">true</param>
         <param name="useJointAcceleration">true</param>
         <param name="imuFilterCutoffInHz">3.0</param>
@@ -93,6 +93,15 @@
             <param name="/wholeBodyDynamics/right_leg/cartesianEndEffectorWrench:o">(r_foot,r_sole,root_link)</param>
         </group>
 
+        <group name="HW_USE_MAS_IMU">
+            <param name="accelerometer">rfeimu_acc</param>
+            <param name="gyroscope">rfeimu_gyro</param>
+        </group>
+
+         <group name="multipleAnalogSensorsNames">
+            <param name="SixAxisForceTorqueSensorsNames">("l_arm_ft", "r_arm_ft", "l_leg_ft", "r_leg_ft")</param>
+        </group>
+
         <action phase="startup" level="15" type="attach">
             <paramlist name="networks">
                 <!-- motorcontrol -->
@@ -109,12 +118,12 @@
                 <elem name="right_arm_vsens">right_arm_virtual_strain</elem>
                 <elem name="left_arm_vsens">left_arm_virtual_strain</elem>
                 <!-- imu -->
-                <elem name="imu">inertial</elem>
+                <elem name="imu">head-inertial-client</elem>
                 <!-- ft -->
-                <elem name="l_arm_ft">left_upper_arm_strain</elem>
-                <elem name="r_arm_ft">right_upper_arm_strain</elem>
-                <elem name="l_leg_ft">left_upper_leg_strain</elem>
-                <elem name="r_leg_ft">right_upper_leg_strain</elem>
+                <elem name="l_arm_ft">left_arm_client</elem>
+                <elem name="r_arm_ft">right_arm_client</elem>
+                <elem name="l_leg_ft">left_leg_client</elem>
+                <elem name="r_leg_ft">right_leg_client</elem>
             </paramlist>
         </action>
 

@@ -12,7 +12,7 @@
         <param name="modelFile">model.urdf</param>
         <param name="fixedFrameGravity">(0,0,-9.81)</param>
             <param name="defaultContactFrames">(l_hand,r_hand,root_link,l_upper_leg,l_foot_front,l_foot_rear,r_upper_leg,r_foot_front,r_foot_rear,l_lower_leg,r_lower_leg)</param>
-        <param name="imuFrameName">imu_frame</param>
+        <param name="imuFrameName">head_imu_0</param>
         <param name="useJointVelocity">true</param>
         <param name="useJointAcceleration">true</param>
         <param name="imuFilterCutoffInHz">3.0</param>
@@ -86,6 +86,15 @@
             <param name="/wholeBodyDynamics/right_foot_rear/cartesianEndEffectorWrench:o">(r_foot_rear,r_sole,r_sole)</param>
         </group>
 
+        <group name="HW_USE_MAS_IMU">
+            <param name="accelerometer">head_imu_0</param>
+            <param name="gyroscope">head_imu_0</param>
+        </group>
+
+         <group name="multipleAnalogSensorsNames">
+            <param name="SixAxisForceTorqueSensorsNames">("l_arm_ft", "r_arm_ft", "l_leg_ft", "r_leg_ft", "l_foot_front_ft", "r_foot_front_ft", "l_foot_rear_ft", "r_foot_rear_ft")</param>
+        </group>
+
         <action phase="startup" level="15" type="attach">
             <paramlist name="networks">
                 <!-- motorcontrol -->
@@ -96,16 +105,12 @@
                 <elem name="left_arm">left_arm_mc</elem>
                 <elem name="head">head_mc</elem>
                 <!-- imu -->
-                <elem name="imu">inertial</elem>
+                <elem name="imu">head-inertial-client</elem>
                 <!-- ft -->
-                <elem name="l_arm_ft">left_upper_arm_strain</elem>
-                <elem name="r_arm_ft">right_upper_arm_strain</elem>
-                <elem name="l_leg_ft">left_upper_leg_strain</elem>
-                <elem name="l_foot_front_ft">left_lower_leg_front_strain</elem>
-                <elem name="l_foot_rear_ft">left_lower_leg_rear_strain</elem>
-                <elem name="r_leg_ft">right_upper_leg_strain</elem>
-                <elem name="r_foot_front_ft">right_lower_leg_front_strain</elem>
-                <elem name="r_foot_rear_ft">right_lower_leg_rear_strain</elem>
+                <elem name="l_arm_ft">left_arm_client</elem>
+                <elem name="r_arm_ft">right_arm_client</elem>
+                <elem name="l_leg_ft">left_leg_client</elem>
+                <elem name="r_leg_ft">right_leg_client</elem>
             </paramlist>
         </action>
 
