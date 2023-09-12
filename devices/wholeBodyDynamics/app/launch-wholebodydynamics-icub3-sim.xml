@@ -61,5 +61,5 @@
     </device>
 
     <!-- estimators -->
-    <xi:include href="./wholebodydynamics-icub3-external-sim.xml" />
+    <xi:include href="estimators/wholebodydynamics-external.xml" />
 </robot>
