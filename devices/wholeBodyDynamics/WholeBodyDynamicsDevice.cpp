@@ -2254,22 +2254,23 @@ void WholeBodyDynamicsDevice::filterSensorsAndRemoveSensorOffsets()
                                   settings.jointAccFilterCutoffInHz);
 
     // Filter and remove offset fromn F/T sensors
+    iDynTree::Wrench rawFTMeasure;
+    iDynTree::Wrench rawFTMeasureWithOffsetRemoved;
+    iDynTree::Wrench filteredFTMeasure;
     for(size_t ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
     {
-        iDynTree::Wrench rawFTMeasure;
         rawSensorsMeasurements.getMeasurement(iDynTree::SIX_AXIS_FORCE_TORQUE,ft,rawFTMeasure);
 
-        iDynTree::Wrench rawFTMeasureWithOffsetRemoved  = ftProcessors[ft].filt(rawFTMeasure,tempMeasurements[ft]);
+        rawFTMeasureWithOffsetRemoved = ftProcessors[ft].filt(rawFTMeasure,tempMeasurements[ft]);
 
-        // Filter the data
-        iDynTree::toYarp(rawFTMeasureWithOffsetRemoved,filters.bufferYarp6);
+        // // Filter the data
+        filters.bufferEigen6.head<3>() = iDynTree::toEigen(rawFTMeasureWithOffsetRemoved.getLinearVec3());
+        filters.bufferEigen6.tail<3>() = iDynTree::toEigen(rawFTMeasureWithOffsetRemoved.getAngularVec3());
 
         // Run the filter
-        const yarp::sig::Vector & outputFt = filters.forcetorqueFilters[ft]->filt(filters.bufferYarp6);
-
-        iDynTree::Wrench filteredFTMeasure;
-
-        iDynTree::toiDynTree(outputFt,filteredFTMeasure);
+        Eigen::Ref<const Eigen::VectorXd> outputFt = filters.forcetorqueFilters[ft]->filt(filters.bufferEigen6);
+        iDynTree::toEigen(filteredFTMeasure.getLinearVec3()) = outputFt.head<3>();
+        iDynTree::toEigen(filteredFTMeasure.getAngularVec3()) = outputFt.tail<3>();
 
         filteredSensorMeasurements.setMeasurement(iDynTree::SIX_AXIS_FORCE_TORQUE,ft,filteredFTMeasure);
     }
@@ -2320,37 +2321,20 @@ void WholeBodyDynamicsDevice::filterSensorsAndRemoveSensorOffsets()
     // Filter joint vel
     if( settings.useJointVelocity )
     {
-        iDynTree::toYarp(jointVel,filters.bufferYarpDofs);
-
-        const yarp::sig::Vector & outputJointVel = filters.jntVelFilter->filt(filters.bufferYarpDofs);
-
-        iDynTree::toiDynTree(outputJointVel,jointVel);
+        iDynTree::toEigen(jointVel) = filters.jntVelFilter->filt(iDynTree::toEigen(jointVel));
     }
 
     // Filter joint acc
     if( settings.useJointAcceleration )
     {
-        iDynTree::toYarp(jointAcc,filters.bufferYarpDofs);
-
-        const yarp::sig::Vector & outputJointAcc = filters.jntAccFilter->filt(filters.bufferYarpDofs);
-
-        iDynTree::toiDynTree(outputJointAcc,jointAcc);
+        iDynTree::toEigen(jointAcc) = filters.jntAccFilter->filt(iDynTree::toEigen(jointAcc));
     }
 
     // Filter IMU Sensor
     if( settings.kinematicSource == IMU )
     {
-        iDynTree::toYarp(rawIMUMeasurements.linProperAcc,filters.bufferYarp3);
-
-        const yarp::sig::Vector & outputLinAcc = filters.imuLinearAccelerationFilter->filt(filters.bufferYarp3);
-
-        iDynTree::toiDynTree(outputLinAcc,filteredIMUMeasurements.linProperAcc);
-
-        iDynTree::toYarp(rawIMUMeasurements.angularVel,filters.bufferYarp3);
-
-        const yarp::sig::Vector & outputAngVel = filters.imuAngularVelocityFilter->filt(filters.bufferYarp3);
-
-        iDynTree::toiDynTree(outputAngVel,filteredIMUMeasurements.angularVel);
+        iDynTree::toEigen(filteredIMUMeasurements.linProperAcc) = filters.imuLinearAccelerationFilter->filt(iDynTree::toEigen(rawIMUMeasurements.linProperAcc));
+        iDynTree::toEigen(filteredIMUMeasurements.angularVel) = filters.imuAngularVelocityFilter->filt(iDynTree::toEigen(rawIMUMeasurements.angularVel));
 
         // For now we just assume that the angular acceleration is zero
         filteredIMUMeasurements.angularAcc.zero();
@@ -3495,10 +3479,7 @@ wholeBodyDynamicsDeviceFilters::wholeBodyDynamicsDeviceFilters(): imuLinearAccel
                                                                   forcetorqueFilters(0),
                                                                   jntVelFilter(0),
                                                                   jntAccFilter(0),
-                                                                  jntVelAccKFFilter(nullptr),
-                                                                  bufferYarp3(0),
-                                                                  bufferYarp6(0),
-                                                                  bufferYarpDofs(0)
+                                                                  jntVelAccKFFilter(nullptr)
 {
 
 }
@@ -3616,26 +3597,24 @@ void wholeBodyDynamicsDeviceFilters::init(int nrOfFTSensors,
                                           double periodInSeconds)
 {
     // Allocate buffers
-    bufferYarp3.resize(3,0.0);
-    bufferYarp6.resize(6,0.0);
-    bufferYarpDofs.resize(nrOfDOFsProcessed,0.0);
+    const Eigen::VectorXd dofsDummy = Eigen::VectorXd::Zero(nrOfDOFsProcessed);
 
     imuLinearAccelerationFilter =
-        new iCub::ctrl::realTime::FirstOrderLowPassFilter(initialCutOffForIMUInHz,periodInSeconds,bufferYarp3);
+        new iCub::ctrl::realTime::FirstOrderLowPassFilter(initialCutOffForIMUInHz,periodInSeconds,Eigen::Vector3d::Zero());
     imuAngularVelocityFilter =
-        new iCub::ctrl::realTime::FirstOrderLowPassFilter(initialCutOffForIMUInHz,periodInSeconds,bufferYarp3);
+        new iCub::ctrl::realTime::FirstOrderLowPassFilter(initialCutOffForIMUInHz,periodInSeconds,Eigen::Vector3d::Zero());
 
     forcetorqueFilters.resize(nrOfFTSensors);
     for(int ft_numeric = 0; ft_numeric < nrOfFTSensors; ft_numeric++ )
     {
         forcetorqueFilters[ft_numeric] =
-                new iCub::ctrl::realTime::FirstOrderLowPassFilter(initialCutOffForFTInHz,periodInSeconds,bufferYarp6);
+            new iCub::ctrl::realTime::FirstOrderLowPassFilter(initialCutOffForFTInHz,periodInSeconds,Eigen::Matrix<double,6,1>::Zero());
     }
 
     jntVelFilter =
-        new iCub::ctrl::realTime::FirstOrderLowPassFilter(initialCutOffForJointVelInHz,periodInSeconds,bufferYarpDofs);
+        new iCub::ctrl::realTime::FirstOrderLowPassFilter(initialCutOffForJointVelInHz,periodInSeconds,dofsDummy);
     jntAccFilter =
-        new iCub::ctrl::realTime::FirstOrderLowPassFilter(initialCutOffForJointAccInHz,periodInSeconds,bufferYarpDofs);
+        new iCub::ctrl::realTime::FirstOrderLowPassFilter(initialCutOffForJointAccInHz,periodInSeconds,dofsDummy);
 }
 
 

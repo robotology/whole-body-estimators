@@ -21,7 +21,6 @@ target_include_directories(${PROJECT_NAME} PUBLIC
 
 include_directories(SYSTEM ${EIGEN3_INCLUDE_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC  ${EIGEN3_INCLUDE_DIR})
-target_link_libraries(${PROJECT_NAME} ${YARP_LIBRARIES})
 
 set_property(TARGET ${PROJECT_NAME} PROPERTY PUBLIC_HEADER ${${PROJECT_NAME}_HELPERS_SRCS})
 
