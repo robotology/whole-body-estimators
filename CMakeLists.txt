@@ -30,10 +30,16 @@ add_install_rpath_support(BIN_DIRS "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_BIND
 
 set(YARP_REQUIRED_VERSION 3.0.1)
 
-find_package(YARP ${YARP_REQUIRED_VERSION} REQUIRED)
+find_package(YARP ${YARP_REQUIRED_VERSION} REQUIRED COMPONENTS robotinterface idl_tools)
 find_package(Eigen3 3.2.92 REQUIRED)
 
 yarp_configure_plugins_installation(${PROJECT_NAME})
+
+option(BUILD_TESTING "Create tests using CMake" OFF)
+if(BUILD_TESTING)
+    find_package(Catch2 3.0.1 REQUIRED)
+    enable_testing()
+endif()
 
 add_subdirectory(libraries)
 add_subdirectory(idl)

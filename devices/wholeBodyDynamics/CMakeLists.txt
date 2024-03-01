@@ -47,4 +47,8 @@ if(ENABLE_wholebodydynamics)
 
     # Install configuration files
     add_subdirectory(app)
+
+    if(BUILD_TESTING)
+        add_subdirectory(test)
+    endif()
 endif()
