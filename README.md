@@ -4,7 +4,9 @@ YARP-based estimators for humanoid robots.
 # Overview
  - [:orange_book: Implementation](#orange_book-implementation)
  - [:page_facing_up: Dependencies](#page_facing_up-dependencies)
- - [:hammer: Build the suite](#hammer-build-the-suite)
+ - [:hammer: Installation](#installation)
+ - [Usage](#usage)
+ - [Authors](#authors)
 
 # :orange_book: Implementation
 The current implementations available in the `devices` folder include,
@@ -27,8 +29,37 @@ The current implementations available in the `devices` folder include,
 
 It must be noted that all of these dependencies can be directly installed together in one place using the [robotology-superbuild](https://github.com/robotology/robotology-superbuild), in particular enabling its `Dynamics` component. 
 
-# :hammer: Build the suite
-## Linux
+# :hammer: Installation
+
+## conda (recommended) 
+
+You can easily install `whole-body-estimators` with with `conda` using the following command
+~~~
+conda install -c conda-forge -c robotology whole-body-estimators
+~~~
+
+If you are not familiar with conda or conda-forge, you can read an introduction document in [conda-forge overview](https://github.com/robotology/robotology-superbuild/blob/master/doc/conda-forge.md#conda-forge-overview).
+
+## robotology-superbuild (advanced)
+
+If you are installing iDynTree for use as part of [iCub humanoid robot software installation](https://icub-tech-iit.github.io/documentation/sw_installation/), you may want to install iDynTree through the [robotology-superbuild](https://github.com/robotology/robotology-superbuild), an easy way to download, compile and install the robotology software on multiple operating systems, using the [CMake](https://www.cmake.org) build system and its extension [YCM](http://robotology.github.io/ycm). To get `whole-body-estimators` when using the `robotology-superbuild`, please enable the `ROBOTOLOGY_ENABLE_DYNAMICS` CMake option of the superbuild. 
+
+
+## Build from source with pixi (advanced)
+
+If you are just interesting in building the devices to check that the compilation is working fine and tests pass, you can use pixi:
+
+~~~
+git clone https://github.com/robotology/whole-body-estimators.git
+cd whole-body-estimators
+pixi run download_deps
+pixi run install_deps
+pixi run test
+~~~
+
+## Build from source manually (advanced)
+
+### Linux
 
 ```sh
 git clone https://github.com/robotology/whole-body-estimators.git
@@ -38,6 +69,7 @@ cmake ../
 make
 [sudo] make install
 ```
+
 Notice: `sudo` is not necessary if you specify the `CMAKE_INSTALL_PREFIX`. In this case it is necessary to add in the `.bashrc` or `.bash_profile` the following lines:
 ``` sh
 export WBDEstimator_INSTALL_DIR=/path/where/you/installed
@@ -45,11 +77,13 @@ export YARP_DATA_DIRS=${YARP_DATA_DIRS}:${WBDEstimator_INSTALL_DIR}/share/yarp
 ```
 Note that this is not necessary if you install `whole-body-estimators` via the `robotology-superbuild` .
 
-# Using the estimators
+# Usage
+
 - [`baseEstimatorV1`](devices/baseEstimatorV1/README.md) Please follow the documentation available here to run the floating base estimator.
 - [`wholeBodyDynamics`](devices/wholeBodyDynamics/README.md) Please follow the documentation for a description of features/parameters of the device and please follow the documentation in [Force Control on iCub](doc/howto/force_control_on_icub.md) for running the whole body dynamics device.
 
 # Authors
+
 ```
 Hosameldin Awadalla Omer Mohamed <hosameldin.mohamed@iit.it>
 Francisco Javier Andrade Chavez <FranciscoJavier.AndradeChavez@iit.it>
