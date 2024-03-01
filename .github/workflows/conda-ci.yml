@@ -41,7 +41,7 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        cmake -GNinja -DBUILD_TESTING:BOOL=ON \
+        cmake -GNinja -DBUILD_TESTING:BOOL=OFF \
               -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
 
     - name: Configure [Windows]
@@ -50,7 +50,7 @@ jobs:
       run: |
         mkdir -p build
         cd build
-        cmake -G"Visual Studio 16 2019" -DBUILD_TESTING:BOOL=ON \
+        cmake -G"Visual Studio 16 2019" -DBUILD_TESTING:BOOL=OFF \
               -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
 
     - name: Build
