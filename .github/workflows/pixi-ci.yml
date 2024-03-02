@@ -25,4 +25,7 @@ jobs:
 
     - name: Run the tests
       shell: bash -l {0}
-      run: pixi run test
+      run: |
+        pixi run download_deps
+        pixi run install_deps
+        pixi run test
