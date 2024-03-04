@@ -37,3 +37,6 @@
 # clangd
 **/compile_commands.json
 **/.cache/
+# pixi environments
+.pixi*
+.build*

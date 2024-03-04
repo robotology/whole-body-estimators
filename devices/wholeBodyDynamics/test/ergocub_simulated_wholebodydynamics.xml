@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE devices PUBLIC "-//YARP//DTD yarprobotinterface 3.0//EN" "http://www.yarp.it/DTD/yarprobotinterfaceV3.0.dtd">
+
+
+<device xmlns:xi="http://www.w3.org/2001/XInclude" name="wholebodydynamics" type="wholebodydynamics">
+  <param name="axesNames">(torso_pitch,torso_roll,torso_yaw,neck_pitch, neck_roll,neck_yaw,l_shoulder_pitch,l_shoulder_roll,l_shoulder_yaw,r_shoulder_pitch,r_shoulder_roll,r_shoulder_yaw,l_hip_pitch,l_hip_roll,l_hip_yaw,l_knee,l_ankle_pitch,l_ankle_roll,r_hip_pitch,r_hip_roll,r_hip_yaw,r_knee,r_ankle_pitch,r_ankle_roll)</param>
+  <param name="modelFile">model.urdf</param>
+  <param name="fixedFrameGravity">(0,0,-9.81)</param>
+  <param name="defaultContactFrames">(l_hand_palm,r_hand_palm,root_link,l_foot_front,l_foot_rear,r_foot_front,r_foot_rear,l_upper_leg,r_upper_leg)</param>
+  <param name="imuFrameName">waist_imu_0</param>
+  <param name="publishOnROS">true</param>
+  <param name="forceTorqueEstimateConfidence">2</param>
+  <param name="useJointVelocity">true</param>
+  <param name="useJointAcceleration">false</param>
+  <param name="streamFilteredFT">true</param>
+  <param name="imuFilterCutoffInHz">3.0</param>
+  <param name="forceTorqueFilterCutoffInHz">3.0</param>
+  <param name="jointVelFilterCutoffInHz">3.0</param> <!-- used if useJointVelocity is set to true -->
+  <param name="jointAccFilterCutoffInHz">3.0</param> <!-- used if useJointAcceleration is set to true -->
+  <param name="devicePeriodInSeconds">0.002</param>
+  <param name="useSkinForContacts">false</param>
+  <param name="publishNetExternalWrenches">true</param>
+  <!--<param name="assume_fixed">root_link</param>-->
+  <group name="HW_USE_MAS_IMU">
+    <param name="accelerometer">waist_imu_0</param>
+    <param name="gyroscope">waist_imu_0</param>
+  </group>
+
+  <group name="multipleAnalogSensorsNames">
+    <param name="SixAxisForceTorqueSensorsNames">(l_leg_ft, l_foot_front_ft, l_foot_rear_ft, r_leg_ft, r_foot_front_ft, r_foot_rear_ft, r_arm_ft, l_arm_ft)</param>
+  </group>
+
+  <group name="GRAVITY_COMPENSATION">
+    <param name="enableGravityCompensation">true</param>
+    <param name="gravityCompensationBaseLink">root_link</param>
+    <param name="gravityCompensationAxesNames">(torso_pitch,torso_roll,torso_yaw,neck_pitch,neck_roll,neck_yaw,l_shoulder_pitch,l_shoulder_roll,l_shoulder_yaw,r_shoulder_pitch,r_shoulder_roll,r_shoulder_yaw,l_hip_pitch,l_hip_roll,l_hip_yaw,l_knee,l_ankle_pitch,l_ankle_roll,r_hip_pitch,r_hip_roll,r_hip_yaw,r_knee,r_ankle_pitch,r_ankle_roll)</param>
+  </group>
+
+  <action phase="startup" level="15" type="attach">
+    <paramlist name="networks">
+      <!-- motorcontrol -->
+      <elem name="controlboard">simulated_controlboard</elem>
+
+      <!-- imu -->
+      <elem name="imu">simulated_imu</elem>
+
+      <!-- fts -->
+      <elem name="fts">simulated_fts</elem>
+    </paramlist>
+  </action>
+
+  <action phase="shutdown" level="2" type="detach" />
+
+</device>
