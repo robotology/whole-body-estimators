@@ -53,7 +53,7 @@ For an overview on `wholeBodyDynamics` and to understand how to run the device, 
 |                      | enableGravityCompensation | bool | -  | -           | No        |  |  |
 |                      | gravityCompensationBaseLink| string | - | -         | No        | ..  | |
 |                      | gravityCompensationAxesNames | vector of strings | - | - | No   | Axes for which the gravity compensation is published. | |
-| HW_USE_MAS_IMU |  -  | group             | -     | -     | No       |  Group to enable attach to Multiple Analog Sensor interface based IMU. | If the group is not present, the default behavior of attaching to IGenericSensor interface IMU will be carried out. |
+| HW_USE_MAS_IMU |  -  | group             | -     | -     | Yes       |  Group to enable attach to Multiple Analog Sensor interface based IMU. | The group is compulsory since whole-body-estimators 0.11.0 . |
 |                |   accelerometer   | string  | - | - | Yes    | Should match the sensor id used to open the device containing MAS IThreeAxisLinearAcccelerometers interface  |  |
 |                |   gyroscope   | string  | - | - | Yes    | Should match the sensor id used to open the device containing MAS IThreeAxisGyroscopes interface  |  |
 
