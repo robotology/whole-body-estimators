@@ -340,7 +340,7 @@ bool WholeBodyDynamicsDevice::openEstimator(os::Searchable& config)
         return false;
     }
 
-    if( estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) == 0 )
+    if( estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) == 0 )
     {
         yWarning() << "wholeBodyDynamics : the loaded model has 0 FT sensors, so the estimation will use just the model.";
         yWarning() << "wholeBodyDynamics : If you instead want to add the FT sensors to your model, please check iDynTree documentation on how to add sensors to models.";
@@ -819,10 +819,10 @@ bool WholeBodyDynamicsDevice::openFilteredFTPorts(os::Searchable& config)
 
     std::string sensorName;
     std::string portName;
-    outputFTPorts.resize(estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE));
-    for(int ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
+    outputFTPorts.resize(estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE));
+    for(int ft=0; ft < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
     {
-        sensorName= estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() ;
+        sensorName= estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() ;
 
         yInfo() << "wholeBodyDynamics: creating port name and opening port for  " << sensorName;
 
@@ -848,8 +848,8 @@ void WholeBodyDynamicsDevice::resizeBuffers()
     this->measuredContactLocations.resize(estimator.model());
     this->ftMeasurement.resize(wholeBodyDynamics_nrOfChannelsOfYARPFTSensor);
     this->imuMeasurement.resize(wholeBodyDynamics_nrOfChannelsOfAYARPIMUSensor);
-    this->rawSensorsMeasurements.resize(estimator.sensors());
-    this->filteredSensorMeasurements.resize(estimator.sensors());
+    this->rawSensorsMeasurements.resize(estimator.model().sensors());
+    this->filteredSensorMeasurements.resize(estimator.model().sensors());
     this->estimatedJointTorques.resize(estimator.model());
     this->estimatedJointTorquesYARP.resize(this->estimatedJointTorques.size(),0.0);
     this->estimateExternalContactWrenches.resize(estimator.model());
@@ -860,7 +860,7 @@ void WholeBodyDynamicsDevice::resizeBuffers()
     jointAccKF.zero();
 
     // Resize F/T stuff
-    size_t nrOfFTSensors = estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE);
+    size_t nrOfFTSensors = estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE);
     calibrationBuffers.calibratingFTsensor.resize(nrOfFTSensors,false);
     iDynTree::Wrench zeroWrench;
     zeroWrench.zero();
@@ -870,7 +870,7 @@ void WholeBodyDynamicsDevice::resizeBuffers()
     calibrationBuffers.assumedContactLocationsForCalibration.resize(estimator.model());
     calibrationBuffers.predictedExternalContactWrenchesForCalibration.resize(estimator.model());
     calibrationBuffers.predictedJointTorquesForCalibration.resize(estimator.model());
-    calibrationBuffers.predictedSensorMeasurementsForCalibration.resize(estimator.sensors());
+    calibrationBuffers.predictedSensorMeasurementsForCalibration.resize(estimator.model().sensors());
 
     ftProcessors.resize(nrOfFTSensors);
 
@@ -1198,9 +1198,9 @@ bool WholeBodyDynamicsDevice::loadSecondaryCalibrationSettingsFromConfig(os::Sea
 
             // Linearly search for the specified sensor
             bool sensorFound = false;
-            for(int ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
+            for(int ft=0; ft < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
             {
-                if( estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() == iDynTree_sensorName )
+                if( estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() == iDynTree_sensorName )
                 {
                     yDebug() << "wholeBodyDynamics: using secondary calibration matrix for sensor " << iDynTree_sensorName;
 
@@ -1259,10 +1259,10 @@ bool WholeBodyDynamicsDevice::loadTemperatureCoefficientsSettingsFromConfig(os::
 
             // Linearly search for the specified sensor
             bool sensorFound = false;
-            for(auto ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
+            for(auto ft=0; ft < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
             {
 
-                if( estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() == iDynTree_sensorName )
+                if( estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() == iDynTree_sensorName )
                 {
                     yDebug() << "wholeBodyDynamics: using temperature coefficients for sensor " << iDynTree_sensorName << " temperatureCoeffs values " << temperatureCoeffs.toString();
 
@@ -1322,9 +1322,9 @@ bool WholeBodyDynamicsDevice::loadFTSensorOffsetFromConfig(os::Searchable& confi
 
             // Linearly search for the specified sensor
             bool sensorFound = false;
-            for(int ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
+            for(int ft=0; ft < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
             {
-                if( estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() == iDynTree_sensorName )
+                if( estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() == iDynTree_sensorName )
                 {
                     yDebug() << "wholeBodyDynamics: using FT offset"<< ftOffset.toString() <<" for sensor " << iDynTree_sensorName;
 
@@ -1724,10 +1724,10 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     yDebug()<<"wholeBodyDynamicsDevice :: number of devices that could contain FT sensors found "<<ftDeviceNames.size()<< "where analog are "<<ftList.size()<<" and MAS are "<<ftSensorList.size();
 
     auto totalNrFTDevices{nrAnalogFTSensors + nrMASFTSensors};
-    if( totalNrFTDevices < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) )
+    if( totalNrFTDevices < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) )
     {
         yError() << "wholeBodyDynamicsDevice : was expecting "
-                 << estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)
+                 << estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)
                  << " from the model, but got only " << totalNrFTDevices << " FT sensor either using "
                  << " analog or MAS interface in the attach list.";
         return false;
@@ -1772,7 +1772,7 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     // Check if the MASremapper and the estimator have a consistent number of ft sensors
     int tempSensors = 0;
     tempSensors=static_cast<int>( remappedMASInterfaces.temperatureSensors->getNrOfTemperatureSensors());
-    if( tempSensors > static_cast<int>( estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)) )
+    if( tempSensors > static_cast<int>( estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)) )
     {
         yError() << "wholeBodyDynamics : The multipleAnalogRemappedDevice has more sensors than those in the open estimator ft sensors list";
         return false;
@@ -1785,8 +1785,8 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     for (int tSensor=0;tSensor<tempSensors;tSensor++){
         remappedMASInterfaces.temperatureSensors->getTemperatureSensorName(tSensor,tempName);
         int individualCheck=0;
-        for (int ft=0;ft<static_cast<int>( estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)); ft++){
-            ftName=estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
+        for (int ft=0;ft<static_cast<int>( estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)); ft++){
+            ftName=estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
             if (tempName==ftName){
                 individualCheck++;
                 ftMap=ft;
@@ -1811,10 +1811,10 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
 
     // iterate through ftMultipleAnalogSensorNames
     // check if each name is a FT sensor in the URDF
-    auto nrFTsInURDF = estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE);
+    auto nrFTsInURDF = estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE);
     for(size_t IDTsensIdx=0; IDTsensIdx < nrFTsInURDF; IDTsensIdx++)
     {
-        std::string sensorName = estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,IDTsensIdx)->getName();
+        std::string sensorName = estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,IDTsensIdx)->getName();
 
         bool ftInAnalog = (std::find(ftAnalogSensorNames.begin(), ftAnalogSensorNames.end(), sensorName) != ftAnalogSensorNames.end());
         bool ftInMAS = (std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName) != ftMultipleAnalogSensorNames.end());
@@ -2047,9 +2047,9 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
     yarp::dev::MAS_status    sensorStatus;
     ftMeasurement.resize(6);
 
-    for(size_t ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
+    for(size_t ft=0; ft < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
     {
-        std::string sensorName = estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
+        std::string sensorName = estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
 
         bool ok;
         auto ftMasITer = (std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName));
@@ -2101,7 +2101,7 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
 
         if( !ok && verbose )
         {
-            std::string sensorName = estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
+            std::string sensorName = estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
             yWarning() << "wholeBodyDynamics warning : FT sensor " << sensorName << " was not readed correctly, using old measurement";
         }
 
@@ -2116,7 +2116,7 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
         }
         if( isNaN )
         {
-            std::string sensorName = estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
+            std::string sensorName = estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
             yError() << "wholeBodyDynamics : FT sensor " << sensorName << " contains nan: " << ftMeasurement.toString() << ", returning error.";
             return false;
         }
@@ -2254,7 +2254,7 @@ void WholeBodyDynamicsDevice::filterSensorsAndRemoveSensorOffsets()
                                   settings.jointAccFilterCutoffInHz);
 
     // Filter and remove offset fromn F/T sensors
-    for(size_t ft=0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
+    for(size_t ft=0; ft < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
     {
         iDynTree::Wrench rawFTMeasure;
         rawSensorsMeasurements.getMeasurement(iDynTree::SIX_AXIS_FORCE_TORQUE,ft,rawFTMeasure);
@@ -2597,7 +2597,7 @@ void WholeBodyDynamicsDevice::computeCalibration()
                                                        calibrationBuffers.predictedJointTorquesForCalibration);
 
         // The kinematics information was already set by the readSensorsAndUpdateKinematics method, just compute the offset and add to the buffer
-        for(size_t ft = 0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++)
+        for(size_t ft = 0; ft < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++)
         {
             if( calibrationBuffers.calibratingFTsensor[ft] )
             {
@@ -2622,7 +2622,7 @@ void WholeBodyDynamicsDevice::computeCalibration()
         if( calibrationBuffers.nrOfSamplesUsedUntilNowForCalibration >= calibrationBuffers.nrOfSamplesToUseForCalibration )
         {
             // Compute the offset by averaging the results
-            for(size_t ft = 0; ft < estimator.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++)
+            for(size_t ft = 0; ft < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++)
             {
                 if( calibrationBuffers.calibratingFTsensor[ft] )
                 {
@@ -2631,7 +2631,7 @@ void WholeBodyDynamicsDevice::computeCalibration()
                     computeMean(calibrationBuffers.measurementSumBuffer[ft],calibrationBuffers.nrOfSamplesUsedUntilNowForCalibration,measurementMean);
                     computeMean(calibrationBuffers.estimationSumBuffer[ft],calibrationBuffers.nrOfSamplesUsedUntilNowForCalibration,estimationMean);
 
-                    yInfo() << "wholeBodyDynamics: Offset for sensor " << estimator.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() << " " << ftProcessors[ft].offset().toString();
+                    yInfo() << "wholeBodyDynamics: Offset for sensor " << estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName() << " " << ftProcessors[ft].offset().toString();
                     yInfo() << "wholeBodyDynamics: obtained assuming a measurement of " << measurementMean.asVector().toString() << " and an estimated ft of " << estimationMean.asVector().toString();
                 }
             }

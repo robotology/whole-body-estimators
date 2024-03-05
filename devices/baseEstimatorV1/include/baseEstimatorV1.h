@@ -543,7 +543,6 @@ namespace yarp {
 
         // robot model and sensors
         iDynTree::Model m_model; ///< iDynTree object of loaded robot model
-        iDynTree::SensorsList m_sensors_list; ///< iDynTree object of loaded sensors list from URDF
 
         const double m_sensor_timeout_in_seconds{2.0}; ///< Timeout to check for sensor measurements during dry run initial check
         const size_t m_nr_of_channels_in_YARP_IMU_sensor{12}; ///< Number of channels available in YARP IMU sensor output port
