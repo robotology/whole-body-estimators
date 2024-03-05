@@ -2,16 +2,6 @@
 # This software may be modified and distributed under the terms of the
 # GNU Lesser General Public License v2.1 or any later version.
 
-set(iDynTree_REQUIRED_VERSION 0.11.0)
-
-find_package(iDynTree ${iDynTree_VERSION} REQUIRED)
-
-find_package(ICUB REQUIRED)
-
-find_package(YARP REQUIRED COMPONENTS
-             eigen
-             os
-             sig)
 
 set(FBE_HEADERS ${CMAKE_CURRENT_SOURCE_DIR}/include/baseEstimatorV1.h
                 ${CMAKE_CURRENT_SOURCE_DIR}/include/WalkingLogger.tpp
