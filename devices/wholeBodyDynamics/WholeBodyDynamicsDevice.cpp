@@ -11,9 +11,9 @@
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/IGenericSensor.h>
 
-#include <iDynTree/yarp/YARPConversions.h>
-#include <iDynTree/Core/Utils.h>
-#include <iDynTree/Core/EigenHelpers.h>
+#include <iDynTree/YARPConversions.h>
+#include <iDynTree/Utils.h>
+#include <iDynTree/EigenHelpers.h>
 #include <cassert>
 #include <cmath>
 

@@ -2,8 +2,8 @@
 #define SIX_AXIS_FORCE_TORQUE_MEASURE_PROCESSOR_H
 
 // iDynTree includes
-#include <iDynTree/Core/Wrench.h>
-#include <iDynTree/Core/MatrixFixSize.h>
+#include <iDynTree/Wrench.h>
+#include <iDynTree/MatrixFixSize.h>
 
 
 namespace wholeBodyDynamics

@@ -9,16 +9,16 @@
 #ifndef BASE_ESTIMATOR_V1_H
 #define BASE_ESTIMATOR_V1_H
 
-#include <iDynTree/Estimation/AttitudeMahonyFilter.h>
-#include <iDynTree/Estimation/SimpleLeggedOdometry.h>
-#include <iDynTree/Estimation/BipedFootContactClassifier.h>
-#include <iDynTree/Estimation/AttitudeQuaternionEKF.h>
+#include <iDynTree/AttitudeMahonyFilter.h>
+#include <iDynTree/SimpleLeggedOdometry.h>
+#include <iDynTree/BipedFootContactClassifier.h>
+#include <iDynTree/AttitudeQuaternionEKF.h>
 
-#include <iDynTree/Model/Model.h>
+#include <iDynTree/Model.h>
 #include <iDynTree/KinDynComputations.h>
-#include <iDynTree/ModelIO/ModelLoader.h>
-#include <iDynTree/yarp/YARPConversions.h>
-#include <iDynTree/Core/EigenHelpers.h>
+#include <iDynTree/ModelLoader.h>
+#include <iDynTree/YARPConversions.h>
+#include <iDynTree/EigenHelpers.h>
 
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/ResourceFinder.h>
