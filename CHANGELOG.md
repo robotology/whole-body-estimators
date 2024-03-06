@@ -1,6 +1,6 @@
 # Changelog
 
-This file documents notable changes to this project done before September 2023. For changes after that date, plase refers to the release notes of each release at https://github.com/robotology/robotology-superbuild/releases .
+This file documents notable changes to this project done before September 2023. For changes after that date, plase refers to the release notes of each release at https://github.com/robotology/whole-body-estimators/releases .
 
 ## [0.10.0] - 2023-09-11
 
