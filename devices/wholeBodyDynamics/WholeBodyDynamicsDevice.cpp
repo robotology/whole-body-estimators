@@ -1118,6 +1118,7 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     if( !prop.check("HW_USE_MAS_IMU") )
     {
         yError() << "wholeBodyDynamics : missing required group parameter HW_USE_MAS_IMU";
+        return false;
     }
     else
     {
