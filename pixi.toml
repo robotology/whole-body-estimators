@@ -13,30 +13,16 @@ platforms = ["linux-64", "win-64", "osx-64"]
 # is released
 
 [activation]
-scripts = ["set_install_prefix.sh"]
+scripts = ["pixi_activation.sh"]
 
 [target.win-64.activation]
-scripts = ["set_install_prefix.bat"]
+scripts = ["pixi_activation.bat"]
 
 
 [tasks]
 
-download_yarp = { cmd = "git clone https://github.com/robotology/yarp .pixi_src_yarp && cd .pixi_src_yarp && git checkout e3ec363c0af7469fcb2c218c356844b8d6bbb1c5" }
-download_icub_main = { cmd = "git clone https://github.com/robotology/icub-main .pixi_src_icub_main && cd .pixi_src_icub_main && git checkout v2.5.0" }
-download_ergocub_software = { cmd = "git clone https://github.com/icub-tech-iit/ergocub-software .pixi_src_ergocub_software && cd .pixi_src_ergocub_software && git checkout v0.7.1" }
-download_deps = {cmd = "echo Downloaded all deps", depends_on = ["download_yarp", "download_icub_main", "download_ergocub_software"]}
-
-configure_yarp = { cmd = "cmake -DCMAKE_BUILD_TYPE=Release  -DYARP_COMPILE_ALL_FAKE_DEVICES:BOOL=ON -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX -GNinja -S.pixi_src_yarp -B.build_yarp" }
-build_yarp = { cmd = "cmake --build .build_yarp --config Release", depends_on = ["configure_yarp"] }
-install_yarp = { cmd = ["cmake", "--install", ".build_yarp", "--config", "Release"], depends_on = ["build_yarp"] }
-configure_icub_main = { cmd = "cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX -GNinja -S.pixi_src_icub_main -B.build_icub_main", depends_on = "install_yarp" }
-build_icub_main = { cmd = "cmake --build .build_icub_main --config Release", depends_on = ["configure_icub_main"] }
-install_icub_main = { cmd = ["cmake", "--install", ".build_icub_main", "--config", "Release"], depends_on = ["build_icub_main"] }
-configure_ergocub_software = { cmd = "cmake -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=$CMAKE_INSTALL_PREFIX -GNinja -S.pixi_src_ergocub_software -B.build_ergocub_software", depends_on = "install_yarp" }
-build_ergocub_software = { cmd = "cmake --build .build_ergocub_software --config Release", depends_on = ["configure_ergocub_software"] }
-install_ergocub_software = { cmd = ["cmake", "--install", ".build_ergocub_software", "--config", "Release"], depends_on = ["build_ergocub_software"] }
-install_deps = {cmd = "echo Installed all deps", depends_on = ["install_yarp", "install_icub_main", "install_ergocub_software"]}
-
+download_deps = {cmd = "echo Download all deps && mkdir -p ./.pixi_colcon_ws/src && vcs import --input ./pixi_source_deps.yaml ./.pixi_colcon_ws/src"}
+install_deps = {cmd = "echo Install all deps && cd .pixi_colcon_ws && colcon build --metas ../pixi_source_deps_options.meta --event-handlers console_direct+ --merge-install --install-base $CMAKE_INSTALL_PREFIX"}
 
 configure = { cmd = [
     "cmake",
@@ -67,8 +53,11 @@ cxx-compiler = "*"
 ninja = "*"
 pkg-config = "*"
 eigen = "*"
-# For tests
+# YARP from source dependencies
 ace = "*"
 ycm-cmake-modules = "*"
 catch2 = "*"
 tinyxml = "*"
+# Used to download and build dependencies from source
+colcon-common-extensions = "*"
+vcstool = "*"
