@@ -105,8 +105,7 @@ bool yarp::dev::baseEstimatorV1::loadEstimator()
     }
 
     m_model = model_loader.model();
-    m_sensors_list = model_loader.sensors();
-    m_sensor_measurements.resize(m_sensors_list);
+    m_sensor_measurements.resize(m_model.sensors());
 
     // check imu relevant information
     auto imu_frame_idx = m_model.getFrameIndex(m_imu_name);
@@ -136,8 +135,8 @@ bool yarp::dev::baseEstimatorV1::loadEstimator()
     resizeBuffers();
     setPeriod(m_device_period_in_s);
 
-    ok = m_sensors_list.getSensorIndex(iDynTree::SIX_AXIS_FORCE_TORQUE, m_left_foot_ft_sensor, m_left_foot_ft_sensor_index) && ok;
-    ok = m_sensors_list.getSensorIndex(iDynTree::SIX_AXIS_FORCE_TORQUE, m_right_foot_ft_sensor, m_right_foot_ft_sensor_index) && ok;
+    ok = m_model.sensors().getSensorIndex(iDynTree::SIX_AXIS_FORCE_TORQUE, m_left_foot_ft_sensor, m_left_foot_ft_sensor_index) && ok;
+    ok = m_model.sensors().getSensorIndex(iDynTree::SIX_AXIS_FORCE_TORQUE, m_right_foot_ft_sensor, m_right_foot_ft_sensor_index) && ok;
 
     m_r_sole_R_r_ft_sensor = m_kin_dyn_comp.getRelativeTransform(m_model.getFrameIndex(m_right_sole), m_right_foot_ft_sensor_index).getRotation();
     m_l_sole_R_l_ft_sensor = m_kin_dyn_comp.getRelativeTransform(m_model.getFrameIndex(m_left_sole), m_left_foot_ft_sensor_index).getRotation();
@@ -185,16 +184,16 @@ bool yarp::dev::baseEstimatorV1::attachAllForceTorqueSensors(const yarp::dev::Po
         }
     }
 
-    if (ft_sensor_list.size() != m_sensors_list.getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE))
+    if (ft_sensor_list.size() != m_model.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE))
     {
-        yError() << "floatingBaseEstimatorV1: " <<  "Obtained " << m_sensors_list.getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) << "from the model, but trying to attach " << (int)ft_sensor_list.size() << " FT sensors in the attach list.";
+        yError() << "floatingBaseEstimatorV1: " <<  "Obtained " << m_model.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) << "from the model, but trying to attach " << (int)ft_sensor_list.size() << " FT sensors in the attach list.";
         return false;
     }
 
     m_whole_body_forcetorque_interface.resize(ft_sensor_list.size());
     for (size_t iDyn_sensor_idx = 0; iDyn_sensor_idx < m_whole_body_forcetorque_interface.size(); iDyn_sensor_idx++)
     {
-        std::string sensor_name = m_sensors_list.getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE, iDyn_sensor_idx)->getName();
+        std::string sensor_name = m_model.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE, iDyn_sensor_idx)->getName();
         // search in sensors list for ft sensor  with same name as attach list
         int idx_of_device_with_same_name{-1};
         for (size_t dev_idx = 0; dev_idx < ft_sensor_list.size(); dev_idx++)
@@ -262,9 +261,9 @@ bool yarp::dev::baseEstimatorV1::attachAllInertialMeasurementUnits(const yarp::d
     for (size_t imu = 0; imu < m_nr_of_IMUs_detected; imu++)
     {
         bool found_imu{false};
-        for (size_t iDyn_sensor_idx = 0; iDyn_sensor_idx < m_sensors_list.getNrOfSensors(iDynTree::ACCELEROMETER); iDyn_sensor_idx++)
+        for (size_t iDyn_sensor_idx = 0; iDyn_sensor_idx < m_model.sensors().getNrOfSensors(iDynTree::ACCELEROMETER); iDyn_sensor_idx++)
         {
-            std::string imu_name = m_sensors_list.getSensor(iDynTree::ACCELEROMETER, iDyn_sensor_idx)->getName();
+            std::string imu_name = m_model.sensors().getSensor(iDynTree::ACCELEROMETER, iDyn_sensor_idx)->getName();
             if (imu_sensor_name[imu] == imu_name)
             {
                 found_imu = true;
@@ -341,7 +340,7 @@ bool yarp::dev::baseEstimatorV1::readFTSensors(bool verbose)
 
         if (!ok && verbose)
         {
-            yWarning() << "floatingBaseEstimatorV1: " << "unable to read from FT sensor " << m_sensors_list.getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE, ft)->getName() << " correctly. using old measurements.";
+            yWarning() << "floatingBaseEstimatorV1: " << "unable to read from FT sensor " << m_model.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE, ft)->getName() << " correctly. using old measurements.";
         }
 
         bool is_NaN = false;
@@ -356,7 +355,7 @@ bool yarp::dev::baseEstimatorV1::readFTSensors(bool verbose)
 
         if (is_NaN)
         {
-            yError() << "floatingBaseEstimatorV1: " << "FT sensor " << m_sensors_list.getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE, ft)->getName() << " contains nan: . using old measurements."<< m_ft_measurements_from_yarp_server.toString();
+            yError() << "floatingBaseEstimatorV1: " << "FT sensor " << m_model.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE, ft)->getName() << " contains nan: . using old measurements."<< m_ft_measurements_from_yarp_server.toString();
             return false;
         }
 

@@ -1,5 +1,5 @@
 #include "SixAxisForceTorqueMeasureHelpers.h"
-#include <iDynTree/Core/EigenHelpers.h>
+#include <iDynTree/EigenHelpers.h>
 
 
 namespace wholeBodyDynamics

@@ -2,9 +2,6 @@
 # Authors: Silvio Traversaro <silvio.traversaro@iit.it>
 # CopyPolicy: Released under the terms of the GNU LGPL v2+
 
-find_package(YARP REQUIRED)
-
-
 yarp_prepare_plugin(virtualAnalogClient CATEGORY device
                                         TYPE yarp::dev::VirtualAnalogClient
                                         INCLUDE "VirtualAnalogClient.h"

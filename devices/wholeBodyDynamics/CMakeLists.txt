@@ -2,10 +2,6 @@
 # Authors: Silvio Traversaro <silvio.traversaro@iit.it>
 # CopyPolicy: Released under the terms of the GNU LGPL v2+
 
-find_package(YARP REQUIRED)
-# ICUB is required for skinDynLib
-find_package(ICUB REQUIRED)
-find_package(iDynTree REQUIRED)
 
 yarp_prepare_plugin(wholebodydynamics CATEGORY device
                                       TYPE yarp::dev::WholeBodyDynamicsDevice

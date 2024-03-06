@@ -9,16 +9,16 @@
 #ifndef BASE_ESTIMATOR_V1_H
 #define BASE_ESTIMATOR_V1_H
 
-#include <iDynTree/Estimation/AttitudeMahonyFilter.h>
-#include <iDynTree/Estimation/SimpleLeggedOdometry.h>
-#include <iDynTree/Estimation/BipedFootContactClassifier.h>
-#include <iDynTree/Estimation/AttitudeQuaternionEKF.h>
+#include <iDynTree/AttitudeMahonyFilter.h>
+#include <iDynTree/SimpleLeggedOdometry.h>
+#include <iDynTree/BipedFootContactClassifier.h>
+#include <iDynTree/AttitudeQuaternionEKF.h>
 
-#include <iDynTree/Model/Model.h>
+#include <iDynTree/Model.h>
 #include <iDynTree/KinDynComputations.h>
-#include <iDynTree/ModelIO/ModelLoader.h>
-#include <iDynTree/yarp/YARPConversions.h>
-#include <iDynTree/Core/EigenHelpers.h>
+#include <iDynTree/ModelLoader.h>
+#include <iDynTree/YARPConversions.h>
+#include <iDynTree/EigenHelpers.h>
 
 #include <yarp/os/PeriodicThread.h>
 #include <yarp/os/ResourceFinder.h>
@@ -543,7 +543,6 @@ namespace yarp {
 
         // robot model and sensors
         iDynTree::Model m_model; ///< iDynTree object of loaded robot model
-        iDynTree::SensorsList m_sensors_list; ///< iDynTree object of loaded sensors list from URDF
 
         const double m_sensor_timeout_in_seconds{2.0}; ///< Timeout to check for sensor measurements during dry run initial check
         const size_t m_nr_of_channels_in_YARP_IMU_sensor{12}; ///< Number of channels available in YARP IMU sensor output port

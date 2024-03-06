@@ -4,8 +4,6 @@
 
 cmake_minimum_required(VERSION 3.5)
 
-find_package(Eigen3 REQUIRED)
-
 project(ctrlLibRT)
 
 set(${PROJECT_NAME}_HDRS include/${PROJECT_NAME}/filters.h)
