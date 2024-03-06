@@ -1117,7 +1117,8 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
 
     if( !prop.check("HW_USE_MAS_IMU") )
     {
-        useMasIMU = false;
+        yError() << "wholeBodyDynamics : missing required group parameter HW_USE_MAS_IMU";
+        return false;
     }
     else
     {
@@ -1677,11 +1678,9 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
     yInfo()<<"Starting attach MAS and analog ft";
     PolyDriverList ftSensorList;
     PolyDriverList tempSensorList;
-    //std::vector<std::string>     tempDeviceNames;
-    std::vector<IAnalogSensor *> ftList;
     std::vector<std::string>     ftDeviceNames;
 
-    std::size_t nrMASFTSensors{0}, nrAnalogFTSensors{0};
+    std::size_t nrMASFTSensors{0};
     for(auto devIdx = 0; devIdx <p.size(); devIdx++)
     {
         ISixAxisForceTorqueSensors * fts = nullptr;
@@ -1702,28 +1701,14 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
                 ftMultipleAnalogSensorNames.emplace_back(ftName);
             }
         }
-        // A device is considered an ft if it implements IAnalogSensor and has 6 channels
-        IAnalogSensor * pAnalogSens = nullptr;
-        if( p[devIdx]->poly->view(pAnalogSens) )
-        {
-            if( pAnalogSens->getChannels() ==static_cast<int>(wholeBodyDynamics_nrOfChannelsOfYARPFTSensor) )
-            {
-                ftList.push_back(pAnalogSens);
-                ftDeviceNames.push_back(p[devIdx]->key);
-                ftAnalogSensorNames.push_back(p[devIdx]->key);
-                nrAnalogFTSensors += 1;
-            }
-        }
-
         if( p[devIdx]->poly->view(tempS) )
         {
             tempSensorList.push(const_cast<PolyDriverDescriptor&>(*p[devIdx]));
-           // tempDeviceNames.push_back(p[devIdx]->key);
         }
     }
-    yDebug()<<"wholeBodyDynamicsDevice :: number of devices that could contain FT sensors found "<<ftDeviceNames.size()<< "where analog are "<<ftList.size()<<" and MAS are "<<ftSensorList.size();
+    yDebug()<<"wholeBodyDynamicsDevice :: number of devices that could contain FT sensors found "<<ftDeviceNames.size();
 
-    auto totalNrFTDevices{nrAnalogFTSensors + nrMASFTSensors};
+    auto totalNrFTDevices{nrMASFTSensors};
     if( totalNrFTDevices < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) )
     {
         yError() << "wholeBodyDynamicsDevice : was expecting "
@@ -1733,8 +1718,7 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         return false;
     }
 
-    ftSensors = ftList;
-    // Attach the controlBoardList to the controlBoardRemapper
+    // Attach the sensors to the multipleanalogsensorsremapper
     bool ok = remappedMASInterfaces.multwrap->attachAll(ftSensorList);
     ok = ok & remappedMASInterfaces.multwrap->attachAll(tempSensorList);
 
@@ -1853,33 +1837,6 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
 
 bool WholeBodyDynamicsDevice::attachAllIMUs(const PolyDriverList& p)
 {
-    if (!useMasIMU)
-    {
-        std::vector<IGenericSensor*> imuList;
-
-        for(size_t devIdx = 0; devIdx < (size_t)p.size(); devIdx++)
-        {
-            IGenericSensor * pGenericSensor = 0;
-            if( p[devIdx]->poly->view(pGenericSensor) )
-            {
-                imuList.push_back(pGenericSensor);
-            }
-        }
-
-        size_t nrOfIMUDetected = imuList.size();
-
-        if( nrOfIMUDetected != 1 )
-        {
-            yError() << "WholeBodyDynamicsDevice was expecting one and only one IMU, but it found " << nrOfIMUDetected << " in the attached devices";
-            return false;
-        }
-
-        if( imuList.size() == 1 )
-        {
-            this->imuInterface = imuList[0];
-        }
-    }
-    else
     {
         size_t noOfMASDevicesWithOneAcc{0};
         size_t noOfMASDevicesWithOneGyro{0};
@@ -2062,17 +2019,6 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
             
 	    ok = true;
         }
-        else
-        {
-
-            auto ftAnalogIter = (std::find(ftAnalogSensorNames.begin(), ftAnalogSensorNames.end(), sensorName));
-            if (ftAnalogIter != ftAnalogSensorNames.end())
-            {
-                auto ftID = std::distance(ftAnalogSensorNames.begin(), ftAnalogIter);
-                int ftRetVal = ftSensors[ftID]->read(ftMeasurement);
-                ok = (ftRetVal == IAnalogSensor::AS_OK);
-            }
-        }
 
         iDynTree::Wrench bufWrench;
         if (timeFTStamp-prevFTTempTimeStamp>checkTemperatureEvery_seconds){
@@ -2142,28 +2088,6 @@ bool WholeBodyDynamicsDevice::readIMUSensors(bool verbose)
     rawIMUMeasurements.angularVel.zero();
 
     bool ok{false};
-    if (!useMasIMU)
-    {
-        ok = imuInterface->read(imuMeasurement);
-
-        if( !ok && verbose )
-        {
-            yWarning() << "wholeBodyDynamics warning : imu sensor was not readed correctly, using old measurement";
-        }
-
-        if( ok )
-        {
-            // Check format of IMU in YARP http://wiki.icub.org/wiki/Inertial_Sensor
-            rawIMUMeasurements.angularVel(0) = deg2rad(imuMeasurement[6]);
-            rawIMUMeasurements.angularVel(1) = deg2rad(imuMeasurement[7]);
-            rawIMUMeasurements.angularVel(2) = deg2rad(imuMeasurement[8]);
-
-            rawIMUMeasurements.linProperAcc(0) = imuMeasurement[3];
-            rawIMUMeasurements.linProperAcc(1) = imuMeasurement[4];
-            rawIMUMeasurements.linProperAcc(2) = imuMeasurement[5];
-        }
-    }
-    else
     {
         double time_stamp;
         yarp::sig::Vector acc(3), gyro(3);

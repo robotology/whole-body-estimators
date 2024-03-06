@@ -13,7 +13,6 @@
 #include <yarp/dev/IVirtualAnalogSensor.h>
 #include <yarp/dev/IAnalogSensor.h>
 #include <yarp/dev/MultipleAnalogSensorsInterfaces.h>
-#include <yarp/dev/IGenericSensor.h>
 
 // iCub includes
 #include <iCub/skinDynLib/skinContactList.h>
@@ -226,7 +225,6 @@ private:
     } remappedVirtualAnalogSensorsInterfaces;
 
     /** F/T sensors interfaces */
-    std::vector<yarp::dev::IAnalogSensor * > ftSensors;
 
     /** Remapped multiple analog sensors containing the sensors that implement multiple analog sensor interfaces*/
     yarp::dev::PolyDriver multipleAnalogRemappedDevice;
@@ -240,8 +238,6 @@ private:
     double prevFTTempTimeStamp;
 
     /** IMU interface */
-    yarp::dev::IGenericSensor * imuInterface;
-
     yarp::dev::IThreeAxisLinearAccelerometers* masAccInterface;
     yarp::dev::IThreeAxisGyroscopes* masGyroInterface;
     bool useMasIMU{true};
@@ -316,21 +312,19 @@ private:
     /**
      * Attach all Six Axis Force/Torque devices.
      * A device is identified as a Six Axis F/T if it
-     * implements the IAnalogSensor interface. It also ataches MAS Six Axis F/T sensors.
-     * A device is identified as a MAS Six Axis F/T if it
-     * implements the Multiple Analog Sensor interfaces.
+     * implements the ISixAxisForceTorqueSensors interface
+     * and getNrOfSixAxisForceTorqueSensors() >= 1 .
+     * If the device also implements the ITemperatureSensors
+     * interface, that is handled.
      */
     bool attachAllFTs(const PolyDriverList& p);
 
     /**
      * Attach all IMU devices.
      * A device is identified as an IMU if it
-     * implements the IGenericSensor interface
-     *  OR (it implements
-     * the IAnalogSensor interface AND it has 12 channels).
-     * (The first is the case of FT sensors in the yarprobotinterface
-     *  and the second is in the case of AnalogSensorClient).
-     *
+     * implements the IThreeAxisLinearAccelerometers and
+     * IThreeAxisGyroscopes interfaces, and getNrOfThreeAxisLinearAccelerometers
+     * and getNrOfThreeAxisGyroscopes return 1.
      */
     bool attachAllIMUs(const PolyDriverList& p);
 
