@@ -2,9 +2,9 @@
 #define GRAVITY_COMPENSATION_HELPERS_H
 
 // iDynTree includes
-#include <iDynTree/Model/FreeFloatingState.h>
-#include <iDynTree/Model/Model.h>
-#include <iDynTree/Model/Traversal.h>
+#include <iDynTree/FreeFloatingState.h>
+#include <iDynTree/Model.h>
+#include <iDynTree/Traversal.h>
 
 
 namespace wholeBodyDynamics

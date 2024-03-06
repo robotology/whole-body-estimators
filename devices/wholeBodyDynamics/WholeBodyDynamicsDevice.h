@@ -19,10 +19,10 @@
 #include <iCub/skinDynLib/skinContactList.h>
 
 // iDynTree includes
-#include <iDynTree/Estimation/ExtWrenchesAndJointTorquesEstimator.h>
+#include <iDynTree/ExtWrenchesAndJointTorquesEstimator.h>
 #include <iDynTree/skinDynLibConversions.h>
 #include <iDynTree/KinDynComputations.h>
-#include <iDynTree/Estimation/KalmanFilter.h>
+#include <iDynTree/KalmanFilter.h>
 
 // Filters
 #include "ctrlLibRT/filters.h"

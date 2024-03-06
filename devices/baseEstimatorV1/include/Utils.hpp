@@ -20,10 +20,10 @@
 #include <yarp/sig/Vector.h>
 
 // iDynTree
-#include <iDynTree/Core/Triplets.h>
-#include <iDynTree/Core/VectorFixSize.h>
-#include <iDynTree/Core/SparseMatrix.h>
-#include <iDynTree/Core/Rotation.h>
+#include <iDynTree/Triplets.h>
+#include <iDynTree/VectorFixSize.h>
+#include <iDynTree/SparseMatrix.h>
+#include <iDynTree/Rotation.h>
 
 // eigen
 #include <Eigen/Sparse>
