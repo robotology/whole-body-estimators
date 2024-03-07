@@ -1,0 +1,13 @@
+repositories:
+  YARP:
+    type: git
+    url: https://github.com/robotology/yarp.git
+    version: e3ec363c0af7469fcb2c218c356844b8d6bbb1c5
+  ICUB:
+    type: git
+    url: https://github.com/robotology/icub-main.git
+    version: v2.5.0
+  ergocub-software:
+    type: git
+    url: https://github.com/icub-tech-iit/ergocub-software.git
+    version: v0.7.1
