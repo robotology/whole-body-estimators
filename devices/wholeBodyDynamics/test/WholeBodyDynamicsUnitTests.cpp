@@ -54,7 +54,7 @@ TEST_CASE("WholeBodyDynamicsSmokeTest")
     REQUIRE(xmlRobotInterfaceResult.robot.enterPhase(yarp::robotinterface::ActionPhaseStartup));
     REQUIRE(xmlRobotInterfaceResult.robot.enterPhase(yarp::robotinterface::ActionPhaseRun));
 
-    // If the robotinterface started, we are good to go, we can close it 
+    // If the robotinterface started, we are good to go, we can close it
     REQUIRE(xmlRobotInterfaceResult.robot.enterPhase(yarp::robotinterface::ActionPhaseInterrupt1));
     REQUIRE(xmlRobotInterfaceResult.robot.enterPhase(yarp::robotinterface::ActionPhaseInterrupt2));
     REQUIRE(xmlRobotInterfaceResult.robot.enterPhase(yarp::robotinterface::ActionPhaseInterrupt3));

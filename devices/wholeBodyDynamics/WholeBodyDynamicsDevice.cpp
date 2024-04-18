@@ -14,8 +14,11 @@
 #include <iDynTree/YARPConversions.h>
 #include <iDynTree/Utils.h>
 #include <iDynTree/EigenHelpers.h>
+#include <iDynTree/ModelLoader.h>
+
 #include <cassert>
 #include <cmath>
+#include <unordered_map>
 
 namespace yarp
 {
@@ -218,6 +221,48 @@ bool getAdditionalConsideredFixedJointsList(os::Searchable& config, std::vector<
     return getConfigParamsAsList(config,"additionalConsideredFixedJoints",additionalFixedJoints, notRequired);
 }
 
+bool getNonConsideredAxesPositions(os::Searchable& config, std::unordered_map<std::string, double>& removedJointPositions)
+{
+    bool notRequired{false};
+    std::string propertyName = "nonConsideredAxesPositions";
+    yarp::os::Property prop;
+    prop.fromString(config.toString().c_str());
+    yarp::os::Bottle *propNames=prop.find(propertyName).asList();
+    if(propNames==nullptr)
+    {
+        return false;
+    }
+
+    for(auto elem=0u; elem < propNames->size(); elem++)
+    {
+        const auto value = propNames->get(elem);
+        if (!value.isList())
+        {
+            yError() << "WholeBodyDynamicsDevice: Error parsing parameters: \" "<<propertyName<<" \". Expected vector of (name,scalarValue) pairs.\n";
+            return false;
+        }
+        yarp::os::Bottle *nonConsideredValuePair = value.asList();
+        if (nonConsideredValuePair->size() != 2)
+        {
+            yError() << "WholeBodyDynamicsDevice: Error parsing parameters: \" "<<propertyName<<" \". Expected vector of (name,scalarValue) pairs.\n";
+            return false;
+        }
+
+        if (!nonConsideredValuePair->get(0).isString() || !nonConsideredValuePair->get(1).isFloat64())
+        {
+            yError() << "WholeBodyDynamicsDevice: Error parsing parameters: \" "<<propertyName<<" \". Expected vector of (name,scalarValue) pairs.\n";
+            return false;
+        }
+
+        std::string jointName = nonConsideredValuePair->get(0).asString();
+        double jointPosition = nonConsideredValuePair->get(1).asFloat64();
+        removedJointPositions[jointName] = jointPosition;
+
+    }
+
+    return true;
+}
+
 bool getGravityCompensationDOFsList(os::Searchable& config, std::vector<std::string> & gravityCompensationDOFs)
 {
     bool required{true};
@@ -332,7 +377,15 @@ bool WholeBodyDynamicsDevice::openEstimator(os::Searchable& config)
         estimationJointNames.insert(estimationJointNames.end(), additionalConsideredJoints.begin(), additionalConsideredJoints.end());
     }
 
-    ok = estimator.loadModelAndSensorsFromFileWithSpecifiedDOFs(modelFileFullPath,estimationJointNames);
+    std::unordered_map<std::string, double> removedJointPositions;
+
+    // Return value is ignored as the parameter is not required
+    getNonConsideredAxesPositions(config, removedJointPositions);
+
+    iDynTree::ModelLoader mdlLoader;
+    mdlLoader.loadReducedModelFromFile(modelFileFullPath, estimationJointNames, removedJointPositions);
+
+    ok = estimator.setModel(mdlLoader.model());
     if( !ok )
     {
         yInfo() << "wholeBodyDynamics : impossible to create ExtWrenchesAndJointTorquesEstimator from file "
