@@ -48,7 +48,6 @@ uninstall = { cmd = ["cmake", "--build", ".build", "--target", "uninstall"]}
 
 [dependencies]
 c-compiler = "*"
-idyntree = "*"
 cxx-compiler = "*"
 ninja = "*"
 pkg-config = "*"
@@ -58,6 +57,10 @@ ace = "*"
 ycm-cmake-modules = "*"
 catch2 = "*"
 tinyxml = "*"
+# iDynTree deps from source
+libxml2 = "*"
+assimp = "*"
+ipopt = "*"
 # Used to download and build dependencies from source
 colcon-common-extensions = "*"
 vcstool = "*"
