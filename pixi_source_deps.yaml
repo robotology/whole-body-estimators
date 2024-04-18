@@ -14,4 +14,4 @@ repositories:
   idyntree:
     type: git
     url: https://github.com/robotology/idyntree.git
-    version: master
+    version: fix495
