@@ -52,12 +52,13 @@ cxx-compiler = "*"
 ninja = "*"
 pkg-config = "*"
 eigen = "*"
-# YARP from source dependencies
+idyntree = "*"
+# YARP from source dependencies (used only when compiling idyntree from source)
 ace = "*"
 ycm-cmake-modules = "*"
 catch2 = "*"
 tinyxml = "*"
-# iDynTree deps from source
+# iDynTree deps from source (used only when compiling idyntree from source)
 libxml2 = "*"
 assimp = "*"
 ipopt = "*"
