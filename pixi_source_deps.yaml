@@ -11,7 +11,3 @@ repositories:
     type: git
     url: https://github.com/icub-tech-iit/ergocub-software.git
     version: v0.7.1
-  idyntree:
-    type: git
-    url: https://github.com/robotology/idyntree.git
-    version: fix495
