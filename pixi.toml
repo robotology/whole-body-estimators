@@ -52,7 +52,8 @@ cxx-compiler = "*"
 ninja = "*"
 pkg-config = "*"
 eigen = "*"
-idyntree = "*"
+# Requires https://github.com/robotology/idyntree/pull/1178
+idyntree = ">=12.2.0"
 # YARP from source dependencies (used only when compiling idyntree from source)
 ace = "*"
 ycm-cmake-modules = "*"

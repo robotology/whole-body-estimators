@@ -64,10 +64,10 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/gxx_linux-64-12.3.0-h4a1b8e8_3.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/humanfriendly-10.0-pyhd8ed1ab_6.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/icu-73.2-h59595ed_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/idyntree-12.1.0-py311hc9ba81c_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/idyntree-12.2.0-py311hc115bfb_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/importlib-metadata-7.1.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/iniconfig-2.0.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/ipopt-3.14.15-h04b96a2_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/ipopt-3.14.16-hf967516_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/irrlicht-1.8.5-h2a6caf8_4.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/kernel-headers_linux-64-2.6.32-he073ed8_17.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/lame-3.100-h166bdaf_1003.tar.bz2
@@ -228,10 +228,10 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/osx-64/glfw-3.4-h10d778d_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/humanfriendly-10.0-pyhd8ed1ab_6.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/icu-73.2-hf5e326d_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/idyntree-12.1.0-py311h143acc2_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/idyntree-12.2.0-py311h1fb5ec5_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/importlib-metadata-7.1.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/iniconfig-2.0.0-pyhd8ed1ab_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/osx-64/ipopt-3.14.14-h09c0c07_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/osx-64/ipopt-3.14.16-h37bbb85_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/irrlicht-1.8.5-h5bfa9a0_4.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/ld64-711-ha02d983_0.conda
       - conda: https://conda.anaconda.org/conda-forge/osx-64/ld64_osx-64-711-ha20a434_0.conda
@@ -346,11 +346,11 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/noarch/exceptiongroup-1.2.0-pyhd8ed1ab_2.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/glfw-3.4-hcfcfb64_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/humanfriendly-10.0-py311h1ea47a8_5.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/idyntree-12.1.0-py311h610bbb2_1.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/idyntree-12.2.0-py311hd1c7e33_1.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/importlib-metadata-7.1.0-pyha770c72_0.conda
       - conda: https://conda.anaconda.org/conda-forge/noarch/iniconfig-2.0.0-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/intel-openmp-2024.1.0-h57928b3_965.conda
-      - conda: https://conda.anaconda.org/conda-forge/win-64/ipopt-3.14.15-h1709daf_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/win-64/ipopt-3.14.16-h394f428_0.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/irrlicht-1.8.5-h65f4d7e_4.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libblas-3.9.0-22_win64_mkl.conda
       - conda: https://conda.anaconda.org/conda-forge/win-64/libboost-1.84.0-hcc118f5_2.conda
@@ -2004,16 +2004,18 @@ packages:
   timestamp: 1692901622519
 - kind: conda
   name: idyntree
-  version: 12.1.0
-  build: py311h143acc2_0
+  version: 12.2.0
+  build: py311h1fb5ec5_1
+  build_number: 1
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/idyntree-12.1.0-py311h143acc2_0.conda
-  sha256: 981d599276b47f6c1fa2528cfdd4038617e627fbb0806eb02a0440a08bca73e6
-  md5: c19899e202509e2f052a44ef5f8c0c4a
+  url: https://conda.anaconda.org/conda-forge/osx-64/idyntree-12.2.0-py311h1fb5ec5_1.conda
+  sha256: 2b462908c8c9535761ef01473e58dff2a26d76a60dea73da60f1c1fe91998439
+  md5: fa07e6fce90dcf648f3ffcce902cf87f
   depends:
+  - __osx >=10.9
   - assimp >=5.3.1,<5.3.2.0a0
   - glfw >=3.4,<4.0a0
-  - ipopt >=3.14.14,<3.14.15.0a0
+  - ipopt >=3.14.16,<3.14.17.0a0
   - irrlicht >=1.8.5,<1.9.0a0
   - libcxx >=16
   - libosqp >=0.6.3,<0.6.4.0a0
@@ -2023,49 +2025,21 @@ packages:
   - python >=3.11,<3.12.0a0
   - python_abi 3.11.* *_cp311
   license: BSD-3-Clause
-  license_family: BSD
-  size: 2204287
-  timestamp: 1712234089586
+  size: 2225144
+  timestamp: 1713851243464
 - kind: conda
   name: idyntree
-  version: 12.1.0
-  build: py311h610bbb2_1
-  build_number: 1
-  subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/idyntree-12.1.0-py311h610bbb2_1.conda
-  sha256: b0380626d853f370da97091c33b07798d4a8fde3433ab02645952975277c963b
-  md5: 3ca5ddbf58ef87b23054cbe55833eb94
-  depends:
-  - assimp >=5.3.1,<5.3.2.0a0
-  - glfw >=3.4,<4.0a0
-  - ipopt >=3.14.15,<3.14.16.0a0
-  - irrlicht >=1.8.5,<1.9.0a0
-  - libosqp >=0.6.3,<0.6.4.0a0
-  - libxml2 >=2.12.6,<3.0a0
-  - numpy >=1.23.5,<2.0a0
-  - osqp-eigen >=0.8.1,<0.8.2.0a0
-  - python >=3.11,<3.12.0a0
-  - python_abi 3.11.* *_cp311
-  - ucrt >=10.0.20348.0
-  - vc >=14.2,<15
-  - vc14_runtime >=14.29.30139
-  license: BSD-3-Clause
-  license_family: BSD
-  size: 7273600
-  timestamp: 1712899323135
-- kind: conda
-  name: idyntree
-  version: 12.1.0
-  build: py311hc9ba81c_1
+  version: 12.2.0
+  build: py311hc115bfb_1
   build_number: 1
   subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/idyntree-12.1.0-py311hc9ba81c_1.conda
-  sha256: c4d8e9cb09732fe3cff4cd42028f223ad40ae8cc5cab0abfae1d16f4f313356f
-  md5: 465afab12bb878c280968680c426a6ee
+  url: https://conda.anaconda.org/conda-forge/linux-64/idyntree-12.2.0-py311hc115bfb_1.conda
+  sha256: bfa818301b4fe7dc98f09a8fb85a6958ec547c5d7a5c41bb28cb89fbeae46407
+  md5: 074de2368447788cb4d90d740ae7963b
   depends:
   - assimp >=5.3.1,<5.3.2.0a0
   - glfw >=3.4,<4.0a0
-  - ipopt >=3.14.15,<3.14.16.0a0
+  - ipopt >=3.14.16,<3.14.17.0a0
   - irrlicht >=1.8.5,<1.9.0a0
   - libgcc-ng >=12
   - libosqp >=0.6.3,<0.6.4.0a0
@@ -2077,9 +2051,34 @@ packages:
   - python_abi 3.11.* *_cp311
   - xorg-libx11 >=1.8.9,<2.0a0
   license: BSD-3-Clause
-  license_family: BSD
-  size: 2469925
-  timestamp: 1712898831162
+  size: 2480029
+  timestamp: 1713850211062
+- kind: conda
+  name: idyntree
+  version: 12.2.0
+  build: py311hd1c7e33_1
+  build_number: 1
+  subdir: win-64
+  url: https://conda.anaconda.org/conda-forge/win-64/idyntree-12.2.0-py311hd1c7e33_1.conda
+  sha256: d434a3a35c897b24ee439d680964c4da5bc3b382abeae3515afda5a7b9978106
+  md5: 105a9b80d93f82a545542a81afb93d4a
+  depends:
+  - assimp >=5.3.1,<5.3.2.0a0
+  - glfw >=3.4,<4.0a0
+  - ipopt >=3.14.16,<3.14.17.0a0
+  - irrlicht >=1.8.5,<1.9.0a0
+  - libosqp >=0.6.3,<0.6.4.0a0
+  - libxml2 >=2.12.6,<3.0a0
+  - numpy >=1.23.5,<2.0a0
+  - osqp-eigen >=0.8.1,<0.8.2.0a0
+  - python >=3.11,<3.12.0a0
+  - python_abi 3.11.* *_cp311
+  - ucrt >=10.0.20348.0
+  - vc >=14.2,<15
+  - vc14_runtime >=14.29.30139
+  license: BSD-3-Clause
+  size: 7236343
+  timestamp: 1713850881763
 - kind: conda
   name: importlib-metadata
   version: 7.1.0
@@ -2126,17 +2125,17 @@ packages:
   timestamp: 1712943333029
 - kind: conda
   name: ipopt
-  version: 3.14.14
-  build: h09c0c07_1
-  build_number: 1
+  version: 3.14.16
+  build: h37bbb85_0
   subdir: osx-64
-  url: https://conda.anaconda.org/conda-forge/osx-64/ipopt-3.14.14-h09c0c07_1.conda
-  sha256: 6d9a8a848a090b2a3f56c872e8ca083650b6200618181ec2fe7db8df4aba9b67
-  md5: 500df5bafb93562771057b7093f96dc8
+  url: https://conda.anaconda.org/conda-forge/osx-64/ipopt-3.14.16-h37bbb85_0.conda
+  sha256: c73bb3ae1251ec65623dc384ef130c38ffe39f2ffe6fb8ce9edc93769bb510c3
+  md5: c587ffd8b8111b4bda5f646c6bf0f082
   depends:
+  - __osx >=10.9
   - ampl-mp >=3.1.0,<3.2.0a0
   - libblas >=3.9.0,<4.0a0
-  - libcxx >=15
+  - libcxx >=16
   - libgfortran 5.*
   - libgfortran5 >=12.3.0
   - libgfortran5 >=13.2.0
@@ -2144,16 +2143,36 @@ packages:
   - metis >=5.1.0,<5.1.1.0a0
   - mumps-seq >=5.6.2,<5.6.3.0a0
   license: EPL-1.0
-  size: 819742
-  timestamp: 1705695597921
+  size: 820255
+  timestamp: 1713801828626
 - kind: conda
   name: ipopt
-  version: 3.14.15
-  build: h04b96a2_0
+  version: 3.14.16
+  build: h394f428_0
+  subdir: win-64
+  url: https://conda.anaconda.org/conda-forge/win-64/ipopt-3.14.16-h394f428_0.conda
+  sha256: 050f1d6c7eb881718e3003f18b79c1c37e0690224d9040bb687a7655e06a8ebc
+  md5: 823e1b166273cea6668a38b7fa72c4ed
+  depends:
+  - libblas >=3.9.0,<4.0a0
+  - libflang >=5.0.0,<6.0.0.a0
+  - liblapack >=3.9.0,<4.0a0
+  - metis >=5.1.0,<5.1.1.0a0
+  - mumps-seq >=5.6.2,<5.6.3.0a0
+  - ucrt >=10.0.20348.0
+  - vc >=14.2,<15
+  - vc14_runtime >=14.29.30139
+  license: EPL-1.0
+  size: 908190
+  timestamp: 1713801996071
+- kind: conda
+  name: ipopt
+  version: 3.14.16
+  build: hf967516_0
   subdir: linux-64
-  url: https://conda.anaconda.org/conda-forge/linux-64/ipopt-3.14.15-h04b96a2_0.conda
-  sha256: 297cd9afdf78454c8d3a2fadc5a7a4f1d2fb5f4bbc60b2e17b85f37a4f8d9587
-  md5: 26868adffd12af686a88fcaa8f994775
+  url: https://conda.anaconda.org/conda-forge/linux-64/ipopt-3.14.16-hf967516_0.conda
+  sha256: d2d6288fb618d58d1725f26753e0aa4142fd1fad6d08072905eab8b5637558a7
+  md5: 21958932471dd56bc1c9cb3aaed65e04
   depends:
   - ampl-mp >=3.1.0,<3.2.0a0
   - libblas >=3.9.0,<4.0a0
@@ -2166,28 +2185,8 @@ packages:
   - metis >=5.1.0,<5.1.1.0a0
   - mumps-seq >=5.6.2,<5.6.3.0a0
   license: EPL-1.0
-  size: 1022873
-  timestamp: 1712819186765
-- kind: conda
-  name: ipopt
-  version: 3.14.15
-  build: h1709daf_0
-  subdir: win-64
-  url: https://conda.anaconda.org/conda-forge/win-64/ipopt-3.14.15-h1709daf_0.conda
-  sha256: 653ca2cc953abeec652ca0fd54ea3b74e368d29dbfbdcd484cf79f2fc18930ee
-  md5: d5b464d7e02790145b3340b42e694094
-  depends:
-  - libblas >=3.9.0,<4.0a0
-  - libflang >=5.0.0,<6.0.0.a0
-  - liblapack >=3.9.0,<4.0a0
-  - metis >=5.1.0,<5.1.1.0a0
-  - mumps-seq >=5.6.2,<5.6.3.0a0
-  - ucrt >=10.0.20348.0
-  - vc >=14.2,<15
-  - vc14_runtime >=14.29.30139
-  license: EPL-1.0
-  size: 907597
-  timestamp: 1712819660643
+  size: 1021090
+  timestamp: 1713801423148
 - kind: conda
   name: irrlicht
   version: 1.8.5
