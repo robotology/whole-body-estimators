@@ -32,7 +32,7 @@ set(YARP_REQUIRED_VERSION 3.0.1)
 
 find_package(YARP ${YARP_REQUIRED_VERSION} REQUIRED COMPONENTS robotinterface idl_tools eigen os sig)
 find_package(Eigen3 REQUIRED)
-find_package(iDynTree 10.0.0 REQUIRED)
+find_package(iDynTree 12.2.0 REQUIRED)
 find_package(ICUB REQUIRED)
 
 yarp_configure_plugins_installation(${PROJECT_NAME})
