@@ -32,9 +32,7 @@ jobs:
       if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && github.event.inputs.delete_pixi_lock == 'true')
       shell: bash
       run: |
-        rm -rf pixi.lock
-        pixi list
-        cat pixi.lock
+        rm pixi.lock
 
     - name: Print used environment
       shell: bash
