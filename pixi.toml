@@ -48,16 +48,21 @@ uninstall = { cmd = ["cmake", "--build", ".build", "--target", "uninstall"]}
 
 [dependencies]
 c-compiler = "*"
-idyntree = "*"
 cxx-compiler = "*"
 ninja = "*"
 pkg-config = "*"
 eigen = "*"
-# YARP from source dependencies
+# Requires https://github.com/robotology/idyntree/pull/1178
+idyntree = ">=12.2.0"
+# YARP from source dependencies (used only when compiling idyntree from source)
 ace = "*"
 ycm-cmake-modules = "*"
 catch2 = "*"
 tinyxml = "*"
+# iDynTree deps from source (used only when compiling idyntree from source)
+libxml2 = "*"
+assimp = "*"
+ipopt = "*"
 # Used to download and build dependencies from source
 colcon-common-extensions = "*"
 vcstool = "*"
