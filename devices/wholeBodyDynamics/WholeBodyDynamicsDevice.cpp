@@ -15,6 +15,7 @@
 #include <iDynTree/Utils.h>
 #include <iDynTree/EigenHelpers.h>
 #include <iDynTree/ModelLoader.h>
+#include <iDynTree/SixAxisForceTorqueSensor.h>
 
 #include <cassert>
 #include <cmath>
@@ -349,6 +350,20 @@ bool WholeBodyDynamicsDevice::openRemapperVirtualSensors(os::Searchable& config)
     return true;
 }
 
+void getFTJointNames(const iDynTree::Model& model,
+                     std::vector<std::string>& ftJointNames)
+{
+    ftJointNames.resize(0);
+
+    for(size_t sens=0; sens < model.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); sens++)
+    {
+        iDynTree::SixAxisForceTorqueSensor* pSens = static_cast<iDynTree::SixAxisForceTorqueSensor*>(model.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,sens));
+        ftJointNames.push_back(pSens->getParentJoint());
+    }
+
+    return;
+}
+
 bool WholeBodyDynamicsDevice::openEstimator(os::Searchable& config)
 {
     // get the list of considered dofs from config
@@ -381,6 +396,32 @@ bool WholeBodyDynamicsDevice::openEstimator(os::Searchable& config)
 
     // Return value is ignored as the parameter is not required
     getNonConsideredAxesPositions(config, removedJointPositions);
+
+    // Indipendently of what is passed as additionalConsideredJoints argument, make sure that all the FT sensors
+    // of the full model are included in the reduced model
+    // Solution for regression in https://github.com/icub-tech-iit/ergocub-software/issues/246#issuecomment-2090436940
+    iDynTree::ModelLoader fullModelLoader;
+    ok = fullModelLoader.loadModelFromFile(modelFileFullPath);
+
+    if  (!ok)
+    {
+        yError() << "wholeBodyDynamics : impossible to load iDynTree model from file "
+                 << modelFileName << " ( full path: " << modelFileFullPath << " ) ";
+        return false;
+    }
+
+    // Add FT joints (if they are not already in the consideredDOFs list
+    std::vector< std::string > ftJointNames;
+    getFTJointNames(fullModelLoader.model(),ftJointNames);
+
+    for (size_t i = 0; i < ftJointNames.size(); i++)
+    {
+        // Only add an F/T sensor joint if it is not already in consideredDOFs
+        if (std::find(estimationJointNames.begin(), estimationJointNames.end(), ftJointNames[i]) == estimationJointNames.end())
+        {
+            estimationJointNames.push_back(ftJointNames[i]);
+        }
+    }
 
     iDynTree::ModelLoader mdlLoader;
     mdlLoader.loadReducedModelFromFile(modelFileFullPath, estimationJointNames, removedJointPositions);
