@@ -1822,18 +1822,6 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         return false;
     }
 
-    if (nrMASFTSensors != remappedMASInterfaces.ftMultiSensors->getNrOfSixAxisForceTorqueSensors())
-    {
-        yError() << "WholeBodyDynamicsDevice::attachAll Invalid number of MAS FT sensors after remapper";
-        return false;
-    }
-
-    if (nrMASFTSensors != ftMultipleAnalogSensorNames.size())
-    {
-	yError() << "WholeBodyDynamicsDevice::attachAll Invalid number of MAS FT sensor names";
-        return false;
-    }
-
     ftMultipleAnalogSensorIdxMapping.resize(ftMultipleAnalogSensorNames.size());
     for (auto ftDx = 0; ftDx < nrMASFTSensors; ftDx++)
     {
