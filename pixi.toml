@@ -50,6 +50,8 @@ uninstall = { cmd = ["cmake", "--build", ".build", "--target", "uninstall"]}
 c-compiler = "*"
 cxx-compiler = "*"
 ninja = "*"
+cmake = "*"
+make  = "*"
 pkg-config = "*"
 eigen = "*"
 # Requires https://github.com/robotology/idyntree/pull/1178

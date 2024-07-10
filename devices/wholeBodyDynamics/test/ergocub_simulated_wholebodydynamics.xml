@@ -13,6 +13,7 @@
   <param name="forceTorqueEstimateConfidence">2</param>
   <param name="useJointVelocity">true</param>
   <param name="useJointAcceleration">false</param>
+  <param name="estimateJointVelocityAcceleration">false</param>
   <param name="streamFilteredFT">true</param>
   <param name="imuFilterCutoffInHz">3.0</param>
   <param name="forceTorqueFilterCutoffInHz">3.0</param>

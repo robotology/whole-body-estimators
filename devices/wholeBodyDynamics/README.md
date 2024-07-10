@@ -61,6 +61,26 @@ For an overview on `wholeBodyDynamics` and to understand how to run the device, 
   The axes contained in the `axesNames` parameter are then mapped to the wrapped `controlboard` in the `attachAll` method, using `controlBoardRemapper` class.
   Furthermore are also used to match the yarp axes to the joint names found in the passed URDF file.
 
+#### Specifying the Force Torque Sensors to use
+
+By default, the `wholebodydynamics` device takes the list of forcetorque sensors from the  `multipleAnalogSensorsNames` group that signals which FT sensors are used.
+
+In particular, the `SixAxisForceTorqueSensorsNames` parameter from the `multipleAnalogSensorsNames` group specify the sensor names that are used.
+
+Example:
+```
+<group name="multipleAnalogSensorsNames">
+    <param name="SixAxisForceTorqueSensorsNames">(l_leg_ft,r_leg_ft,l_foot_ft,r_foot_ft)</param>
+</group>
+```
+
+The sensors specified in this way need to be:
+* Available in the URDF sensor used for the robot, using the format supported by iDynTree to specify FT sensors (see https://github.com/robotology/idyntree/blob/master/doc/model_loading.md#force_torque)
+* Exposed as YARP devices that expose the [`yarp::dev::ISixAxisForceTorqueSensors`](https://www.yarp.it/latest/classyarp_1_1dev_1_1ISixAxisForceTorqueSensors.html) YARP interface in one of the devices passed to the device via the `attach` xml list or the `attachAll` C++ method.
+
+If the `FT_TEMPERATURE_COEFFICIENTS` parameter is specified, then it is assumed that for each FT sensors there is a temperature sensor with the same name the measure of which is available via the [`yarp::dev::ITemperatureSensors`](https://www.yarp.it/latest/classyarp_1_1dev_1_1ITemperatureSensors.html) interface. If that is not the case, an error is raised. To use the temperature compensation, all used FT sensors must support the temperature compensation.
+
+
 #### Gravity Compensation
   This device also provides gravity compensation torques (using the `IImpedanceControl::setImpedanceOffset` method) for axis that are in compliant interaction mode and in position/position direct/velocity control mode.
 
@@ -149,7 +169,6 @@ Typically this estimates are provided only for the upper joints (arms and torso)
        </group>
   ```
 
-For a detailed explanation on their usage, please see the document [Using temperature coefficients and pre-estimated FT offsets](../../doc/howto/useTemperatureCoefficientsAndOffsetCompensationInWholeBodyDynamics.md).
 
   #### Filters
 

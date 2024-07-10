@@ -4,6 +4,7 @@
         "YARP" :
         {
             "cmake-args": [
+                "-GNinja",
                 "-DYARP_COMPILE_ALL_FAKE_DEVICES:BOOL=ON",
                 "-DYARP_COMPILE_GUIS=OFF"
             ]
@@ -11,6 +12,7 @@
         "ICUB" :
         {
             "cmake-args": [
+                "-GNinja",
                 "-DBUILD_SHARED_LIBS=ON",
                 "-DICUBMAIN_COMPILE_CORE=OFF",
                 "-DICUBMAIN_COMPILE_TOOLS=OFF",

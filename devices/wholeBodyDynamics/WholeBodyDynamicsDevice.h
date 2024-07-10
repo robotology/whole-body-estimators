@@ -366,6 +366,8 @@ private:
     bool loadSettingsFromConfig(yarp::os::Searchable& config);
     bool loadSecondaryCalibrationSettingsFromConfig(yarp::os::Searchable& config);
     bool loadGravityCompensationSettingsFromConfig(yarp::os::Searchable & config);
+    bool m_temperatureCompensationEnabled{false};
+    bool checkIfTemperatureCompensationIsSetFromConfig(yarp::os::Searchable & config);
     bool loadTemperatureCoefficientsSettingsFromConfig(yarp::os::Searchable& config);
     bool loadFTSensorOffsetFromConfig(yarp::os::Searchable& config);
     bool applyLPFSettingsFromConfig(const yarp::os::Property& config, const std::string& setting_name);
@@ -446,11 +448,9 @@ private:
     std::vector<wholeBodyDynamics::SixAxisForceTorqueMeasureProcessor> ftProcessors;
 
     /**
-     * Vector of Analog FT Sensor names
+     * Vector of FT Sensor names considered for estimation
      */
-    std::vector<std::string>     ftAnalogSensorNames;
-    std::vector<std::string>     ftMultipleAnalogSensorNames;
-    std::vector<int>  ftMultipleAnalogSensorIdxMapping;
+    std::vector<std::string> ftSensorNames;
 
     /***
      * RPC Calibration related methods
