@@ -1850,13 +1850,17 @@ bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
         while( (timeSpentTryngToReadSensors < wholeBodyDynamics_sensorTimeoutInSeconds) && !readSuccessfull )
         {
             readSuccessfull = readFTSensors(verbose);
-            timeSpentTryngToReadSensors = (yarp::os::Time::now() - tic);
-            yarp::os::Time::delay(0.001);
+            // Only update the timeSpentTryngToReadSensors and wait if the read was not successful
+            if (!readSuccessfull)
+            {
+                timeSpentTryngToReadSensors = (yarp::os::Time::now() - tic);
+                yarp::os::Time::delay(0.001);
+            }
         }
 
         if( !readSuccessfull )
         {
-            yError() << "WholeBodyDynamicsDevice was unable to correctly read from the FT sensors";
+            yError() << "WholeBodyDynamicsDevice was unable to correctly read from the FT sensors after " << timeSpentTryngToReadSensors << " seconds.";
             return false;
         }
     }
