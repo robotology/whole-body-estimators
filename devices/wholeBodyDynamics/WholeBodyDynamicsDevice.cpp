@@ -903,7 +903,7 @@ bool WholeBodyDynamicsDevice::openMultipleAnalogSensorRemapper(os::Searchable &c
     // We get the multipleAnalogSensorsNames group, but from it we just use the multipleAnalogSensorsNames parameter
     if (!prop.check("multipleAnalogSensorsNames"))
     {
-        yError() << "wholeBodyDynamics :Impossible to find requied group multipleAnalogSensorsNames";
+        yError() << "wholeBodyDynamics: Impossible to find required group multipleAnalogSensorsNames";
         return false;
     }
 
@@ -913,13 +913,13 @@ bool WholeBodyDynamicsDevice::openMultipleAnalogSensorRemapper(os::Searchable &c
     bool ok = getConfigParamsAsList(multipleAnalogSensorsNames, "SixAxisForceTorqueSensorsNames", this->ftSensorNames, required);
     if (!ok)
     {
-        yError() << "wholeBodyDynamics :Impossible to find required variable SixAxisForceTorqueSensorsNames in group multipleAnalogSensorsNames";
+        yError() << "wholeBodyDynamics: Impossible to find required variable SixAxisForceTorqueSensorsNames in group multipleAnalogSensorsNames";
         return false;
     }
 
     if (multipleAnalogSensorsNames.find("TemperatureSensorsNames").isList())
     {
-        yWarning() << "wholeBodyDynamics : TemperatureSensorsNames parameter is not used anymore, the names in SixAxisForceTorqueSensorsNames are used, please remove TemperatureSensorsNames parameter to avoid confusion";
+        yWarning() << "wholeBodyDynamics: TemperatureSensorsNames parameter is not used anymore, the names in SixAxisForceTorqueSensorsNames are used, please remove TemperatureSensorsNames parameter to avoid confusion";
     }
 
     addVectorOfStringToProperty(propMASRemapper, "SixAxisForceTorqueSensorsNames", this->ftSensorNames);
@@ -1184,7 +1184,7 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     if( !(prop.check(estimateJointVelocityAccelerationOptionName.c_str()) && prop.find(estimateJointVelocityAccelerationOptionName.c_str()).isBool()) )
     {
         yWarning() << "wholeBodyDynamics: estimateJointVelocityAcceleration bool parameter missing, please specify it.";
-        yWarning() << "wholeBodyDynamics: setting estimateJointVelocityAcceleration to the default value of true, but this is a deprecated behaviour that will be removed in the future.";
+        yWarning() << "wholeBodyDynamics: setting estimateJointVelocityAcceleration to the default value of false, but this is a deprecated behavior that will be removed in the future.";
         settings.estimateJointVelocityAcceleration = false;
     }
     else
