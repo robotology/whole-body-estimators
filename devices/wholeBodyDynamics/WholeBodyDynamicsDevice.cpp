@@ -55,7 +55,6 @@ WholeBodyDynamicsDevice::WholeBodyDynamicsDevice(): yarp::os::PeriodicThread(def
     calibrationBuffers.nrOfSamplesUsedUntilNowForCalibration = 0;
     // temperature measuremnts vector
     tempMeasurements.resize(0);
-    ftTempMapping.resize(0);
     prevFTTempTimeStamp=0;
 }
 
@@ -350,15 +349,18 @@ bool WholeBodyDynamicsDevice::openRemapperVirtualSensors(os::Searchable& config)
     return true;
 }
 
-void getFTJointNames(const iDynTree::Model& model,
-                     std::vector<std::string>& ftJointNames)
+void getFTInfoFromiDynTreeModel(const iDynTree::Model& model,
+                                std::vector<std::string>& ftJointNames,
+                                std::vector<std::string>& ftSensorNames)
 {
     ftJointNames.resize(0);
+    ftSensorNames.resize(0);
 
     for(size_t sens=0; sens < model.sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); sens++)
     {
         iDynTree::SixAxisForceTorqueSensor* pSens = static_cast<iDynTree::SixAxisForceTorqueSensor*>(model.sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,sens));
         ftJointNames.push_back(pSens->getParentJoint());
+        ftSensorNames.push_back(pSens->getName());
     }
 
     return;
@@ -410,23 +412,54 @@ bool WholeBodyDynamicsDevice::openEstimator(os::Searchable& config)
         return false;
     }
 
-    // Add FT joints (if they are not already in the consideredDOFs list
-    std::vector< std::string > ftJointNames;
-    getFTJointNames(fullModelLoader.model(),ftJointNames);
+    // Add FT joints (if they are not already in the consideredDOFs list_
+    std::vector<std::string> ftJointNamesiDynTreeModel;
+    std::vector<std::string> ftSensorNamesiDynTreeModel;
+    getFTInfoFromiDynTreeModel(fullModelLoader.model(), ftJointNamesiDynTreeModel, ftSensorNamesiDynTreeModel);
 
-    for (size_t i = 0; i < ftJointNames.size(); i++)
+    for (size_t i = 0; i < ftJointNamesiDynTreeModel.size(); i++)
     {
         // Only add an F/T sensor joint if it is not already in consideredDOFs
-        if (std::find(estimationJointNames.begin(), estimationJointNames.end(), ftJointNames[i]) == estimationJointNames.end())
+        if (std::find(estimationJointNames.begin(), estimationJointNames.end(), ftJointNamesiDynTreeModel[i]) == estimationJointNames.end())
         {
-            estimationJointNames.push_back(ftJointNames[i]);
+            estimationJointNames.push_back(ftJointNamesiDynTreeModel[i]);
         }
     }
 
     iDynTree::ModelLoader mdlLoader;
     mdlLoader.loadReducedModelFromFile(modelFileFullPath, estimationJointNames, removedJointPositions);
 
-    ok = estimator.setModel(mdlLoader.model());
+    // Raise an error if the specified ft sensor is not present in the model
+    for(size_t i=0; i < ftSensorNames.size(); i++)
+    {
+        if (std::find(ftSensorNamesiDynTreeModel.begin(), ftSensorNamesiDynTreeModel.end(), ftSensorNames[i]) == ftSensorNamesiDynTreeModel.end())
+        {
+            yError() << "wholeBodyDynamics: sensor named " << ftSensorNames[i] << " not found in the URDF model, are you sure the URDF contains the required <sensor> tags?";
+            return false;
+        }
+    }
+
+    // In the estimation we want just to use the FT sensors that are specified in the configuration file, so at this point
+    // we modify the SensorsList infrastructure to remove the FT sensors that we do not want
+    // Note that in some case we still want the fixed joints corresponding to the FT sensors even if we do not want to
+    // consider the FT sensors, see https://github.com/robotology/idyntree/issues/829
+    iDynTree::Model newModel = mdlLoader.model();
+    iDynTree::SensorsList oldSensorsList = newModel.sensors();
+    iDynTree::SensorsList newSensorsList = newModel.sensors();
+
+    // First of all, we remove from the newSensorsList all the FT sensors
+    newSensorsList.removeAllSensorsOfType(iDynTree::SIX_AXIS_FORCE_TORQUE);
+
+    // Then, add back only the sensors we want (in the order we want)
+    for(size_t i=0; i < ftSensorNames.size(); i++)
+    {
+        std::ptrdiff_t oldSensorsListSensorIndex =  oldSensorsList.getSensorIndex(iDynTree::SIX_AXIS_FORCE_TORQUE, ftSensorNames[i]);
+        newSensorsList.addSensor(*(oldSensorsList.getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE, oldSensorsListSensorIndex)));
+    }
+
+    newModel.sensors() = newSensorsList;
+
+    ok = estimator.setModel(newModel);
     if( !ok )
     {
         yInfo() << "wholeBodyDynamics : impossible to create ExtWrenchesAndJointTorquesEstimator from file "
@@ -864,30 +897,43 @@ bool WholeBodyDynamicsDevice::openMultipleAnalogSensorRemapper(os::Searchable &c
     yarp::os::Property prop;
     prop.fromString(config.toString().c_str());
     yarp::os::Property propMASRemapper;
-    yarp::os::Bottle & propMasNames=prop.findGroup("multipleAnalogSensorsNames");
+
     propMASRemapper.put("device","multipleanalogsensorsremapper");
-    bool ok=false;
-    for (auto types=1u;types<propMasNames.size();types++){
-        yarp::os::Bottle * mas_type = propMasNames.get(types).asList();
-        if( mas_type->size() != 2 || mas_type->get(1).asList() == nullptr )
-        {
-            yError() << "wholeBodyDynamics: multipleAnalogSensorsNames group is malformed (" << mas_type->toString() << "). ";
-            return false;
-        }
-        else {
-            ok=true;
-        }
 
-        propMASRemapper.addGroup(mas_type->get(0).asString());
-        yarp::os::Bottle  MASnames;
-        yarp::os::Bottle & MASnamesList= MASnames.addList();
-        for(auto i=0u; i < mas_type->get(1).asList()->size(); i++)
-        {
-            MASnamesList.addString(mas_type->get(1).asList()->get(i).asString());
-        }
-        propMASRemapper.put(mas_type->get(0).asString(),MASnames.get(0));
-
+    // We get the multipleAnalogSensorsNames group, but from it we just use the multipleAnalogSensorsNames parameter
+    if (!prop.check("multipleAnalogSensorsNames"))
+    {
+        yError() << "wholeBodyDynamics: Impossible to find required group multipleAnalogSensorsNames";
+        return false;
     }
+
+    yarp::os::Searchable& multipleAnalogSensorsNames = prop.findGroup("multipleAnalogSensorsNames");
+
+    bool required = true;
+    bool ok = getConfigParamsAsList(multipleAnalogSensorsNames, "SixAxisForceTorqueSensorsNames", this->ftSensorNames, required);
+    if (!ok)
+    {
+        yError() << "wholeBodyDynamics: Impossible to find required variable SixAxisForceTorqueSensorsNames in group multipleAnalogSensorsNames";
+        return false;
+    }
+
+    if (multipleAnalogSensorsNames.find("TemperatureSensorsNames").isList())
+    {
+        yWarning() << "wholeBodyDynamics: TemperatureSensorsNames parameter is not used anymore, the names in SixAxisForceTorqueSensorsNames are used, please remove TemperatureSensorsNames parameter to avoid confusion";
+    }
+
+    addVectorOfStringToProperty(propMASRemapper, "SixAxisForceTorqueSensorsNames", this->ftSensorNames);
+
+    if (this->m_temperatureCompensationEnabled)
+    {
+        // If temperature compensation is required, also pass the sensor names as temperature sensors, if the load of the remapper will fail that will mean that
+        // the required FT sensors are not available
+        addVectorOfStringToProperty(propMASRemapper, "TemperatureSensorsNames", this->ftSensorNames);
+    }
+
+
+
+    // Try to load the required sensors
     ok = multipleAnalogRemappedDevice.open(propMASRemapper);
     if( !ok )
     {
@@ -897,6 +943,7 @@ bool WholeBodyDynamicsDevice::openMultipleAnalogSensorRemapper(os::Searchable &c
     ok = ok && multipleAnalogRemappedDevice.view(remappedMASInterfaces.temperatureSensors);
     ok = ok && multipleAnalogRemappedDevice.view(remappedMASInterfaces.ftMultiSensors);
     ok = ok && multipleAnalogRemappedDevice.view(remappedMASInterfaces.multwrap);
+
     if( !ok )
     {
         yError() << "wholeBodyDynamics : openMultipleAnalogSensorRemapper : error while opening the necessary interfaces in multipleAnalogRemappedDevice";
@@ -970,7 +1017,6 @@ void WholeBodyDynamicsDevice::resizeBuffers()
 
     // Resize temperature sensor inside F/T sensors
     this->tempMeasurements.resize(nrOfFTSensors,0.0);
-    this->ftTempMapping.resize(nrOfFTSensors,-1);
 
     // Resize filters
     filters.init(nrOfFTSensors,
@@ -1137,8 +1183,8 @@ bool WholeBodyDynamicsDevice::loadSettingsFromConfig(os::Searchable& config)
     std::string estimateJointVelocityAccelerationOptionName = "estimateJointVelocityAcceleration";
     if( !(prop.check(estimateJointVelocityAccelerationOptionName.c_str()) && prop.find(estimateJointVelocityAccelerationOptionName.c_str()).isBool()) )
     {
-        yWarning() << "wholeBodyDynamics: estimateVelocityAccelerationOptionName bool parameter missing, please specify it.";
-        yWarning() << "wholeBodyDynamics: setting estimateVelocityAccelerationOptionName to the default value of true, but this is a deprecated behaviour that will be removed in the future.";
+        yWarning() << "wholeBodyDynamics: estimateJointVelocityAcceleration bool parameter missing, please specify it.";
+        yWarning() << "wholeBodyDynamics: setting estimateJointVelocityAcceleration to the default value of false, but this is a deprecated behavior that will be removed in the future.";
         settings.estimateJointVelocityAcceleration = false;
     }
     else
@@ -1318,6 +1364,25 @@ bool WholeBodyDynamicsDevice::loadSecondaryCalibrationSettingsFromConfig(os::Sea
     return ret;
 
 }
+
+bool WholeBodyDynamicsDevice::checkIfTemperatureCompensationIsSetFromConfig(os::Searchable& config)
+{
+    bool ret;
+    yarp::os::Property propAll;
+    propAll.fromString(config.toString().c_str());
+
+    if( propAll.check("FT_TEMPERATURE_COEFFICIENTS") )
+    {
+        this->m_temperatureCompensationEnabled = true;
+    }
+    else
+    {
+        this->m_temperatureCompensationEnabled = false;
+    }
+
+    return true;
+}
+
 
 bool WholeBodyDynamicsDevice::loadTemperatureCoefficientsSettingsFromConfig(os::Searchable& config)
 {
@@ -1530,10 +1595,25 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 {
     std::lock_guard<std::mutex> guard(this->deviceMutex);
 
-    yDebug() << "wholeBodyDynamics Statistics: Opening estimator.";
+    // As first step, check if temperature compensation is enabled, as this influence the rest of the parsing
+    this->checkIfTemperatureCompensationIsSetFromConfig(config);
+
+    yDebug() << "wholeBodyDynamics Statistics: Opening multiple analog sensors remapper.";
     double tick = yarp::os::Time::now();
 
-    bool ok;
+    // Open the multiple analog sensor remapper
+    bool ok = this->openMultipleAnalogSensorRemapper(config);
+    if( !ok )
+    {
+        yError() << "wholeBodyDynamics: Problem in opening multiple analog sensor remapper.";
+        return false;
+    }
+
+    yDebug() << "wholeBodyDynamics Statistics: Multiple analog sensors remapper opened in " << yarp::os::Time::now() - tick << "s.";
+
+    yDebug() << "wholeBodyDynamics Statistics: Opening estimator.";
+    tick = yarp::os::Time::now();
+
     // Create the estimator
     ok = this->openEstimator(config);
     if( !ok )
@@ -1583,14 +1663,6 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
     if( !ok )
     {
         yError() << "wholeBodyDynamics: Problem in loading secondary calibration matrix settings.";
-        return false;
-    }
-
-    // Open settings related to gravity compensation (we need the estimator to be open)
-    ok = this->loadTemperatureCoefficientsSettingsFromConfig(config);
-    if( !ok )
-    {
-        yError() << "wholeBodyDynamics: Problem in loading temperature coefficients matrix settings.";
         return false;
     }
 
@@ -1697,19 +1769,6 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
 
     yDebug() << "wholeBodyDynamics Statistics: External port wrenches opened in " << yarp::os::Time::now() - tick << "s.";
 
-    yDebug() << "wholeBodyDynamics Statistics: Opening multiple analog sensors remapper.";
-    tick = yarp::os::Time::now();
-
-    // Open the multiple analog sensor remapper
-    ok = this->openMultipleAnalogSensorRemapper(config);
-    if( !ok )
-    {
-        yError() << "wholeBodyDynamics: Problem in opening multiple analog sensor remapper.";
-        return false;
-    }
-
-    yDebug() << "wholeBodyDynamics Statistics: Multiple analog sensors remapper opened in " << yarp::os::Time::now() - tick << "s.";
-
     // Open the ports related to publishing filtered ft wrenches
     if (streamFilteredFT){
         yDebug() << "wholeBodyDynamics Statistics: Opening filtered FT ports.";
@@ -1769,145 +1828,39 @@ bool WholeBodyDynamicsDevice::attachAllVirtualAnalogSensor(const PolyDriverList&
 
 bool WholeBodyDynamicsDevice::attachAllFTs(const PolyDriverList& p)
 {
-    yInfo()<<"Starting attach MAS and analog ft";
-    PolyDriverList ftSensorList;
-    PolyDriverList tempSensorList;
-    std::vector<std::string>     ftDeviceNames;
-
-    std::size_t nrMASFTSensors{0};
-    for(auto devIdx = 0; devIdx <p.size(); devIdx++)
-    {
-        ISixAxisForceTorqueSensors * fts = nullptr;
-        ITemperatureSensors *tempS =nullptr;
-        if( p[devIdx]->poly->view(fts) )
-        {
-            auto nrFTsinThisDevice = fts->getNrOfSixAxisForceTorqueSensors();
-            if(nrFTsinThisDevice > 0)
-            {
-                ftSensorList.push(const_cast<PolyDriverDescriptor&>(*p[devIdx]));
-                ftDeviceNames.push_back(p[devIdx]->key);
-            }
-            nrMASFTSensors +=  nrFTsinThisDevice;
-            for (auto ftDx = 0; ftDx < nrFTsinThisDevice; ftDx++)
-            {
-                std::string ftName;
-                fts->getSixAxisForceTorqueSensorName(ftDx, ftName);
-                ftMultipleAnalogSensorNames.emplace_back(ftName);
-            }
-        }
-        if( p[devIdx]->poly->view(tempS) )
-        {
-            tempSensorList.push(const_cast<PolyDriverDescriptor&>(*p[devIdx]));
-        }
-    }
-    yDebug()<<"wholeBodyDynamicsDevice :: number of devices that could contain FT sensors found "<<ftDeviceNames.size();
-
-    auto totalNrFTDevices{nrMASFTSensors};
-    if( totalNrFTDevices < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE) )
-    {
-        yError() << "wholeBodyDynamicsDevice : was expecting "
-                 << estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)
-                 << " from the model, but got only " << totalNrFTDevices << " FT sensor either using "
-                 << " analog or MAS interface in the attach list.";
-        return false;
-    }
-
+    yInfo()<<"wholeBodyEstimators: Starting attach MAS and analog ft";
     // Attach the sensors to the multipleanalogsensorsremapper
-    bool ok = remappedMASInterfaces.multwrap->attachAll(ftSensorList);
-    ok = ok & remappedMASInterfaces.multwrap->attachAll(tempSensorList);
-
+    bool ok = remappedMASInterfaces.multwrap->attachAll(p);
     if( !ok  )
     {
         yError() << " WholeBodyDynamicsDevice::attachAll in attachAll of the remappedMASInterfaces";
         return false;
     }
+    yInfo()<<"wholeBodyEstimators: Ended of attach MAS and analog ft";
 
-    ftMultipleAnalogSensorIdxMapping.resize(ftMultipleAnalogSensorNames.size());
-    for (auto ftDx = 0; ftDx < nrMASFTSensors; ftDx++)
-    {
-        std::string sensorName;
-        remappedMASInterfaces.ftMultiSensors->getSixAxisForceTorqueSensorName(ftDx, sensorName);
-        auto ftIter = std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName);
-        if (ftIter != ftMultipleAnalogSensorNames.end())
-        {
-	    auto ftMapIdx = std::distance(ftMultipleAnalogSensorNames.begin(), ftIter);
-            ftMultipleAnalogSensorIdxMapping[ftMapIdx] = ftDx;
-        }
-    }
-
-    // Check if the MASremapper and the estimator have a consistent number of ft sensors
-    int tempSensors = 0;
-    tempSensors=static_cast<int>( remappedMASInterfaces.temperatureSensors->getNrOfTemperatureSensors());
-    if( tempSensors > static_cast<int>( estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)) )
-    {
-        yError() << "wholeBodyDynamics : The multipleAnalogRemappedDevice has more sensors than those in the open estimator ft sensors list";
-        return false;
-    }
-
-    int checkCounter=0;
-    std::string ftName;
-    std::string tempName;
-    int ftMap=-1;
-    for (int tSensor=0;tSensor<tempSensors;tSensor++){
-        remappedMASInterfaces.temperatureSensors->getTemperatureSensorName(tSensor,tempName);
-        int individualCheck=0;
-        for (int ft=0;ft<static_cast<int>( estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE)); ft++){
-            ftName=estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
-            if (tempName==ftName){
-                individualCheck++;
-                ftMap=ft;
-            }
-        }
-        if (individualCheck!=1){
-            yWarning()<< "wholeBodyDynamics : A temperature sensor name in multipleAnalogRemappedDevice do not match the name of the ft sensors";
-            yDebug()<<"wholeBodyDynamics : Could not find or found multiple times sensor "<<tempName<<" among ft sensor names";
-        }
-        else {
-            checkCounter++;
-            // assuming the name is the same the order withing the mas interfaces might have a different id so we need a mapping
-            ftTempMapping[static_cast<size_t>(ftMap)]=tSensor;
-            yInfo()<< "wholeBodyDynamics: ftTempMapping "<< ftMap << " is ft position in model "<< tSensor <<"="<<ftTempMapping[ftMap] << " sensor name "<< tempName;
-        }
-    }
-    if (checkCounter!=tempSensors){
-        yError("wholeBodyDynamics : Not all temperature sensors have the same name as the ft sensors, expected %d , found %d",tempSensors,checkCounter);
-        return false;
-    }
-    //End of temporary temperature check
-
-    // iterate through ftMultipleAnalogSensorNames
-    // check if each name is a FT sensor in the URDF
-    auto nrFTsInURDF = estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE);
-    for(size_t IDTsensIdx=0; IDTsensIdx < nrFTsInURDF; IDTsensIdx++)
-    {
-        std::string sensorName = estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,IDTsensIdx)->getName();
-
-        bool ftInAnalog = (std::find(ftAnalogSensorNames.begin(), ftAnalogSensorNames.end(), sensorName) != ftAnalogSensorNames.end());
-        bool ftInMAS = (std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName) != ftMultipleAnalogSensorNames.end());
-
-        if (!ftInAnalog && !ftInMAS)
-        {
-            yError() << "WholeBodyDynamicsDevice was expecting a sensor named " << sensorName << " but it did not find one in the attached devices";
-            return false;
-        }
-    }
+    size_t nrOfFTSensorsInConfigFile = ftSensorNames.size();
 
     if (!settings.disableSensorReadCheckAtStartup) {
         // We try to read for a brief moment the sensors for two reasons:
         // so we can make sure that they actually work, and to make sure that the buffers are correctly initialized
         bool verbose = false;
-        double tic = yarp::os::Time::now();
-        bool timeSpentTryngToReadSensors = 0.0;
+        double timeSpentTryngToReadSensors = 0.0;
         bool readSuccessfull = false;
+        double tic = yarp::os::Time::now();
         while( (timeSpentTryngToReadSensors < wholeBodyDynamics_sensorTimeoutInSeconds) && !readSuccessfull )
         {
             readSuccessfull = readFTSensors(verbose);
-            timeSpentTryngToReadSensors = (yarp::os::Time::now() - tic);
+            // Only update the timeSpentTryngToReadSensors and wait if the read was not successful
+            if (!readSuccessfull)
+            {
+                timeSpentTryngToReadSensors = (yarp::os::Time::now() - tic);
+                yarp::os::Time::delay(0.001);
+            }
         }
 
         if( !readSuccessfull )
         {
-            yError() << "WholeBodyDynamicsDevice was unable to correctly read from the FT sensors";
+            yError() << "WholeBodyDynamicsDevice was unable to correctly read from the FT sensors after " << timeSpentTryngToReadSensors << " seconds.";
             return false;
         }
     }
@@ -2079,64 +2032,51 @@ void convertVectorFromDegreesToRadians(iDynTree::VectorDynSize & vector)
 
 bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
 {
-    bool FTSensorsReadCorrectly = true;
-    bool TempSensorReadCorrectly = true;
+    bool allReadSuccessful = true;
     double timeFTStamp=yarp::os::Time::now();
     bool readTemperatureSensorThisTime=false;
     yarp::dev::MAS_status    sensorStatus;
     ftMeasurement.resize(6);
 
-    for(size_t ft=0; ft < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); ft++ )
+    for(size_t sensorIndex=0; sensorIndex < estimator.model().sensors().getNrOfSensors(iDynTree::SIX_AXIS_FORCE_TORQUE); sensorIndex++ )
     {
-        std::string sensorName = estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
+        std::string sensorName = estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE, sensorIndex)->getName();
+        double timestamp;
+        bool singleFTReadCorrectly = remappedMASInterfaces.ftMultiSensors->getSixAxisForceTorqueSensorMeasure(sensorIndex, ftMeasurement, timestamp);
 
-        bool ok;
-        auto ftMasITer = (std::find(ftMultipleAnalogSensorNames.begin(), ftMultipleAnalogSensorNames.end(), sensorName));
-        if (ftMasITer != ftMultipleAnalogSensorNames.end())
+        if (this->m_temperatureCompensationEnabled)
         {
-            auto ftID = std::distance(ftMultipleAnalogSensorNames.begin(), ftMasITer);
-            auto sensorId = ftMultipleAnalogSensorIdxMapping[ftID];
-            double timestamp;
-            remappedMASInterfaces.ftMultiSensors->getSixAxisForceTorqueSensorMeasure(sensorId, ftMeasurement, timestamp);
-            
-	    ok = true;
+            bool singleTempReadCorrectly = false;
+            if (timeFTStamp-prevFTTempTimeStamp>checkTemperatureEvery_seconds)
+            {
+                    sensorStatus=remappedMASInterfaces.temperatureSensors->getTemperatureSensorStatus(sensorIndex);
+
+                    if (sensorStatus==MAS_OK)
+                    {
+                        singleTempReadCorrectly=remappedMASInterfaces.temperatureSensors->getTemperatureSensorMeasure(sensorIndex, tempMeasurements[sensorIndex], timeFTStamp);
+                    }
+                    else
+                    { //should be yError() but lets leave it like this for now
+                        yInfo()<<"wholeBodyDynamics : Temp sensor "<< sensorName << " return status "<< sensorStatus;
+                    }
+                    readTemperatureSensorThisTime=true;
+            }
+
+            if (readTemperatureSensorThisTime) {
+                prevFTTempTimeStamp=timeFTStamp;
+            }
+
         }
 
-        iDynTree::Wrench bufWrench;
-        if (timeFTStamp-prevFTTempTimeStamp>checkTemperatureEvery_seconds){
-            if (ftTempMapping[ft]!=-1){
-                sensorStatus=remappedMASInterfaces.temperatureSensors->getTemperatureSensorStatus(ftTempMapping[ft]);
-                std::string nameOfSensor;
-                remappedMASInterfaces.temperatureSensors->getTemperatureSensorName(ftTempMapping[ft],nameOfSensor);
-
-
-                if (sensorStatus==MAS_OK ){
-                    TempSensorReadCorrectly=remappedMASInterfaces.temperatureSensors->getTemperatureSensorMeasure(ftTempMapping[ft],tempMeasurements[ft],timeFTStamp);
-                     remappedMASInterfaces.temperatureSensors->getTemperatureSensorStatus(ftTempMapping[ft]);
-                }
-                else
-                { //should be yError() but lets leave it like this for now
-                    yInfo()<<"wholeBodyDynamics : Temp sensor "<< nameOfSensor << " return status "<< sensorStatus;
-                }
-                readTemperatureSensorThisTime=true;
-            }
-            else {
-                tempMeasurements[ft]=0;
-            }
-        }
-
-        FTSensorsReadCorrectly = FTSensorsReadCorrectly && ok && TempSensorReadCorrectly;
-
-        if( !ok && verbose )
+        if (!singleFTReadCorrectly)
         {
-            std::string sensorName = estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
             yWarning() << "wholeBodyDynamics warning : FT sensor " << sensorName << " was not readed correctly, using old measurement";
         }
 
         bool isNaN = false;
         for (size_t i = 0; i < ftMeasurement.size(); i++)
         {
-            if( std::isnan(ftMeasurement[i]) ||  std::isnan(tempMeasurements[ft]))
+            if( std::isnan(ftMeasurement[i]) ||  std::isnan(tempMeasurements[sensorIndex]))
             {
                 isNaN = true;
                 break;
@@ -2144,23 +2084,22 @@ bool WholeBodyDynamicsDevice::readFTSensors(bool verbose)
         }
         if( isNaN )
         {
-            std::string sensorName = estimator.model().sensors().getSensor(iDynTree::SIX_AXIS_FORCE_TORQUE,ft)->getName();
             yError() << "wholeBodyDynamics : FT sensor " << sensorName << " contains nan: " << ftMeasurement.toString() << ", returning error.";
             return false;
         }
 
-        if( ok )
+        if (singleFTReadCorrectly)
         {
             // Format of F/T measurement in YARP/iDynTree is consistent: linear/angular
+            iDynTree::Wrench bufWrench;
             iDynTree::toiDynTree(ftMeasurement,bufWrench);
-
-            rawSensorsMeasurements.setMeasurement(iDynTree::SIX_AXIS_FORCE_TORQUE,ft,bufWrench);
+            rawSensorsMeasurements.setMeasurement(iDynTree::SIX_AXIS_FORCE_TORQUE,sensorIndex,bufWrench);
         }
+
+        allReadSuccessful = allReadSuccessful && singleFTReadCorrectly;
     }
-    if (readTemperatureSensorThisTime) {
-        prevFTTempTimeStamp=timeFTStamp;
-    }
-    return FTSensorsReadCorrectly;
+
+    return allReadSuccessful;
 }
 
 bool WholeBodyDynamicsDevice::readIMUSensors(bool verbose)
@@ -2265,10 +2204,18 @@ void WholeBodyDynamicsDevice::filterSensorsAndRemoveSensorOffsets()
         iDynTree::Wrench rawFTMeasure;
         rawSensorsMeasurements.getMeasurement(iDynTree::SIX_AXIS_FORCE_TORQUE,ft,rawFTMeasure);
 
-        iDynTree::Wrench rawFTMeasureWithOffsetRemoved  = ftProcessors[ft].filt(rawFTMeasure,tempMeasurements[ft]);
+        iDynTree::Wrench rawFTMeasureWithOffsetRemoved;
+
+        if (this->m_temperatureCompensationEnabled)
+        {
+            rawFTMeasureWithOffsetRemoved = ftProcessors[ft].filt(rawFTMeasure,tempMeasurements[ft]);
+        } else
+        {
+            rawFTMeasureWithOffsetRemoved = ftProcessors[ft].filt(rawFTMeasure);
+        }
 
         // Filter the data
-        iDynTree::toYarp(rawFTMeasureWithOffsetRemoved,filters.bufferYarp6);
+        iDynTree::toYarp(rawFTMeasureWithOffsetRemoved, filters.bufferYarp6);
 
         // Run the filter
         const yarp::sig::Vector & outputFt = filters.forcetorqueFilters[ft]->filt(filters.bufferYarp6);

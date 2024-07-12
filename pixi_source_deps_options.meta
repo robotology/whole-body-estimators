@@ -4,6 +4,8 @@
         "YARP" :
         {
             "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+                "-GNinja",
                 "-DYARP_COMPILE_ALL_FAKE_DEVICES:BOOL=ON",
                 "-DYARP_COMPILE_GUIS=OFF"
             ]
@@ -11,6 +13,8 @@
         "ICUB" :
         {
             "cmake-args": [
+                "-DCMAKE_BUILD_TYPE=RelWithDebInfo",
+                "-GNinja",
                 "-DBUILD_SHARED_LIBS=ON",
                 "-DICUBMAIN_COMPILE_CORE=OFF",
                 "-DICUBMAIN_COMPILE_TOOLS=OFF",

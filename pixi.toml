@@ -41,7 +41,7 @@ configure = { cmd = [
 ]}
 
 build = { cmd = "cmake --build .build --config Release", depends_on = ["configure"] }
-test = { cmd = "ctest --test-dir .build --build-config Release", depends_on = ["build"] }
+test = { cmd = "ctest --test-dir .build --build-config Release --output-on-failure", depends_on = ["build"] }
 install = { cmd = ["cmake", "--install", ".build", "--config", "Release"], depends_on = ["build"] }
 uninstall = { cmd = ["cmake", "--build", ".build", "--target", "uninstall"]}
 
@@ -50,6 +50,8 @@ uninstall = { cmd = ["cmake", "--build", ".build", "--target", "uninstall"]}
 c-compiler = "*"
 cxx-compiler = "*"
 ninja = "*"
+cmake = "*"
+make  = "*"
 pkg-config = "*"
 eigen = "*"
 # Requires https://github.com/robotology/idyntree/pull/1178
