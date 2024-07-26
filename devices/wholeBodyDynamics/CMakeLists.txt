@@ -10,6 +10,20 @@ yarp_prepare_plugin(wholebodydynamics CATEGORY device
                                       ADVANCED)
 
 if(ENABLE_wholebodydynamics)
+
+  if(WHOLEBODYDYNAMICS_USES_SYSTEM_frugally_deep)
+    find_package(frugally-deep 0.15.19 REQUIRED)
+  else()
+    include(FetchContent)
+
+    FetchContent_Declare(frugally-deep
+      GIT_REPOSITORY https://github.com/Dobiasd/frugally-deep.git
+      GIT_TAG v0.15.19-p0)
+
+    FetchContent_MakeAvailable(frugally-deep)
+    find_package(frugally-deep 0.15.19 REQUIRED)
+  endif()
+
     include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
     include_directories(SYSTEM
@@ -26,7 +40,9 @@ if(ENABLE_wholebodydynamics)
                                                     ctrlLibRT
                                                     ${YARP_LIBRARIES}
                                                     skinDynLib
-                                                    ${iDynTree_LIBRARIES})
+                                                    ${iDynTree_LIBRARIES}
+                                                    frugally-deep::fdeep)
+
 
     if(MSVC)
         add_definitions(-D_USE_MATH_DEFINES)
