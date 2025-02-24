@@ -1719,12 +1719,12 @@ bool WholeBodyDynamicsDevice::open(os::Searchable& config)
     tick = yarp::os::Time::now();
 
      // Open the virtualsensor remapper
-    ok = this->openRemapperVirtualSensors(config);
-    if( !ok )
-    {
-        yError() << "wholeBodyDynamics: Problem in opening virtual analog sensors remapper.";
-        return false;
-    }
+    // ok = this->openRemapperVirtualSensors(config);
+    // if( !ok )
+    // {
+    //     yError() << "wholeBodyDynamics: Problem in opening virtual analog sensors remapper.";
+    //     return false;
+    // }
 
     yDebug() << "wholeBodyDynamics Statistics: Remapper virtual sensors opened in " << yarp::os::Time::now() - tick << "s.";
 
@@ -1965,8 +1965,8 @@ bool WholeBodyDynamicsDevice::attachAll(const PolyDriverList& p)
 
     yDebug() << "wholeBodyDynamics Statistics: Attaching all virtual analog sensors.";
     tick = yarp::os::Time::now();
-    ok = ok && this->attachAllVirtualAnalogSensor(p);
-    yDebug() << "wholeBodyDynamics Statistics: Attaching all virtual analog sensors took " << yarp::os::Time::now() - tick << "s.";
+    // ok = ok && this->attachAllVirtualAnalogSensor(p);
+    // yDebug() << "wholeBodyDynamics Statistics: Attaching all virtual analog sensors took " << yarp::os::Time::now() - tick << "s.";
 
     yDebug() << "wholeBodyDynamics Statistics: Attaching all FTs.";
     tick = yarp::os::Time::now();
@@ -2617,7 +2617,7 @@ void WholeBodyDynamicsDevice::publishEstimatedQuantities()
         if( validOffsetAvailable )
         {
             //Send torques
-            publishTorques();
+            // publishTorques();
 
             //Send external contacts
             if (useSkinForContacts)
