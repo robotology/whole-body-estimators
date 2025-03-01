@@ -2,8 +2,6 @@
 # Authors: Silvio Traversaro
 # CopyPolicy: Released under the terms of the LGPLv2.1 or later, see LGPL.TXT
 
-cmake_minimum_required(VERSION 2.8.11)
-
 project(wholeBodyDynamicsHelpers)
 
 set(WHOLEBODYDYNAMICS_HELPERS_HDRS include/wholeBodyDynamics/)
